@@ -996,10 +996,8 @@ function exporteerInschrijvingen() {
     .tO     { background: #F2F2F2; color: #111111; }
     .tEC    { background: #FFFFFF; color: #111111; text-align: center; }
     .tOC    { background: #F2F2F2; color: #111111; text-align: center; }
-    .tNrE   { background: #FFFFFF; color: #CC1A1A; text-align: center;
-              font-size: 13pt; font-weight: bold; }
-    .tNrO   { background: #F2F2F2; color: #CC1A1A; text-align: center;
-              font-size: 13pt; font-weight: bold; }
+    .tNrE   { background: #FFFFFF; color: #111111; text-align: center; font-size: 10pt; }
+    .tNrO   { background: #F2F2F2; color: #111111; text-align: center; font-size: 10pt; }
     .tWpE   { background: #FFFFFF; color: #1A7A1A; text-align: center;
               font-size: 12pt; font-weight: bold; }
     .tWpO   { background: #F2F2F2; color: #1A7A1A; text-align: center;
@@ -1038,20 +1036,33 @@ xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="UTF-8"><style>${css}</style></head>
 <body>
 <table>
+  <colgroup>
+    <col style="width:38pt;  mso-width-source:userset;">
+    <col style="width:130pt; mso-width-source:userset;">
+    <col style="width:95pt;  mso-width-source:userset;">
+    <col style="width:60pt;  mso-width-source:userset;">
+    <col style="width:48pt;  mso-width-source:userset;">
+    <col style="width:55pt;  mso-width-source:userset;">
+    <col style="width:42pt;  mso-width-source:userset;">
+    <col style="width:155pt; mso-width-source:userset;">
+    <col style="width:110pt; mso-width-source:userset;">
+    <col style="width:80pt;  mso-width-source:userset;">
+    <col style="width:130pt; mso-width-source:userset;">
+  </colgroup>
   <tr><td colspan="11" class="tTitel">${esc(ev?.naam||'Inschrijvingen')}</td></tr>
   <tr><td colspan="11" class="tSub">${esc(subtitel)}</td></tr>
   <tr>
-    <th class="tHdrC" style="width:42px;">#</th>
-    <th class="tHdr"  style="width:145px;">Naam</th>
-    <th class="tHdr"  style="width:110px;">Klasse</th>
-    <th class="tHdrC" style="width:70px;">Kart type</th>
-    <th class="tHdrC" style="width:52px;">Kart WP</th>
-    <th class="tHdrC" style="width:60px;">Banden WP</th>
-    <th class="tHdrC" style="width:46px;">Bak WP</th>
-    <th class="tHdr"  style="width:195px;">Benzine</th>
-    <th class="tHdr"  style="width:125px;">Huurkart type</th>
-    <th class="tHdrC" style="width:88px;">Lengte / Gewicht</th>
-    <th class="tHdr"  style="width:145px;">Uitrusting nodig</th>
+    <th class="tHdrC">#</th>
+    <th class="tHdr">Naam</th>
+    <th class="tHdr">Klasse</th>
+    <th class="tHdrC">Kart type</th>
+    <th class="tHdrC">Kart WP</th>
+    <th class="tHdrC">Banden WP</th>
+    <th class="tHdrC">Bak WP</th>
+    <th class="tHdr">Benzine</th>
+    <th class="tHdr">Huurkart type</th>
+    <th class="tHdrC">Lengte / Gewicht</th>
+    <th class="tHdr">Uitrusting nodig</th>
   </tr>
   ${dataRijen}
 </table>
