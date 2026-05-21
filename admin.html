@@ -107,6 +107,7 @@
     #dfk-root .event-list { display: flex; flex-direction: column; gap: 10px; }
     #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
     #dfk-root .ev-row.past { border-left-color: #333; opacity: 0.5; }
+    #dfk-root .ev-row.gesloten { border-left-color: #4cff4c; }
     #dfk-root .ev-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
     #dfk-root .ev-date-block { text-align: center; min-width: 48px; flex-shrink: 0; }
     #dfk-root .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; line-height: 1; }
@@ -371,7 +372,7 @@ function renderList(containerId, list, icon, emptyMsg, isPast) {
       : '';
     const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
     const inCount = _inschrijvingen[ev.id] || 0;
-    return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}">
+    return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}${(!isPast && deadlinePassed)?' gesloten':''}">
       <div class="ev-date-block">
         <div class="ev-day">${d.getDate()}</div>
         <div class="ev-month">${MAANDEN[d.getMonth()]}</div>
