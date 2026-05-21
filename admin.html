@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFK – Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; }
+
+    #dfk-root * { box-sizing: border-box; }
+    #dfk-root { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; font-family: 'Barlow', sans-serif; }
+
+    #dfk-root .nav { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+    #dfk-root .nav-badge { background: #E02020; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; margin-left: 10px; }
+    #dfk-root .nav-back { font-size: 12px; color: #666; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; }
+    #dfk-root .nav-back:hover { color: #ccc; }
+
+    #dfk-root .layout { display: grid; grid-template-columns: 1fr 420px; gap: 0; flex: 1; }
+    #dfk-root .left-col { padding: 2rem; border-right: 1px solid #1e1e1e; overflow-y: auto; }
+    #dfk-root .right-col { padding: 2rem; background: #0d0d0d; overflow-y: auto; }
+
+    #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+    #dfk-root .page-sub { font-size: 13px; color: #666; margin-bottom: 1.8rem; }
+    #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
+
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-input:focus { border-color: #E02020; }
+    #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
+    #dfk-root .hint { font-size: 11px; color: #555; margin-bottom: 0.6rem; margin-top: -0.4rem; }
+
+    #dfk-root .edit-banner { background: #1a1a00; border: 1px solid #555500; border-radius: 4px; padding: 10px 14px; margin-bottom: 1.2rem; font-size: 13px; color: #cccc00; display: none; }
+    #dfk-root .edit-banner.show { display: flex; align-items: center; justify-content: space-between; }
+
+    #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
+    #dfk-root .chk-item.on { border-color: #E02020; background: #2a1010; }
+    #dfk-root .chk-box { width: 16px; height: 16px; border: 1px solid #555; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
+    #dfk-root .chk-item.on .chk-box { background: #E02020; border-color: #E02020; }
+    #dfk-root .chk-mark { color: #fff; font-size: 11px; font-weight: 700; display: none; }
+    #dfk-root .chk-item.on .chk-mark { display: block; }
+    #dfk-root .chk-label { font-size: 13px; color: #ccc; }
+    #dfk-root .chk-item.on .chk-label { color: #fff; }
+
+    #dfk-root .add-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 0.5rem; }
+    #dfk-root .add-btn:hover { background: #c01010; }
+    #dfk-root .add-btn.edit-mode { background: #c08000; }
+    #dfk-root .add-btn.edit-mode:hover { background: #a06000; }
+    #dfk-root .reset-btn { display: block; width: 100%; padding: 11px; background: transparent; color: #555; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .reset-btn:hover { color: #888; border-color: #333; }
+
+    #dfk-root .circuit-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    #dfk-root .circuit-add-row .field-input { margin-bottom: 0; flex: 1; }
+    #dfk-root .circuit-add-btn { flex-shrink: 0; padding: 0 16px; background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
+    #dfk-root .circuit-add-btn:hover { border-color: #E02020; color: #fff; }
+
+    #dfk-root .dl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -0.5rem; margin-bottom: 1rem; }
+    #dfk-root .dl-chip { padding: 5px 10px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; font-size: 11px; color: #888; cursor: pointer; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; }
+    #dfk-root .dl-chip:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .dl-chip-del { color: #555; font-size: 12px; line-height: 1; }
+    #dfk-root .dl-chip-del:hover { color: #ff5555; }
+    #dfk-root .dl-chips-label { font-size: 11px; color: #555; width: 100%; margin-bottom: 2px; }
+
+    #dfk-root .event-list { display: flex; flex-direction: column; gap: 10px; }
+    #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    #dfk-root .ev-row.past { border-left-color: #333; opacity: 0.5; }
+    #dfk-root .ev-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
+    #dfk-root .ev-date-block { text-align: center; min-width: 48px; flex-shrink: 0; }
+    #dfk-root .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; line-height: 1; }
+    #dfk-root .ev-month { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; color: #E02020; letter-spacing: 2px; text-transform: uppercase; }
+    #dfk-root .ev-divider { width: 1px; height: 40px; background: #2a2a2a; flex-shrink: 0; }
+    #dfk-root .ev-info { flex: 1; min-width: 0; }
+    #dfk-root .ev-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #dfk-root .ev-meta { font-size: 12px; color: #666; margin-top: 2px; }
+    #dfk-root .ev-deadline { font-size: 11px; color: #888; margin-top: 3px; }
+    #dfk-root .ev-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #888; }
+    #dfk-root .ev-btn:hover { color: #fff; border-color: #555; }
+    #dfk-root .ev-btn.edit { color: #cccc00; border-color: #555500; background: #1a1a00; }
+    #dfk-root .ev-btn.edit:hover { background: #2a2a00; border-color: #888800; }
+    #dfk-root .ev-btn.del { color: #ff5555; border-color: #3a1a1a; background: #1c1010; }
+    #dfk-root .ev-btn.del:hover { background: #2a1010; border-color: #ff5555; }
+
+    #dfk-root .empty { text-align: center; padding: 2rem 1rem; color: #444; font-size: 13px; }
+    #dfk-root .empty-icon { font-size: 28px; margin-bottom: 0.4rem; }
+
+    #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease; pointer-events: none; }
+    #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
+    #dfk-root .toast.yellow { background: #3a3a00; color: #ffff44; border: 1px solid #888800; }
+    #dfk-root .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div id="dfk-root">
+
+  <nav class="nav">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
+      <span class="nav-badge">Admin</span>
+    </div>
+    <a class="nav-back" href="evenementen.html">← Terug naar evenementen</a>
+  </nav>
+
+  <div class="layout">
+
+    <div class="left-col">
+      <div class="page-title">Evenementen</div>
+      <p class="page-sub">Overzicht van alle ingevoerde evenementen</p>
+      <div class="section-label">Komende evenementen</div>
+      <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">📅</div>Nog geen evenementen toegevoegd</div></div>
+      <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
+      <div class="event-list" id="past-list"><div class="empty"><div class="empty-icon">🏁</div>Geen afgelopen evenementen</div></div>
+    </div>
+
+    <div class="right-col">
+      <div class="page-title" id="form-title">Toevoegen</div>
+      <p class="page-sub" id="form-sub">Vul het formulier in om een nieuw evenement aan te maken</p>
+
+      <div class="edit-banner" id="edit-banner">
+        <span>✎ Je past een evenement aan</span>
+        <span onclick="cancelEdit()" style="cursor:pointer; color:#888;">✕ Annuleren</span>
+      </div>
+
+      <div class="section-label">Evenement</div>
+
+      <label class="field-label">Naam</label>
+      <input class="field-input" id="f-naam" type="text" placeholder="bijv. Iame Benelux – Ronde 3" />
+
+      <div class="two-col">
+        <div>
+          <label class="field-label">Datum</label>
+          <input class="field-input" id="f-datum" type="date" style="margin-bottom:0;" />
+        </div>
+        <div>
+          <label class="field-label">Type</label>
+          <select class="field-select" id="f-type" style="margin-bottom:0;">
+            <option value="">Selecteer...</option>
+            <option>Wedstrijd</option><option>Nationaal</option><option>Club</option><option>Training</option><option>Andere</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="field-label" style="margin-top:1rem;">Circuit / Locatie</label>
+      <select class="field-select" id="f-circuit"><option value="">Selecteer circuit...</option></select>
+      <div class="circuit-add-row">
+        <input class="field-input" id="f-circuit-nieuw" type="text" placeholder="Nieuw circuit toevoegen..." />
+        <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
+      </div>
+
+      <label class="field-label">Inschrijvingsdeadline</label>
+      <input class="field-input" id="f-deadline" type="datetime-local" />
+      <div id="dl-chips" class="dl-chips"></div>
+
+      <div class="section-label">Klassen</div>
+      <p class="hint">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="klassen-grid">
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Iame Mini"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="KA100"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="X30 Junior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="X30 Senior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Iame Super Shifter"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Cadet"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Junior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Senior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Rotax"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Alle klassen"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Alle klassen</span></div>
+      </div>
+
+      <button class="add-btn" id="submit-btn" onclick="submitForm()">+ Evenement toevoegen</button>
+      <button class="reset-btn" onclick="cancelEdit()">Annuleren / leegmaken</button>
+    </div>
+  </div>
+
+  <div class="toast green" id="toast"></div>
+</div>
+
+<script>
+  const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  const DAGEN = ['zo','ma','di','wo','do','vr','za'];
+  let events = [], circuits = [], deadlineHistory = [];
+  let editIndex = -1;
+
+  function load() {
+    try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) { events = []; }
+    try { circuits = JSON.parse(localStorage.getItem('dfk_circuits') || '[]'); } catch(e) { circuits = []; }
+    try { deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]'); } catch(e) { deadlineHistory = []; }
+    renderCircuitSelect();
+    renderDeadlineChips();
+    renderEvents();
+  }
+
+  function save() { localStorage.setItem('dfk_events', JSON.stringify(events)); }
+  function saveCircuits() { localStorage.setItem('dfk_circuits', JSON.stringify(circuits)); }
+  function saveDeadlines() { localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory)); }
+
+  function renderCircuitSelect(selected) {
+    const sel = document.getElementById('f-circuit');
+    const current = selected || sel.value;
+    sel.innerHTML = '<option value="">Selecteer circuit...</option>' + circuits.map(c => `<option value="${c}"${c===current?' selected':''}>${c}</option>`).join('');
+  }
+
+  function addCircuit() {
+    const input = document.getElementById('f-circuit-nieuw');
+    const naam = input.value.trim();
+    if (!naam) return;
+    if (circuits.includes(naam)) { alert('Dit circuit staat al in de lijst.'); return; }
+    circuits.push(naam); circuits.sort();
+    saveCircuits(); renderCircuitSelect(naam);
+    document.getElementById('f-circuit').value = naam;
+    input.value = '';
+    showToast('Circuit toegevoegd!', 'green');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.activeElement.id === 'f-circuit-nieuw') addCircuit(); });
+
+  function renderDeadlineChips() {
+    const container = document.getElementById('dl-chips');
+    if (deadlineHistory.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = '<span class="dl-chips-label">Eerder gebruikt:</span>' +
+      deadlineHistory.map((dl, i) => `<span class="dl-chip" onclick="pickDeadline('${dl}')">⏱ ${formatDate(dl)}<span class="dl-chip-del" onclick="removeDeadline(event,${i})">✕</span></span>`).join('');
+  }
+
+  function pickDeadline(val) { document.getElementById('f-deadline').value = val; }
+  function removeDeadline(e, idx) { e.stopPropagation(); deadlineHistory.splice(idx, 1); saveDeadlines(); renderDeadlineChips(); }
+  function saveDeadlineToHistory(val) { if (!val) return; deadlineHistory = [val, ...deadlineHistory.filter(d => d !== val)].slice(0, 8); saveDeadlines(); renderDeadlineChips(); }
+
+  function toggleChk(item) { item.classList.toggle('on'); }
+
+  function resetForm() {
+    document.getElementById('f-naam').value = '';
+    document.getElementById('f-datum').value = '';
+    document.getElementById('f-type').value = '';
+    document.getElementById('f-circuit').value = '';
+    document.getElementById('f-circuit-nieuw').value = '';
+    document.getElementById('f-deadline').value = '';
+    document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
+  }
+
+  function cancelEdit() {
+    editIndex = -1; resetForm();
+    document.getElementById('form-title').textContent = 'Toevoegen';
+    document.getElementById('form-sub').textContent = 'Vul het formulier in om een nieuw evenement aan te maken';
+    document.getElementById('edit-banner').classList.remove('show');
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '+ Evenement toevoegen'; btn.classList.remove('edit-mode');
+    renderEvents();
+  }
+
+  function editEvent(idx) {
+    editIndex = idx;
+    const ev = events[idx];
+    document.getElementById('f-naam').value = ev.naam;
+    document.getElementById('f-datum').value = ev.datum;
+    document.getElementById('f-type').value = ev.type;
+    renderCircuitSelect(ev.circuit);
+    document.getElementById('f-deadline').value = ev.deadline || '';
+    document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.toggle('on', ev.klassen.includes(i.dataset.klasse)));
+    document.getElementById('form-title').textContent = 'Aanpassen';
+    document.getElementById('form-sub').textContent = 'Pas de gegevens aan en sla op';
+    document.getElementById('edit-banner').classList.add('show');
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '✓ Wijzigingen opslaan'; btn.classList.add('edit-mode');
+    renderEvents();
+    document.querySelector('.right-col').scrollTop = 0;
+  }
+
+  function deleteEvent(idx) {
+    if (editIndex === idx) cancelEdit();
+    events.splice(idx, 1); save(); renderEvents();
+    showToast('Evenement verwijderd', 'yellow');
+  }
+
+  function submitForm() {
+    const naam = document.getElementById('f-naam').value.trim();
+    const datum = document.getElementById('f-datum').value;
+    const type = document.getElementById('f-type').value;
+    const circuit = document.getElementById('f-circuit').value;
+    const deadline = document.getElementById('f-deadline').value;
+    const klassen = [...document.querySelectorAll('#klassen-grid .chk-item.on')].map(i => i.dataset.klasse);
+    if (!naam || !datum || !circuit || !type) { alert('Vul minstens naam, datum, type en circuit in.'); return; }
+    saveDeadlineToHistory(deadline);
+    const ev = { naam, datum, type, circuit, deadline, klassen };
+    if (editIndex >= 0) { events[editIndex] = ev; showToast('Evenement aangepast!', 'yellow'); }
+    else { events.push(ev); showToast('Evenement toegevoegd!', 'green'); }
+    events.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+    save(); cancelEdit();
+  }
+
+  function renderEvents() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const upcoming = events.map((e,i) => ({...e, _idx: i})).filter(e => new Date(e.datum) >= today);
+    const past = events.map((e,i) => ({...e, _idx: i})).filter(e => new Date(e.datum) < today);
+    renderList('upcoming-list', upcoming, '📅', 'Nog geen evenementen toegevoegd', false);
+    renderList('past-list', past, '🏁', 'Geen afgelopen evenementen', true);
+  }
+
+  function renderList(containerId, list, icon, emptyMsg, isPast) {
+    const container = document.getElementById(containerId);
+    if (list.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`; return; }
+    container.innerHTML = list.map(ev => {
+      const d = new Date(ev.datum);
+      const isEditing = ev._idx === editIndex;
+      const deadlineTxt = ev.deadline ? `⏱ ${formatDate(ev.deadline)}` : '';
+      return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}">
+        <div class="ev-date-block"><div class="ev-day">${d.getDate()}</div><div class="ev-month">${MAANDEN[d.getMonth()]}</div></div>
+        <div class="ev-divider"></div>
+        <div class="ev-info">
+          <div class="ev-name">${ev.naam}</div>
+          <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type}</div>
+          ${ev.klassen.length ? `<div class="ev-meta">${ev.klassen.join(' · ')}</div>` : ''}
+          ${deadlineTxt ? `<div class="ev-deadline">${deadlineTxt}</div>` : ''}
+        </div>
+        <div class="ev-actions">
+          <button class="ev-btn edit" onclick="editEvent(${ev._idx})">✎ Aanpassen</button>
+          <button class="ev-btn del" onclick="deleteEvent(${ev._idx})">Verwijder</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return `${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} om ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  function showToast(msg, color) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${color} show`;
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  load();
+</script>
+</body>
+</html>

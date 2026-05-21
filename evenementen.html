@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFK – Evenementen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; }
+
+    #dfk-root * { box-sizing: border-box; }
+    #dfk-root { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; font-family: 'Barlow', sans-serif; }
+
+    #dfk-root .nav { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+    #dfk-root .nav-logo { display: flex; align-items: center; gap: 14px; }
+    #dfk-root .nav-divider { width: 1px; height: 28px; background: #2a2a2a; margin: 0 4px; }
+    #dfk-root .nav-right { display: flex; align-items: center; gap: 12px; position: relative; }
+    #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 4px; padding: 7px 14px; cursor: pointer; color: #ccc; font-size: 13px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .nav-user-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+    #dfk-root .nav-chevron { font-size: 10px; color: #666; }
+
+    #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
+    #dfk-root .dropdown.open { display: block; }
+    #dfk-root .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; }
+    #dfk-root .dropdown-item:last-child { border-bottom: none; }
+    #dfk-root .dropdown-item:hover { background: #1c1c1c; color: #fff; }
+    #dfk-root .dropdown-item.danger { color: #ff5555; }
+    #dfk-root .dropdown-item.danger:hover { background: #1c1c1c; }
+    #dfk-root .di-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    #dfk-root .main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; width: 100%; margin: 0 auto; }
+    #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+    #dfk-root .page-sub { font-size: 13px; color: #666; margin-bottom: 2rem; }
+    #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size:40x; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
+
+    #dfk-root .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    #dfk-root .event-card { background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
+    #dfk-root .event-card-top { background: #E02020; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+    #dfk-root .event-date { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
+    #dfk-root .event-badge { background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
+    #dfk-root .event-body { padding: 16px; }
+    #dfk-root .event-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
+    #dfk-root .event-circuit { font-size: 13px; color: #888; margin-bottom: 12px; }
+    #dfk-root .event-deadline { font-size: 11px; color: #666; margin-bottom: 10px; }
+    #dfk-root .event-deadline.urgent { color: #E02020; }
+    #dfk-root .event-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    #dfk-root .class-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 3px 8px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
+    #dfk-root .event-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #1e1e1e; padding-top: 12px; }
+    #dfk-root .event-days { font-size: 12px; color: #666; }
+    #dfk-root .event-days span { color: #E02020; font-weight: 600; }
+    #dfk-root .inschrijf-btn { background: #E02020; color: #fff; border: none; border-radius: 3px; padding: 8px 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+    #dfk-root .inschrijf-btn:hover { background: #c01010; }
+    #dfk-root .inschrijf-btn.vol { background: #2a2a2a; color: #555; cursor: default; }
+    #dfk-root .events-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; grid-column: 1/-1; }
+    #dfk-root .events-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
+
+    #dfk-root .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; }
+    #dfk-root .overlay.open { display: block; }
+    #dfk-root .account-panel { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; background: #141414; border-left: 3px solid #E02020; z-index: 400; display: flex; flex-direction: column; transition: right 0.25s ease; overflow-y: auto; }
+    #dfk-root .account-panel.open { right: 0; }
+    #dfk-root .panel-header { background: #111; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
+    #dfk-root .panel-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
+    #dfk-root .panel-close { background: none; border: none; color: #666; font-size: 22px; cursor: pointer; line-height: 1; }
+    #dfk-root .panel-close:hover { color: #fff; }
+    #dfk-root .panel-body { padding: 24px; flex: 1; }
+    #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
+    #dfk-root .section-title:first-child { margin-top: 0; }
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-input:focus { border-color: #E02020; }
+    #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
+    #dfk-root .save-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 1.5rem; }
+    #dfk-root .save-btn:hover { background: #c01010; }
+    #dfk-root .edit-btn { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 6px 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+    #dfk-root .edit-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .cancel-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #666; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .cancel-btn:hover { color: #ccc; border-color: #444; }
+    #dfk-root.locked .field-input { background: #111; border-color: #1e1e1e; color: #aaa; pointer-events: none; }
+    #dfk-root.locked .field-select { background: #111; border-color: #1e1e1e; color: #aaa; pointer-events: none; }
+    #dfk-root.locked .tog-btn { pointer-events: none; }
+    #dfk-root.locked .chk-item { pointer-events: none; }
+    #dfk-root.locked .benz-btn { pointer-events: none; }
+    #dfk-root.locked .save-btn { display: none; }
+    #dfk-root.locked .cancel-btn { display: none; }
+    #dfk-root:not(.locked) .save-btn { display: block; }
+    #dfk-root:not(.locked) .cancel-btn { display: block; }
+    #dfk-root:not(.locked) .edit-btn { display: none; }
+    #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
+    #dfk-root .chk-item.on { border-color: #E02020; background: #2a1010; }
+    #dfk-root .chk-box { width: 16px; height: 16px; border: 1px solid #555; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
+    #dfk-root .chk-item.on .chk-box { background: #E02020; border-color: #E02020; }
+    #dfk-root .chk-mark { color: #fff; font-size: 11px; font-weight: 700; display: none; }
+    #dfk-root .chk-item.on .chk-mark { display: block; }
+    #dfk-root .chk-label { font-size: 13px; color: #ccc; }
+    #dfk-root .chk-item.on .chk-label { color: #fff; }
+    #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
+    #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
+    #dfk-root .toggle-group { display: flex; gap: 6px; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #888; }
+    #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
+    #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
+    #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
+    #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
+  </style>
+</head>
+<body>
+
+<div id="dfk-root" class="locked">
+
+  <nav class="nav">
+    <div class="nav-logo">
+      <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
+      <div class="nav-divider"></div>
+    </div>
+    <div class="nav-right">
+      <button class="nav-user-btn" onclick="toggleDropdown()">
+        <div class="nav-avatar">JJ</div>
+        Jan Janssen
+        <span class="nav-chevron">▼</span>
+      </button>
+      <div class="dropdown" id="user-dropdown">
+        <div class="dropdown-item" onclick="openAccount()">
+          <span class="di-icon">👤</span> Mijn account
+        </div>
+        <div class="dropdown-item danger" onclick="window.location.href='index.html'">
+          <span class="di-icon">↩</span> Uitloggen
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="page-title">Evenementen</div>
+    <p class="page-sub">Overzicht van alle komende races en activiteiten</p>
+    <div class="section-label">Komende evenementen</div>
+    <div class="events-grid" id="events-grid"></div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeAccount()"></div>
+
+  <div class="account-panel" id="account-panel">
+    <div class="panel-header">
+      <span class="panel-title">Mijn Account</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="edit-btn" onclick="enableEdit()">✎ Aanpassen</button>
+        <button class="panel-close" onclick="closeAccount()">✕</button>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <span class="section-title">Persoonlijke gegevens</span>
+      <div class="two-col">
+        <div><label class="field-label">Voornaam</label><input class="field-input" type="text" value="Jan" /></div>
+        <div><label class="field-label">Naam</label><input class="field-input" type="text" value="Janssen" /></div>
+      </div>
+      <label class="field-label">Geboortedatum rijder</label>
+      <input class="field-input" type="date" value="2010-03-15" />
+      <label class="field-label">E-mailadres</label>
+      <input class="field-input" type="email" value="jan@email.be" />
+      <label class="field-label">Telefoonnummer contactpersoon</label>
+      <input class="field-input" type="tel" value="+32 477 00 00 00" />
+      <label class="field-label">Wachtwoord wijzigen</label>
+      <input class="field-input" type="password" placeholder="Nieuw wachtwoord" />
+
+      <span class="section-title">Kart & Competitie</span>
+      <div class="two-col">
+        <div>
+          <label class="field-label">Klasse</label>
+          <select class="field-select">
+            <option>Iame Mini</option><option selected>KA100</option><option>X30 Junior</option>
+            <option>X30 Senior</option><option>Iame Super Shifter</option>
+            <option>Formula Honda Cadet</option><option>Formula Honda Junior</option>
+            <option>Formula Honda Senior</option><option>Rotax</option>
+          </select>
+        </div>
+        <div><label class="field-label">Startnummer</label><input class="field-input" type="number" value="42" style="margin-bottom:0" /></div>
+      </div>
+      <label class="field-label">Kampioenschap(pen)</label>
+      <div class="chk-grid">
+        <div class="chk-item on" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
+        <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
+        <div class="chk-item on" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
+        <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Club Venray</span></div>
+        <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Hobby</span></div>
+      </div>
+
+      <span class="section-title">Materiaal in werkplaats</span>
+      <div class="toggle-row"><span>Kart in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes on" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row"><span>Banden in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no on" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row"><span>Bak met materiaal in werkplaats</span><div class="toggle-group"><button class="tog-btn yes on" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+
+      <span class="section-title">Benzine</span>
+      <div class="benzine-opts">
+        <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik neem altijd zelf benzine mee</button>
+        <button class="benz-btn on" onclick="pickBenz(this)">⛽&nbsp; Ik pak altijd benzine bij DFK</button>
+        <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
+      </div>
+
+      <button class="save-btn" onclick="disableEdit()">Wijzigingen opslaan →</button>
+      <button class="cancel-btn" onclick="disableEdit()">Annuleren</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const DAGEN_KORT = ['zo','ma','di','wo','do','vr','za'];
+
+function renderEvents() {
+  const grid = document.getElementById('events-grid');
+  let events = [];
+  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
+  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
+  if (events.length === 0) {
+    grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn nog geen evenementen gepland.</div>`;
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  grid.innerHTML = events.map(ev => {
+    const d = new Date(ev.datum);
+    const isPast = d < today;
+    const dagenOver = Math.round((d - today) / 86400000);
+    let deadlineHtml = '';
+    if (ev.deadline) {
+      const dl = new Date(ev.deadline);
+      const dagenTotDeadline = Math.round((dl - today) / 86400000);
+      const urgent = dagenTotDeadline >= 0 && dagenTotDeadline <= 7;
+      const uur = dl.getHours().toString().padStart(2,'0');
+      const min = dl.getMinutes().toString().padStart(2,'0');
+      const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} om ${uur}:${min}`;
+      deadlineHtml = dagenTotDeadline < 0
+        ? `<div class="event-deadline">⏱ Inschrijving gesloten</div>`
+        : `<div class="event-deadline${urgent ? ' urgent' : ''}">⏱ Deadline: ${tijdStr}${urgent ? ' — nog ' + dagenTotDeadline + ' dag(en)!' : ''}</div>`;
+    }
+    const klassenHtml = ev.klassen.length ? ev.klassen.map(k => `<span class="class-tag">${k}</span>`).join('') : '<span class="class-tag">Alle klassen</span>';
+    const topStyle = isPast ? 'style="background:#444;"' : '';
+    const footerDagen = isPast ? `<span class="event-days" style="color:#555;">Afgelopen</span>` : `<span class="event-days">Over <span>${dagenOver}</span> dag${dagenOver===1?'':'en'}</span>`;
+    const inschrijfBtn = isPast ? `<button class="inschrijf-btn vol">Gesloten</button>` : `<button class="inschrijf-btn">Inschrijven →</button>`;
+    return `<div class="event-card"><div class="event-card-top" ${topStyle}><span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span><span class="event-badge">${isPast ? 'Afgelopen' : ev.type}</span></div><div class="event-body"><div class="event-name">${ev.naam}</div><div class="event-circuit">📍 ${ev.circuit}</div>${deadlineHtml}<div class="event-classes">${klassenHtml}</div><div class="event-footer">${footerDagen}${inschrijfBtn}</div></div></div>`;
+  }).join('');
+}
+renderEvents();
+
+function enableEdit() { document.getElementById('dfk-root').classList.remove('locked'); }
+function disableEdit() { document.getElementById('dfk-root').classList.add('locked'); }
+function toggleDropdown() { document.getElementById('user-dropdown').classList.toggle('open'); }
+document.addEventListener('click', e => { if (!e.target.closest('.nav-right')) document.getElementById('user-dropdown').classList.remove('open'); });
+function openAccount() { document.getElementById('user-dropdown').classList.remove('open'); document.getElementById('overlay').classList.add('open'); document.getElementById('account-panel').classList.add('open'); }
+function closeAccount() { document.getElementById('overlay').classList.remove('open'); document.getElementById('account-panel').classList.remove('open'); }
+function tog(btn) { const grp = btn.closest('.toggle-group'); grp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
+function pickBenz(btn) { document.querySelectorAll('#dfk-root .benz-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
+function toggleChk(item) { item.classList.toggle('on'); }
+</script>
+</body>
+</html>

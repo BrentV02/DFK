@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFK – Inloggen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; min-height: 100vh; }
+
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap');
+
+    #dfk-root * { box-sizing: border-box; }
+    #dfk-root { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; position: relative; overflow: hidden; }
+    #dfk-root .top-bar { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: #E02020; }
+    #dfk-root .bot-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #E02020; }
+    #dfk-root .logo { text-align: center; margin-bottom: 2rem; }
+    #dfk-root .logo-line { width: 40px; height: 3px; background: #E02020; margin: 10px auto 0; display: block; }
+    #dfk-root .card { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 4px; width: 100%; max-width: 460px; padding: 2rem; }
+    #dfk-root .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+    #dfk-root .tab-btn { flex: 1; padding: 10px; border-radius: 3px; border: 1px solid #555 !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; background-color: transparent !important; color: #cccccc !important; }
+    #dfk-root .tab-btn.on { background-color: #E02020 !important; color: #ffffff !important; border-color: #E02020 !important; }
+    #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-input:focus { border-color: #E02020 !important; }
+    #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
+    #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
+    #dfk-root .toggle-row span { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
+    #dfk-root .toggle-group { display: flex; gap: 6px; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444 !important; background: transparent !important; color: #888 !important; }
+    #dfk-root .tog-btn.yes.on { background: #1a5c1a !important; color: #4cff4c !important; border-color: #2a8a2a !important; }
+    #dfk-root .tog-btn.no.on { background: #5c1a1a !important; color: #ff6666 !important; border-color: #8a2a2a !important; }
+    #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
+    #dfk-root .chk-item.on { border-color: #E02020 !important; background: #2a1010 !important; }
+    #dfk-root .chk-box { width: 16px; height: 16px; border: 1px solid #555; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
+    #dfk-root .chk-item.on .chk-box { background: #E02020; border-color: #E02020; }
+    #dfk-root .chk-mark { color: #fff; font-size: 11px; font-weight: 700; display: none; }
+    #dfk-root .chk-item.on .chk-mark { display: block; }
+    #dfk-root .chk-label { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
+    #dfk-root .chk-item.on .chk-label { color: #fff; }
+    #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border: 1px solid #444 !important; background: #1c1c1c !important; color: #aaa !important; text-align: left; }
+    #dfk-root .benz-btn.on { background: #2a1010 !important; color: #ffffff !important; border-color: #E02020 !important; }
+    #dfk-root .submit-btn { display: block; width: 100%; padding: 14px 20px; margin-top: 1rem; background-color: #E02020 !important; color: #ffffff !important; border: none !important; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
+    #dfk-root .submit-btn:hover { background-color: #c01010 !important; }
+    #dfk-root .forgot { display: block; text-align: center; margin-top: 1rem; font-size: 12px; color: #888 !important; cursor: pointer; background: none !important; border: none !important; width: 100%; font-family: 'Barlow', sans-serif; }
+    #dfk-root .panel { display: none; }
+    #dfk-root .panel.on { display: block; }
+    #dfk-root .terms { font-size: 11px; color: #555; text-align: center; margin-top: 1rem; line-height: 1.6; font-family: 'Barlow', sans-serif; }
+    #dfk-root .terms em { color: #E02020; font-style: normal; cursor: pointer; }
+    #dfk-root .scroll-panel { max-height: 480px; overflow-y: auto; padding-right: 6px; }
+    #dfk-root .scroll-panel::-webkit-scrollbar { width: 4px; }
+    #dfk-root .scroll-panel::-webkit-scrollbar-track { background: #111; }
+    #dfk-root .scroll-panel::-webkit-scrollbar-thumb { background: #E02020; border-radius: 2px; }
+    #dfk-root .hint { font-size: 11px; color: #666; font-family: 'Barlow', sans-serif; margin-bottom: 0.6rem; margin-top: -0.4rem; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="dfk-root">
+  <div class="top-bar"></div>
+  <div class="bot-bar"></div>
+
+  <div class="logo">
+    <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:80px; width:auto; display:block; margin:0 auto 0.6rem;" />
+    <span class="logo-line"></span>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn on" onclick="sw('login')">Inloggen</button>
+      <button class="tab-btn" onclick="sw('reg')">Account aanmaken</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="p-login" class="panel on">
+      <label class="field-label">E-mailadres</label>
+      <input class="field-input" type="email" placeholder="jouw@email.be" />
+      <label class="field-label">Wachtwoord</label>
+      <input class="field-input" type="password" placeholder="••••••••" />
+      <button class="submit-btn" onclick="window.location.href='evenementen.html'">Inloggen →</button>
+      <button class="forgot">Wachtwoord vergeten?</button>
+    </div>
+
+    <!-- REGISTRATIE -->
+    <div id="p-reg" class="panel">
+      <div class="scroll-panel">
+
+        <span class="section-title">Persoonlijke gegevens</span>
+
+        <div class="two-col">
+          <div>
+            <label class="field-label">Voornaam</label>
+            <input class="field-input" type="text" placeholder="Jan" />
+          </div>
+          <div>
+            <label class="field-label">Naam</label>
+            <input class="field-input" type="text" placeholder="Janssen" />
+          </div>
+        </div>
+
+        <label class="field-label">Geboortedatum rijder</label>
+        <input class="field-input" type="date" />
+
+        <label class="field-label">E-mailadres</label>
+        <input class="field-input" type="email" placeholder="jouw@email.be" />
+
+        <label class="field-label">Telefoonnummer contactpersoon</label>
+        <input class="field-input" type="tel" placeholder="+32 477 00 00 00" />
+
+        <label class="field-label">Wachtwoord</label>
+        <input class="field-input" type="password" placeholder="Minimaal 8 tekens" />
+
+        <span class="section-title">Kart & Competitie</span>
+
+        <div class="two-col">
+          <div>
+            <label class="field-label">Klasse</label>
+            <select class="field-select">
+              <option value="">Selecteer...</option>
+              <option>Iame Mini</option>
+              <option>KA100</option>
+              <option>X30 Junior</option>
+              <option>X30 Senior</option>
+              <option>Iame Super Shifter</option>
+              <option>Formula Honda Cadet</option>
+              <option>Formula Honda Junior</option>
+              <option>Formula Honda Senior</option>
+              <option>Rotax</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Startnummer</label>
+            <input class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
+          </div>
+        </div>
+
+        <label class="field-label">Kampioenschap(pen)</label>
+        <p class="hint">Meerdere keuzes mogelijk</p>
+        <div class="chk-grid">
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Club Venray</span></div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Hobby</span></div>
+        </div>
+
+        <span class="section-title">Materiaal in werkplaats</span>
+
+        <div class="toggle-row">
+          <span>Kart in onze werkplaats</span>
+          <div class="toggle-group">
+            <button class="tog-btn yes" onclick="tog(this)">Ja</button>
+            <button class="tog-btn no" onclick="tog(this)">Nee</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span>Banden in onze werkplaats</span>
+          <div class="toggle-group">
+            <button class="tog-btn yes" onclick="tog(this)">Ja</button>
+            <button class="tog-btn no" onclick="tog(this)">Nee</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span>Bak met materiaal in werkplaats</span>
+          <div class="toggle-group">
+            <button class="tog-btn yes" onclick="tog(this)">Ja</button>
+            <button class="tog-btn no" onclick="tog(this)">Nee</button>
+          </div>
+        </div>
+
+        <span class="section-title">Benzine</span>
+        <div class="benzine-opts">
+          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik neem altijd zelf benzine mee</button>
+          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik pak altijd benzine bij DFK</button>
+          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
+        </div>
+
+        <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+        <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function sw(tab) {
+  document.querySelectorAll('#dfk-root .tab-btn').forEach((b,i) => {
+    b.classList.toggle('on', (tab==='login'&&i===0)||(tab==='reg'&&i===1));
+  });
+  document.getElementById('p-login').classList.toggle('on', tab==='login');
+  document.getElementById('p-reg').classList.toggle('on', tab==='reg');
+}
+function tog(btn) {
+  const grp = btn.closest('.toggle-group');
+  grp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function pickBenz(btn) {
+  document.querySelectorAll('#dfk-root .benz-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function toggleChk(item) {
+  item.classList.toggle('on');
+}
+</script>
+</body>
+</html>
