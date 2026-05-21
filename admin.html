@@ -165,6 +165,40 @@
     #dfk-root .rider-badge.admin { background: #3a1a00; color: #ffaa44; }
     #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
     #dfk-root .rol-select { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 5px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
+
+    /* ── Inschrijvingen full-screen overlay ────── */
+    #dfk-root .inschr-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
+    #dfk-root .inschr-overlay.open { display: flex; }
+    #dfk-root .inschr-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; }
+    #dfk-root .inschr-ev-info { flex: 1; min-width: 0; overflow: hidden; }
+    #dfk-root .inschr-ev-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; color: #fff; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #dfk-root .inschr-ev-sub { font-size: 12px; color: #666; margin-top: 1px; }
+    #dfk-root .inschr-body { flex: 1; overflow-y: auto; padding: 2rem; }
+    #dfk-root .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; align-items: center; }
+    #dfk-root .filter-chip { padding: 7px 16px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #666; transition: border-color 0.1s, color 0.1s; }
+    #dfk-root .filter-chip.on { background: #2a1010; border-color: #E02020; color: #fff; }
+    #dfk-root .filter-chip:hover:not(.on) { border-color: #555; color: #ccc; }
+    #dfk-root .inschr-sort { margin-left: auto; background: #1c1c1c; border: 1px solid #333; color: #ccc; padding: 7px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; outline: none; cursor: pointer; }
+    #dfk-root .inschr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    #dfk-root .inschr-card { background: #111; border: 1px solid #222; border-top: 3px solid #E02020; border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    #dfk-root .inschr-card-header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e1e1e; }
+    #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: #fff; letter-spacing: 1px; line-height: 1.2; }
+    #dfk-root .inschr-reg { font-size: 11px; color: #444; margin-top: 2px; }
+    #dfk-root .inschr-sectie { display: flex; flex-direction: column; gap: 4px; }
+    #dfk-root .inschr-sectie-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E02020; }
+    #dfk-root .inschr-sectie-value { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
+    #dfk-root .inschr-klasse-lijn { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1px; display: flex; align-items: baseline; gap: 10px; }
+    #dfk-root .inschr-nr { color: #E02020; }
+    #dfk-root .inschr-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    #dfk-root .inschr-chip { padding: 4px 9px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px; font-size: 11px; color: #888; font-family: 'Barlow', sans-serif; }
+    #dfk-root .inschr-chip.ok { border-color: #1a4000; color: #66cc44; background: #0a1a00; }
+    #dfk-root .inschr-chip.benzine { border-color: #3a2200; color: #ffaa33; background: #180f00; }
+    @media (max-width: 768px) {
+      #dfk-root .inschr-topbar { padding: 0 1rem; gap: 1rem; }
+      #dfk-root .inschr-body { padding: 1rem; }
+      #dfk-root .inschr-grid { grid-template-columns: 1fr; }
+      #dfk-root .inschr-ev-naam { font-size: 15px; }
+    }
   </style>
 </head>
 <body>
@@ -298,6 +332,22 @@
     </div>
   </div>
 
+  <!-- ── Inschrijvingen full-screen overlay ── -->
+  <div id="inschr-overlay" class="inschr-overlay">
+    <div class="inschr-topbar">
+      <button class="nav-back" onclick="sluitInschrijvingenPanel()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div class="inschr-ev-info">
+        <div class="inschr-ev-naam" id="inschr-ev-naam"></div>
+        <div class="inschr-ev-sub" id="inschr-ev-sub"></div>
+      </div>
+    </div>
+    <div class="inschr-body">
+      <div class="section-label" id="inschr-count" style="margin-bottom:1rem;"></div>
+      <div class="filter-bar" id="inschr-filters"></div>
+      <div class="inschr-grid" id="inschr-grid"></div>
+    </div>
+  </div>
+
   <div class="toast green" id="toast"></div>
 </div>
 
@@ -315,6 +365,10 @@ let circuits        = [];
 let deadlineHistory = [];
 let editEventId     = null; // UUID of event being edited
 let editRijderId    = null; // UUID of rider being edited
+let _inschrData     = [];   // inschrijvingen voor huidig geopend event
+let _inschrEvent    = null;
+let _inschrFilter   = null; // actieve klasse-filter (null = alle)
+let _inschrSort     = 'naam';
 
 // ── Init ─────────────────────────────────────
 (async () => {
@@ -856,17 +910,24 @@ function cancelRijderEdit() {
   document.getElementById('rider-detail').style.display = '';
 }
 
-// ── Inschrijvingen per event ──────────────────
+// ── Inschrijvingen full-screen overlay ───────
 async function toonInschrijvingen(eventId) {
   const ev = _allEvents.find(e => e.id === eventId);
   if (!ev) return;
+  _inschrEvent  = ev;
+  _inschrFilter = null;
+  _inschrSort   = 'naam';
 
-  // Open rechterpaneel, toon inschrijvingen, verberg formulier
-  document.querySelector('#panel-evenementen .layout').classList.add('show-right');
-  document.getElementById('form-content').style.display = 'none';
-  const panel = document.getElementById('inschrijvingen-content');
-  panel.style.display = '';
-  panel.innerHTML = '<div style="color:#666; padding:2rem; text-align:center; font-family:\'Barlow\',sans-serif; font-size:13px;">Laden...</div>';
+  // Toon overlay, reset inhoud
+  document.getElementById('inschr-overlay').classList.add('open');
+  const d = new Date(ev.datum + 'T12:00:00');
+  document.getElementById('inschr-ev-naam').textContent = ev.naam;
+  document.getElementById('inschr-ev-sub').textContent  =
+    `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} · ${ev.circuit}`;
+  document.getElementById('inschr-count').textContent   = '';
+  document.getElementById('inschr-filters').innerHTML   = '';
+  document.getElementById('inschr-grid').innerHTML      =
+    '<div style="color:#666;text-align:center;padding:3rem;font-family:\'Barlow\',sans-serif;font-size:13px;">Laden...</div>';
 
   const { data, error } = await _supabase
     .from('inschrijvingen')
@@ -875,55 +936,155 @@ async function toonInschrijvingen(eventId) {
     .order('bevestigd_op', { ascending: true });
 
   if (error) {
-    panel.innerHTML = `<div style="color:#E02020; padding:1rem; font-size:13px;">Fout: ${error.message}</div>`;
+    document.getElementById('inschr-grid').innerHTML =
+      `<div style="color:#E02020;padding:1rem;font-size:13px;">Fout: ${error.message}</div>`;
     return;
   }
 
-  const d = new Date(ev.datum + 'T12:00:00');
-  const datumStr = `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
-  const count = data.length;
-
-  const rijderRows = count === 0
-    ? `<div class="empty"><div class="empty-icon">👥</div>Niemand ingeschreven</div>`
-    : data.map(r => {
-        const p = r.profiles || {};
-        const voornaam = p.voornaam || '';
-        const naam     = p.naam     || '';
-        const vollNaam = `${voornaam} ${naam}`.trim() || '—';
-        const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
-        const kartInfo = p.kart_type === 'huur'
-          ? (p.huurkart_type || 'Huurkart')
-          : r.klasse
-            ? `${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}`
-            : (p.klassen?.length ? p.klassen.join(', ') : '—');
-        const regStr = formatDate(r.bevestigd_op);
-        const badgeType  = p.kart_type === 'huur' ? 'huur' : 'eigen';
-        const badgeLabel = p.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart';
-        return `
-          <div class="inschrijving-rider-row">
-            <div class="rider-avatar" style="width:36px;height:36px;font-size:13px;">${ini}</div>
-            <div class="inschrijving-rider-info">
-              <div class="inschrijving-rider-naam">${vollNaam} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
-              <div class="inschrijving-rider-meta">${kartInfo}</div>
-              <div class="inschrijving-rider-reg">Ingeschreven op ${regStr}</div>
-            </div>
-          </div>`;
-      }).join('');
-
-  panel.innerHTML = `
-    <button class="close-panel-btn" onclick="sluitInschrijvingenPanel()">✕ Sluiten</button>
-    <div class="page-title" style="margin-bottom:4px;">${ev.naam}</div>
-    <p class="page-sub" style="margin-bottom:1.5rem;">${datumStr} &nbsp;·&nbsp; ${ev.circuit}</p>
-    <div class="section-label">${count} ingeschreven rijder${count !== 1 ? 's' : ''}</div>
-    ${rijderRows}
-  `;
+  _inschrData = data || [];
+  _renderInschrFilters();
+  _renderInschrGrid();
 }
 
 function sluitInschrijvingenPanel() {
-  document.getElementById('inschrijvingen-content').style.display = 'none';
-  document.getElementById('form-content').style.display = '';
-  document.querySelector('#panel-evenementen .layout').classList.remove('show-right');
-  cancelEdit();
+  document.getElementById('inschr-overlay').classList.remove('open');
+  _inschrData   = [];
+  _inschrEvent  = null;
+}
+
+function _renderInschrFilters() {
+  const klassen = [...new Set(_inschrData.filter(r => r.klasse).map(r => r.klasse))].sort();
+  const bar = document.getElementById('inschr-filters');
+  if (klassen.length === 0) { bar.innerHTML = ''; return; }
+
+  bar.innerHTML = `
+    <span style="font-size:11px;color:#555;font-family:'Barlow',sans-serif;align-self:center;margin-right:4px;">Filter klasse:</span>
+    <button class="filter-chip on" onclick="filterInschrijvingen(null)">Alle</button>
+    ${klassen.map(k => `<button class="filter-chip" onclick="filterInschrijvingen('${k.replace(/'/g,"\\'")}')">${k}</button>`).join('')}
+    <select class="inschr-sort" onchange="sorteerInschrijvingen(this.value)">
+      <option value="naam">Naam A → Z</option>
+      <option value="naam_z">Naam Z → A</option>
+      <option value="nr">Startnummer</option>
+      <option value="datum">Inschrijfdatum</option>
+    </select>`;
+}
+
+function filterInschrijvingen(klasse) {
+  _inschrFilter = klasse;
+  document.querySelectorAll('#inschr-filters .filter-chip').forEach(btn => {
+    const isAlle = btn.textContent === 'Alle';
+    btn.classList.toggle('on', klasse === null ? isAlle : btn.textContent === klasse);
+  });
+  _renderInschrGrid();
+}
+
+function sorteerInschrijvingen(sort) {
+  _inschrSort = sort;
+  _renderInschrGrid();
+}
+
+function _renderInschrGrid() {
+  let lijst = _inschrFilter
+    ? _inschrData.filter(r => r.klasse === _inschrFilter)
+    : _inschrData;
+
+  lijst = [...lijst].sort((a, b) => {
+    const pa = a.profiles || {}, pb = b.profiles || {};
+    const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
+    const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
+    if (_inschrSort === 'naam')   return nA.localeCompare(nB);
+    if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
+    if (_inschrSort === 'nr')     return (a.startnummer||9999) - (b.startnummer||9999);
+    if (_inschrSort === 'datum')  return new Date(a.bevestigd_op) - new Date(b.bevestigd_op);
+    return 0;
+  });
+
+  const total = _inschrData.length;
+  const count = lijst.length;
+  document.getElementById('inschr-count').textContent = _inschrFilter
+    ? `${count} van ${total} rijder${total !== 1 ? 's' : ''} · ${_inschrFilter}`
+    : `${total} ingeschreven rijder${total !== 1 ? 's' : ''}`;
+
+  document.getElementById('inschr-grid').innerHTML = lijst.length === 0
+    ? `<div class="empty"><div class="empty-icon">👥</div>Niemand ingeschreven${_inschrFilter ? ' in deze klasse' : ''}</div>`
+    : lijst.map(_inschrCardHTML).join('');
+}
+
+function _inschrCardHTML(r) {
+  const p        = r.profiles || {};
+  const voornaam = p.voornaam || '';
+  const naam     = p.naam     || '';
+  const vollNaam = `${voornaam} ${naam}`.trim() || '—';
+  const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+  const isHuur   = p.kart_type === 'huur';
+  const badgeType  = isHuur ? 'huur' : 'eigen';
+  const badgeLabel = isHuur ? 'Huurkart' : 'Eigen kart';
+
+  let body = '';
+
+  if (!isHuur) {
+    // ── Eigen kart ──
+    const klasse = r.klasse     || '';
+    const nr     = r.startnummer;
+    const kamp   = Array.isArray(p.kampioenschappen) ? p.kampioenschappen : [];
+    const werkpl = [];
+    if (p.kart_in_werkplaats)    werkpl.push('Kart');
+    if (p.banden_in_werkplaats)  werkpl.push('Banden');
+    if (p.bak_in_werkplaats)     werkpl.push('Bak');
+
+    body = `
+      ${klasse ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Klasse</div>
+        <div class="inschr-klasse-lijn">${klasse}${nr ? `<span class="inschr-nr">#${nr}</span>` : ''}</div>
+      </div>` : ''}
+      ${kamp.length ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Kampioenschap(pen)</div>
+        <div class="inschr-chips">${kamp.map(k => `<span class="inschr-chip">${k}</span>`).join('')}</div>
+      </div>` : ''}
+      ${werkpl.length ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Materiaal in werkplaats</div>
+        <div class="inschr-chips">${werkpl.map(w => `<span class="inschr-chip ok">✓ ${w}</span>`).join('')}</div>
+      </div>` : ''}
+      ${p.benzine ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Benzine</div>
+        <div class="inschr-chips"><span class="inschr-chip benzine">⛽ ${p.benzine}</span></div>
+      </div>` : ''}
+      ${p.telefoon ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Telefoon</div>
+        <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
+      </div>` : ''}`;
+  } else {
+    // ── Huur kart ──
+    const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
+    body = `
+      ${p.huurkart_type ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Kart type</div>
+        <div class="inschr-klasse-lijn" style="font-size:17px;">${p.huurkart_type}</div>
+      </div>` : ''}
+      ${(p.lengte || p.gewicht) ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Afmetingen</div>
+        <div class="inschr-sectie-value">${p.lengte ? p.lengte + ' cm' : '—'} &nbsp;·&nbsp; ${p.gewicht ? p.gewicht + ' kg' : '—'}</div>
+      </div>` : ''}
+      ${uitr.length ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Uitrusting nodig</div>
+        <div class="inschr-chips">${uitr.map(u => `<span class="inschr-chip">${u}</span>`).join('')}</div>
+      </div>` : ''}
+      ${p.telefoon ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Telefoon</div>
+        <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
+      </div>` : ''}`;
+  }
+
+  return `<div class="inschr-card">
+    <div class="inschr-card-header">
+      <div class="rider-avatar">${ini}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="inschr-naam">${vollNaam} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="inschr-reg">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
+      </div>
+    </div>
+    ${body}
+  </div>`;
 }
 
 // ── Hulpfuncties ──────────────────────────────
