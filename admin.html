@@ -612,7 +612,7 @@ function renderRijders() {
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
         <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
-        <div class="rider-meta">${r.klasse ? r.klasse : (r.huurkart_type || '—')}${r.startnummer ? ' · #'+r.startnummer : ''}</div>
+        <div class="rider-meta">${(r.klassen?.length ? r.klassen.join(', ') : null) || (r.huurkart_type || '—')}${r.startnummer ? ' · #'+r.startnummer : ''}</div>
       </div>
       <div class="rider-actions">
         <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder('${r.id}')">✎</button>
@@ -639,6 +639,8 @@ function rijderFormHTML(r) {
   const kamp = r?.kampioenschappen || [];
   const uitr = r?.uitrusting || [];
   const benzine = r?.benzine || '';
+
+  const klassen = Array.isArray(r?.klassen) ? r.klassen : [];
 
   const chk = (label, arr) => `
     <div class="chk-item${arr.includes(label)?' on':''}" onclick="toggleChk(this)">
@@ -686,20 +688,14 @@ function rijderFormHTML(r) {
     <!-- EIGEN KART -->
     <div id="r-eigen-sectie" style="display:${eigenVis}">
       <div class="section-label">Kart & Competitie</div>
-      <div class="two-col">
-        <div>
-          <label class="field-label">Klasse</label>
-          <select class="field-select" id="r-klasse" style="margin-bottom:0;">
-            <option value="">Selecteer...</option>
-            ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax']
-              .map(k=>`<option${r?.klasse===k?' selected':''}>${k}</option>`).join('')}
-          </select>
-        </div>
-        <div>
-          <label class="field-label">Startnummer</label>
-          <input class="field-input" id="r-startnr" type="number" value="${r?.startnummer||''}" style="margin-bottom:0;" />
-        </div>
+      <label class="field-label">Klasse(n)</label>
+      <p class="hint">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="r-klassen-grid">
+        ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax']
+          .map(k=>chk(k,klassen)).join('')}
       </div>
+      <label class="field-label">Startnummer</label>
+      <input class="field-input" id="r-startnr" type="number" value="${r?.startnummer||''}" />
       <label class="field-label" style="margin-top:1rem;">Kampioenschap(pen)</label>
       <div class="chk-grid" id="r-kamp-grid">
         ${['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'].map(k=>chk(k,kamp)).join('')}
@@ -773,7 +769,7 @@ async function saveRijder(id) {
     telefoon:         document.getElementById('r-tel')?.value || null,
     rol:              document.getElementById('r-rol')?.value || 'rijder',
     kart_type:        isEigen ? 'eigen' : 'huur',
-    klasse:           isEigen ? (document.getElementById('r-klasse')?.value || null) : null,
+    klassen:          isEigen ? [...document.querySelectorAll('#r-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
     startnummer:      isEigen ? (parseInt(document.getElementById('r-startnr')?.value) || null) : null,
     kampioenschappen: isEigen ? [...document.querySelectorAll('#r-kamp-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
     kart_in_werkplaats:   isEigen ? !!(togRows[0]?.querySelector('.tog-btn.yes.on')) : null,
@@ -848,7 +844,7 @@ async function toonInschrijvingen(eventId) {
         const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
         const kartInfo = p.kart_type === 'huur'
           ? (p.huurkart_type || 'Huurkart')
-          : [p.klasse, p.startnummer ? '#'+p.startnummer : ''].filter(Boolean).join(' · ') || '—';
+          : [(p.klassen?.length ? p.klassen.join(', ') : null), p.startnummer ? '#'+p.startnummer : ''].filter(Boolean).join(' · ') || '—';
         const regStr = formatDate(r.bevestigd_op);
         const badgeType  = p.kart_type === 'huur' ? 'huur' : 'eigen';
         const badgeLabel = p.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart';

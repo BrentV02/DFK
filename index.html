@@ -137,31 +137,25 @@
 
           <span class="section-title">Kart & Competitie</span>
 
-          <div class="two-col">
-            <div>
-              <label class="field-label">Klasse</label>
-              <select id="reg-klasse" class="field-select">
-                <option value="">Selecteer...</option>
-                <option>Iame Mini</option>
-                <option>KA100</option>
-                <option>X30 Junior</option>
-                <option>X30 Senior</option>
-                <option>Iame Super Shifter</option>
-                <option>Formula Honda Cadet</option>
-                <option>Formula Honda Junior</option>
-                <option>Formula Honda Senior</option>
-                <option>Rotax</option>
-              </select>
-            </div>
-            <div>
-              <label class="field-label">Startnummer</label>
-              <input id="reg-startnr" class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
-            </div>
+          <label class="field-label">Klasse(n)</label>
+          <p class="hint">Meerdere keuzes mogelijk</p>
+          <div class="chk-grid" id="reg-klassen-grid">
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
           </div>
+          <label class="field-label">Startnummer</label>
+          <input id="reg-startnr" class="field-input" type="number" placeholder="bijv. 42" />
 
           <label class="field-label">Kampioenschap(pen)</label>
           <p class="hint">Meerdere keuzes mogelijk</p>
-          <div class="chk-grid">
+          <div class="chk-grid" id="reg-kamp-grid">
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
@@ -382,9 +376,9 @@ async function doRegister() {
       const togRows = document.querySelectorAll('#eigen-kart-sectie .toggle-row');
       const benzEl  = document.querySelector('#eigen-kart-sectie .benz-btn.on');
       Object.assign(profiel, {
-        klasse:               document.getElementById('reg-klasse').value || null,
+        klassen:              [...document.querySelectorAll('#reg-klassen-grid .chk-item.on .chk-label')].map(e => e.textContent.trim()),
         startnummer:          parseInt(document.getElementById('reg-startnr').value) || null,
-        kampioenschappen:     [...document.querySelectorAll('#eigen-kart-sectie .chk-item.on .chk-label')].map(e => e.textContent.trim()),
+        kampioenschappen:     [...document.querySelectorAll('#reg-kamp-grid .chk-item.on .chk-label')].map(e => e.textContent.trim()),
         kart_in_werkplaats:   !!(togRows[0]?.querySelector('.tog-btn.yes.on')),
         banden_in_werkplaats: !!(togRows[1]?.querySelector('.tog-btn.yes.on')),
         bak_in_werkplaats:    !!(togRows[2]?.querySelector('.tog-btn.yes.on')),

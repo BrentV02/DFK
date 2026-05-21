@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   kart_type             TEXT CHECK (kart_type IN ('eigen', 'huur')),
 
   -- Eigen kart
-  klasse                TEXT,
+  klassen               TEXT[]   DEFAULT '{}',
   startnummer           INT,
   kampioenschappen      TEXT[]   DEFAULT '{}',
   kart_in_werkplaats    BOOLEAN  DEFAULT false,
@@ -58,9 +58,17 @@ CREATE TABLE IF NOT EXISTS inschrijvingen (
   id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
   rijder_id     UUID        REFERENCES profiles(id)     ON DELETE CASCADE,
   event_id      UUID        REFERENCES evenementen(id)  ON DELETE CASCADE,
+  klassen       TEXT[]      DEFAULT '{}',
   bevestigd_op  TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (rijder_id, event_id)
 );
+
+-- ── Migratie (bestaande DB) ───────────────────────────────
+-- Voer dit uit als de tabel al bestond zonder klassen-kolom:
+-- ALTER TABLE inschrijvingen ADD COLUMN IF NOT EXISTS klassen TEXT[] DEFAULT '{}';
+-- En als profiles nog een oude 'klasse TEXT' kolom heeft:
+-- ALTER TABLE profiles RENAME COLUMN klasse TO klassen;
+-- ALTER TABLE profiles ALTER COLUMN klassen TYPE TEXT[] USING ARRAY[klassen]::TEXT[];
 
 
 -- ══════════════════════════════════════════════════════
