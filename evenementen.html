@@ -183,6 +183,9 @@
         <div class="dropdown-item" onclick="openAccount()">
           <span class="di-icon">👤</span> Mijn account
         </div>
+        <div class="dropdown-item" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">
+          <span class="di-icon">⚙</span> Admin
+        </div>
         <div class="dropdown-item danger" onclick="uitloggen()">
           <span class="di-icon">↩</span> Uitloggen
         </div>
@@ -362,6 +365,8 @@ function updateNavbar() {
   const ini  = naam.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0,2) || '?';
   document.getElementById('nav-avatar').textContent = ini;
   document.getElementById('nav-naam').textContent   = naam;
+  // Toon admin-link alleen voor admins
+  document.getElementById('admin-link').style.display = (p?.rol === 'admin') ? '' : 'none';
 }
 
 // ── Data laden ───────────────────────────────
