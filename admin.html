@@ -1026,7 +1026,6 @@ function _inschrCardHTML(r) {
     // ── Eigen kart ──
     const klasse = r.klasse     || '';
     const nr     = r.startnummer;
-    const kamp   = Array.isArray(p.kampioenschappen) ? p.kampioenschappen : [];
     const werkpl = [];
     if (p.kart_in_werkplaats)    werkpl.push('Kart');
     if (p.banden_in_werkplaats)  werkpl.push('Banden');
@@ -1036,10 +1035,6 @@ function _inschrCardHTML(r) {
       ${klasse ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Klasse</div>
         <div class="inschr-klasse-lijn">${klasse}${nr ? `<span class="inschr-nr">#${nr}</span>` : ''}</div>
-      </div>` : ''}
-      ${kamp.length ? `<div class="inschr-sectie">
-        <div class="inschr-sectie-label">Kampioenschap(pen)</div>
-        <div class="inschr-chips">${kamp.map(k => `<span class="inschr-chip">${k}</span>`).join('')}</div>
       </div>` : ''}
       ${werkpl.length ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Materiaal in werkplaats</div>
