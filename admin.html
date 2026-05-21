@@ -956,6 +956,7 @@ function sluitInschrijvingenPanel() {
 function exporteerInschrijvingen() {
   const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
     'juli','augustus','september','oktober','november','december'];
+  const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   // Zelfde sortering als het scherm
   const lijst = (_inschrFilter
@@ -972,19 +973,37 @@ function exporteerInschrijvingen() {
     return 0;
   });
 
-  const ev  = _inschrEvent;
-  const d   = ev ? new Date(ev.datum+'T12:00:00') : new Date();
+  const ev       = _inschrEvent;
+  const d        = ev ? new Date(ev.datum+'T12:00:00') : new Date();
   const datumStr = `${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
-  const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const subtitel = `${datumStr} · ${ev?.circuit||''} · ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · '+_inschrFilter:''}`;
 
-  // ── Cel-helpers ──────────────────────────────
-  const cel = (val, sid, asNum) => {
-    const isNum = asNum && val !== '' && val !== null && !isNaN(Number(val));
-    return `<Cell ss:StyleID="${sid}"><Data ss:Type="${isNum?'Number':'String'}">${isNum ? Number(val) : esc(val)}</Data></Cell>`;
-  };
-  const leeg  = sid => `<Cell ss:StyleID="${sid}"/>`;
-  const merge = (val, sid, span) =>
-    `<Cell ss:StyleID="${sid}" ss:MergeAcross="${span}"><Data ss:Type="String">${esc(val)}</Data></Cell>`;
+  // ── CSS stijlen ──────────────────────────────
+  const css = `
+    body { font-family: Calibri, Arial, sans-serif; font-size: 10pt; }
+    table { border-collapse: collapse; }
+    td, th { padding: 5px 10px; border: 1px solid #D8D8D8; vertical-align: middle; white-space: nowrap; }
+    .tTitel { font-size: 16pt; font-weight: bold; color: #FFFFFF; background: #111111;
+              padding: 10px 14px; border: none; }
+    .tSub   { font-size: 9pt; color: #888888; background: #111111;
+              border-top: none; border-left: none; border-right: none;
+              border-bottom: 3pt solid #E02020; padding: 3px 14px; }
+    .tHdr   { font-weight: bold; color: #FFFFFF; background: #CC1A1A;
+              border-color: #AA0000; text-align: left; }
+    .tHdrC  { font-weight: bold; color: #FFFFFF; background: #CC1A1A;
+              border-color: #AA0000; text-align: center; }
+    .tE     { background: #FFFFFF; color: #111111; }
+    .tO     { background: #F2F2F2; color: #111111; }
+    .tEC    { background: #FFFFFF; color: #111111; text-align: center; }
+    .tOC    { background: #F2F2F2; color: #111111; text-align: center; }
+    .tNrE   { background: #FFFFFF; color: #CC1A1A; text-align: center;
+              font-size: 13pt; font-weight: bold; }
+    .tNrO   { background: #F2F2F2; color: #CC1A1A; text-align: center;
+              font-size: 13pt; font-weight: bold; }
+    .tWpE   { background: #FFFFFF; color: #1A7A1A; text-align: center;
+              font-size: 12pt; font-weight: bold; }
+    .tWpO   { background: #F2F2F2; color: #1A7A1A; text-align: center;
+              font-size: 12pt; font-weight: bold; }`;
 
   // ── Data rijen ───────────────────────────────
   const dataRijen = lijst.map((r, i) => {
@@ -992,108 +1011,53 @@ function exporteerInschrijvingen() {
     const naam   = `${p.voornaam||''} ${p.naam||''}`.trim();
     const isHuur = p.kart_type === 'huur';
     const e      = i % 2 === 0;
-    const sT = e?'sE':'sO', sC = e?'sEC':'sOC',
-          sN = e?'sEN':'sON', sW = e?'sEW':'sOW';
-    const vink = v => v ? '✓' : '';
+    const tT  = e ? 'tE'   : 'tO';
+    const tC  = e ? 'tEC'  : 'tOC';
+    const tNr = e ? 'tNrE' : 'tNrO';
+    const tWp = e ? 'tWpE' : 'tWpO';
 
-    return `<Row>
-      ${isHuur ? leeg(sN) : cel(r.startnummer??'', sN, true)}
-      ${cel(naam, sT)}
-      ${cel(isHuur ? '' : (r.klasse||''), sT)}
-      ${cel(isHuur ? 'Huurkart' : 'Eigen kart', sC)}
-      ${isHuur ? leeg(sW) : cel(vink(p.kart_in_werkplaats),   sW)}
-      ${isHuur ? leeg(sW) : cel(vink(p.banden_in_werkplaats), sW)}
-      ${isHuur ? leeg(sW) : cel(vink(p.bak_in_werkplaats),    sW)}
-      ${cel(isHuur ? '' : (p.benzine||''), sT)}
-      ${cel(isHuur ? (p.huurkart_type||'') : '', sT)}
-      ${cel(isHuur ? `${p.lengte?p.lengte+' cm':'—'} / ${p.gewicht?p.gewicht+' kg':'—'}` : '', sC)}
-      ${cel(isHuur ? (Array.isArray(p.uitrusting)?p.uitrusting.join(', '):'') : '', sT)}
-    </Row>`;
-  });
+    return `<tr>
+      <td class="${tNr}">${isHuur ? '' : esc(r.startnummer??'')}</td>
+      <td class="${tT}">${esc(naam)}</td>
+      <td class="${tT}">${esc(isHuur ? '' : (r.klasse||''))}</td>
+      <td class="${tC}">${esc(isHuur ? 'Huurkart' : 'Eigen kart')}</td>
+      <td class="${tWp}">${isHuur ? '' : (p.kart_in_werkplaats   ? '&#10003;' : '')}</td>
+      <td class="${tWp}">${isHuur ? '' : (p.banden_in_werkplaats ? '&#10003;' : '')}</td>
+      <td class="${tWp}">${isHuur ? '' : (p.bak_in_werkplaats    ? '&#10003;' : '')}</td>
+      <td class="${tT}">${esc(isHuur ? '' : (p.benzine||''))}</td>
+      <td class="${tT}">${esc(isHuur ? (p.huurkart_type||'') : '')}</td>
+      <td class="${tC}">${esc(isHuur ? `${p.lengte?p.lengte+' cm':'—'} / ${p.gewicht?p.gewicht+' kg':'—'}` : '')}</td>
+      <td class="${tT}">${esc(isHuur ? (Array.isArray(p.uitrusting)?p.uitrusting.join(', '):'') : '')}</td>
+    </tr>`;
+  }).join('');
 
-  const subtitel = `${datumStr}  ·  ${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Klasse: '+_inschrFilter:''}`;
+  // ── HTML opbouwen ────────────────────────────
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><style>${css}</style></head>
+<body>
+<table>
+  <tr><td colspan="11" class="tTitel">${esc(ev?.naam||'Inschrijvingen')}</td></tr>
+  <tr><td colspan="11" class="tSub">${esc(subtitel)}</td></tr>
+  <tr>
+    <th class="tHdrC" style="width:42px;">#</th>
+    <th class="tHdr"  style="width:145px;">Naam</th>
+    <th class="tHdr"  style="width:110px;">Klasse</th>
+    <th class="tHdrC" style="width:70px;">Kart type</th>
+    <th class="tHdrC" style="width:52px;">Kart WP</th>
+    <th class="tHdrC" style="width:60px;">Banden WP</th>
+    <th class="tHdrC" style="width:46px;">Bak WP</th>
+    <th class="tHdr"  style="width:195px;">Benzine</th>
+    <th class="tHdr"  style="width:125px;">Huurkart type</th>
+    <th class="tHdrC" style="width:88px;">Lengte / Gewicht</th>
+    <th class="tHdr"  style="width:145px;">Uitrusting nodig</th>
+  </tr>
+  ${dataRijen}
+</table>
+</body></html>`;
 
-  // ── SpreadsheetML XML ────────────────────────
-  const xml = `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Styles>
- <Style ss:ID="Default"><Font ss:FontName="Calibri" ss:Size="10"/><Alignment ss:Vertical="Center"/></Style>
- <Style ss:ID="sTitel">
-  <Font ss:FontName="Calibri" ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/>
-  <Interior ss:Color="#111111" ss:Pattern="Solid"/>
-  <Alignment ss:Vertical="Center" ss:Horizontal="Left"/>
- </Style>
- <Style ss:ID="sSub">
-  <Font ss:FontName="Calibri" ss:Size="10" ss:Color="#999999"/>
-  <Interior ss:Color="#111111" ss:Pattern="Solid"/>
-  <Alignment ss:Vertical="Center" ss:Horizontal="Left"/>
-  <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="3" ss:Color="#E02020"/></Borders>
- </Style>
- <Style ss:ID="sHL">
-  <Font ss:FontName="Calibri" ss:Bold="1" ss:Size="10" ss:Color="#FFFFFF"/>
-  <Interior ss:Color="#CC1A1A" ss:Pattern="Solid"/>
-  <Alignment ss:Vertical="Center" ss:Horizontal="Left" ss:WrapText="1"/>
-  <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#FF5555"/></Borders>
- </Style>
- <Style ss:ID="sHC">
-  <Font ss:FontName="Calibri" ss:Bold="1" ss:Size="10" ss:Color="#FFFFFF"/>
-  <Interior ss:Color="#CC1A1A" ss:Pattern="Solid"/>
-  <Alignment ss:Vertical="Center" ss:Horizontal="Center" ss:WrapText="1"/>
-  <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#FF5555"/></Borders>
- </Style>
- <Style ss:ID="sE"> <Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Left"/></Style>
- <Style ss:ID="sO"> <Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Left"/></Style>
- <Style ss:ID="sEC"><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
- <Style ss:ID="sOC"><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
- <Style ss:ID="sEN"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="13" ss:Color="#CC1A1A"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
- <Style ss:ID="sON"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="13" ss:Color="#CC1A1A"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
- <Style ss:ID="sEW"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1A7A1A"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
- <Style ss:ID="sOW"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1A7A1A"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
-</Styles>
-<Worksheet ss:Name="Inschrijvingen">
- <Table ss:DefaultRowHeight="20">
-  <Column ss:Width="42"/>
-  <Column ss:Width="145"/>
-  <Column ss:Width="110"/>
-  <Column ss:Width="70"/>
-  <Column ss:Width="52"/>
-  <Column ss:Width="60"/>
-  <Column ss:Width="46"/>
-  <Column ss:Width="195"/>
-  <Column ss:Width="125"/>
-  <Column ss:Width="88"/>
-  <Column ss:Width="145"/>
-  <Row ss:Height="34">${merge(ev?.naam||'Inschrijvingen','sTitel',10)}</Row>
-  <Row ss:Height="18">${merge(subtitel,'sSub',10)}</Row>
-  <Row ss:Height="30">
-   <Cell ss:StyleID="sHC"><Data ss:Type="String">#</Data></Cell>
-   <Cell ss:StyleID="sHL"><Data ss:Type="String">Naam</Data></Cell>
-   <Cell ss:StyleID="sHL"><Data ss:Type="String">Klasse</Data></Cell>
-   <Cell ss:StyleID="sHC"><Data ss:Type="String">Kart type</Data></Cell>
-   <Cell ss:StyleID="sHC"><Data ss:Type="String">Kart WP</Data></Cell>
-   <Cell ss:StyleID="sHC"><Data ss:Type="String">Banden WP</Data></Cell>
-   <Cell ss:StyleID="sHC"><Data ss:Type="String">Bak WP</Data></Cell>
-   <Cell ss:StyleID="sHL"><Data ss:Type="String">Benzine</Data></Cell>
-   <Cell ss:StyleID="sHL"><Data ss:Type="String">Huurkart type</Data></Cell>
-   <Cell ss:StyleID="sHC"><Data ss:Type="String">Lengte / Gewicht</Data></Cell>
-   <Cell ss:StyleID="sHL"><Data ss:Type="String">Uitrusting nodig</Data></Cell>
-  </Row>
-  ${dataRijen.join('\n  ')}
- </Table>
- <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-  <FreezePanes/>
-  <FrozenNoSplit/>
-  <SplitHorizontal>3</SplitHorizontal>
-  <TopRowBottomPane>3</TopRowBottomPane>
-  <ActivePane>2</ActivePane>
- </WorksheetOptions>
-</Worksheet>
-</Workbook>`;
-
-  const blob = new Blob(['﻿'+xml], {type:'application/vnd.ms-excel;charset=utf-8;'});
+  const blob = new Blob(['﻿'+html], {type:'application/vnd.ms-excel;charset=utf-8;'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   const slug = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
