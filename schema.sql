@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS profiles (
 
   -- Eigen kart
   klassen               TEXT[]   DEFAULT '{}',
-  startnummer           INT,
+  startnummer           INT,           -- legacy, vervangen door startnummers
+  startnummers          JSONB    DEFAULT '{}',
   kampioenschappen      TEXT[]   DEFAULT '{}',
   kart_in_werkplaats    BOOLEAN  DEFAULT false,
   banden_in_werkplaats  BOOLEAN  DEFAULT false,
@@ -69,6 +70,8 @@ CREATE TABLE IF NOT EXISTS inschrijvingen (
 -- En als profiles nog een oude 'klasse TEXT' kolom heeft:
 -- ALTER TABLE profiles RENAME COLUMN klasse TO klassen;
 -- ALTER TABLE profiles ALTER COLUMN klassen TYPE TEXT[] USING ARRAY[klassen]::TEXT[];
+-- Startnummers per klasse (JSONB, bv. {"KA100": 42, "X30 Junior": 15}):
+-- ALTER TABLE profiles ADD COLUMN IF NOT EXISTS startnummers JSONB DEFAULT '{}';
 
 
 -- ══════════════════════════════════════════════════════

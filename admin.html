@@ -411,6 +411,42 @@ function renderList(containerId, list, icon, emptyMsg, isPast) {
 // ── Formulier helpers ─────────────────────────
 function toggleChk(item) { item.classList.toggle('on'); }
 
+// ── Startnummer per klasse helpers ────────────
+function updateStartnrFields(gridId, containerId, preValues) {
+  const grid      = document.getElementById(gridId);
+  const container = document.getElementById(containerId);
+  if (!grid || !container) return;
+  const selected = [...grid.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim());
+  const list     = container.querySelector('.startnr-list');
+  if (selected.length === 0) {
+    container.style.display = 'none';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  container.style.display = '';
+  list.innerHTML = selected.map(k => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+      <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+      <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
+        value="${(preValues && preValues[k]) ? preValues[k] : ''}"
+        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+    </div>`).join('');
+}
+function toggleKlasseChk(item, gridId, containerId) {
+  const container = document.getElementById(containerId);
+  const prev = {};
+  if (container) container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) prev[inp.dataset.klasse] = inp.value; });
+  item.classList.toggle('on');
+  updateStartnrFields(gridId, containerId, prev);
+}
+function getStartnummers(containerId) {
+  const result = {};
+  const container = document.getElementById(containerId);
+  if (!container) return result;
+  container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) result[inp.dataset.klasse] = parseInt(inp.value); });
+  return result;
+}
+
 function resetForm() {
   document.getElementById('f-naam').value    = '';
   document.getElementById('f-datum').value   = '';
@@ -612,7 +648,9 @@ function renderRijders() {
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
         <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
-        <div class="rider-meta">${(r.klassen?.length ? r.klassen.join(', ') : null) || (r.huurkart_type || '—')}${r.startnummer ? ' · #'+r.startnummer : ''}</div>
+        <div class="rider-meta">${r.klassen?.length
+          ? r.klassen.map(k => `${k}${(r.startnummers?.[k]) ? ' #'+r.startnummers[k] : ''}`).join(' · ')
+          : (r.huurkart_type || '—')}</div>
       </div>
       <div class="rider-actions">
         <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder('${r.id}')">✎</button>
@@ -640,7 +678,8 @@ function rijderFormHTML(r) {
   const uitr = r?.uitrusting || [];
   const benzine = r?.benzine || '';
 
-  const klassen = Array.isArray(r?.klassen) ? r.klassen : [];
+  const klassen      = Array.isArray(r?.klassen)    ? r.klassen    : [];
+  const startnummers = (r?.startnummers && typeof r.startnummers === 'object') ? r.startnummers : {};
 
   const chk = (label, arr) => `
     <div class="chk-item${arr.includes(label)?' on':''}" onclick="toggleChk(this)">
@@ -692,10 +731,20 @@ function rijderFormHTML(r) {
       <p class="hint">Meerdere keuzes mogelijk</p>
       <div class="chk-grid" id="r-klassen-grid">
         ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax']
-          .map(k=>chk(k,klassen)).join('')}
+          .map(k=>`<div class="chk-item${klassen.includes(k)?' on':''}" onclick="toggleKlasseChk(this,'r-klassen-grid','r-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span></div>`).join('')}
       </div>
-      <label class="field-label">Startnummer</label>
-      <input class="field-input" id="r-startnr" type="number" value="${r?.startnummer||''}" />
+      <div id="r-startnrs" style="display:${klassen.length?'':'none'};margin-bottom:1rem;">
+        <label class="field-label">Startnummer per klasse</label>
+        <div class="startnr-list">
+          ${klassen.map(k=>`
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+              <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+              <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
+                value="${startnummers[k]||''}"
+                style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+            </div>`).join('')}
+        </div>
+      </div>
       <label class="field-label" style="margin-top:1rem;">Kampioenschap(pen)</label>
       <div class="chk-grid" id="r-kamp-grid">
         ${['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'].map(k=>chk(k,kamp)).join('')}
@@ -770,7 +819,7 @@ async function saveRijder(id) {
     rol:              document.getElementById('r-rol')?.value || 'rijder',
     kart_type:        isEigen ? 'eigen' : 'huur',
     klassen:          isEigen ? [...document.querySelectorAll('#r-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
-    startnummer:      isEigen ? (parseInt(document.getElementById('r-startnr')?.value) || null) : null,
+    startnummers:     isEigen ? getStartnummers('r-startnrs') : {},
     kampioenschappen: isEigen ? [...document.querySelectorAll('#r-kamp-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
     kart_in_werkplaats:   isEigen ? !!(togRows[0]?.querySelector('.tog-btn.yes.on')) : null,
     banden_in_werkplaats: isEigen ? !!(togRows[1]?.querySelector('.tog-btn.yes.on')) : null,
@@ -842,9 +891,12 @@ async function toonInschrijvingen(eventId) {
         const naam     = p.naam     || '';
         const vollNaam = `${voornaam} ${naam}`.trim() || '—';
         const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+        const snrs = (p.startnummers && typeof p.startnummers === 'object') ? p.startnummers : {};
         const kartInfo = p.kart_type === 'huur'
           ? (p.huurkart_type || 'Huurkart')
-          : [(p.klassen?.length ? p.klassen.join(', ') : null), p.startnummer ? '#'+p.startnummer : ''].filter(Boolean).join(' · ') || '—';
+          : p.klassen?.length
+            ? p.klassen.map(k => `${k}${snrs[k] ? ' (#'+snrs[k]+')' : ''}`).join(', ')
+            : '—';
         const regStr = formatDate(r.bevestigd_op);
         const badgeType  = p.kart_type === 'huur' ? 'huur' : 'eigen';
         const badgeLabel = p.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart';

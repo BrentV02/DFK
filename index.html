@@ -140,18 +140,20 @@
           <label class="field-label">Klasse(n)</label>
           <p class="hint">Meerdere keuzes mogelijk</p>
           <div class="chk-grid" id="reg-klassen-grid">
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
-            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
           </div>
-          <label class="field-label">Startnummer</label>
-          <input id="reg-startnr" class="field-input" type="number" placeholder="bijv. 42" />
+          <div id="reg-startnrs" style="display:none; margin-bottom:1rem;">
+            <label class="field-label">Startnummer per klasse</label>
+            <div class="startnr-list"></div>
+          </div>
 
           <label class="field-label">Kampioenschap(pen)</label>
           <p class="hint">Meerdere keuzes mogelijk</p>
@@ -273,6 +275,42 @@ function pickKartType(btn) {
 }
 function toggleChk(item) { item.classList.toggle('on'); }
 
+// ── Startnummer per klasse helpers ────────────
+function updateStartnrFields(gridId, containerId, preValues) {
+  const grid      = document.getElementById(gridId);
+  const container = document.getElementById(containerId);
+  if (!grid || !container) return;
+  const selected = [...grid.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim());
+  const list     = container.querySelector('.startnr-list');
+  if (selected.length === 0) {
+    container.style.display = 'none';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  container.style.display = '';
+  list.innerHTML = selected.map(k => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+      <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+      <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
+        value="${(preValues && preValues[k]) ? preValues[k] : ''}"
+        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+    </div>`).join('');
+}
+function toggleKlasseChk(item, gridId, containerId) {
+  const container = document.getElementById(containerId);
+  const prev = {};
+  if (container) container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) prev[inp.dataset.klasse] = inp.value; });
+  item.classList.toggle('on');
+  updateStartnrFields(gridId, containerId, prev);
+}
+function getStartnummers(containerId) {
+  const result = {};
+  const container = document.getElementById(containerId);
+  if (!container) return result;
+  container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) result[inp.dataset.klasse] = parseInt(inp.value); });
+  return result;
+}
+
 function setMsg(id, tekst, ok = false) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -377,7 +415,7 @@ async function doRegister() {
       const benzEl  = document.querySelector('#eigen-kart-sectie .benz-btn.on');
       Object.assign(profiel, {
         klassen:              [...document.querySelectorAll('#reg-klassen-grid .chk-item.on .chk-label')].map(e => e.textContent.trim()),
-        startnummer:          parseInt(document.getElementById('reg-startnr').value) || null,
+        startnummers:         getStartnummers('reg-startnrs'),
         kampioenschappen:     [...document.querySelectorAll('#reg-kamp-grid .chk-item.on .chk-label')].map(e => e.textContent.trim()),
         kart_in_werkplaats:   !!(togRows[0]?.querySelector('.tog-btn.yes.on')),
         banden_in_werkplaats: !!(togRows[1]?.querySelector('.tog-btn.yes.on')),
