@@ -342,12 +342,13 @@ const BENZ_LABELS = ['Ik neem altijd zelf benzine mee','Ik pak altijd benzine bi
 const KAMPIOENSCHAPPEN = ['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'];
 const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
 
-let _currentUser    = null;
-let _currentProfile = null;
-let _allEvents      = [];
-let _myEventIds     = new Set();
+let _currentUser      = null;
+let _currentProfile   = null;
+let _allEvents        = [];
+let _myEventIds       = new Set();
 let _myInschrijvingen = [];
-let _currentEvent   = null;
+let _currentEvent     = null;
+let _selectedKlasse   = null; // gekozen klasse voor huidig event
 
 // ── Init ─────────────────────────────────────
 (async () => {
@@ -599,7 +600,7 @@ function renderInschrijvingen() {
           <div class="inschrijving-naam">${ev.naam}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
           <div class="inschrijving-meta">📍 ${ev.circuit}${ev.type ? ' &nbsp;·&nbsp; ' + ev.type : ''}</div>
-          ${r.klassen && r.klassen.length ? `<div class="inschrijving-meta">🏁 ${r.klassen.join(', ')}</div>` : ''}
+          ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
           <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
         </div>
         ${!isPast
@@ -826,7 +827,10 @@ function openInschrijven(eventId) {
 
     ${kartInfoHtml}
 
-    <div style="display:flex; align-items:center; justify-content:space-between; margin:1.8rem 0 0.5rem;">
+    <span class="section-title">Klasse voor dit event</span>
+    ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin:1.2rem 0 0.5rem;">
       <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Is alles correct?</div>
       <button class="edit-btn" onclick="enableInschrijfEdit()">✎ Aanpassen</button>
     </div>
@@ -843,20 +847,26 @@ function openInschrijven(eventId) {
 function sluitInschrijven() {
   document.getElementById('inschrijf-overlay').classList.remove('open');
   document.getElementById('inschrijf-panel').classList.remove('open');
-  _currentEvent = null;
+  _currentEvent   = null;
+  _selectedKlasse = null;
 }
 
 async function _toonBevestiging() {
   const ev = _currentEvent;
   if (!ev) return;
 
+  // Lees geselecteerde klasse vóór innerHTML vervangen
+  const klasse      = _selectedKlasse;
+  const startnummer = klasse ? (_currentProfile?.startnummers?.[klasse] ?? null) : null;
+
   const body = document.getElementById('inschrijf-body');
   body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#888;">Bezig met inschrijven...</div>`;
 
   const { error } = await _supabase.from('inschrijvingen').insert({
-    rijder_id: _currentUser.id,
-    event_id:  ev.id,
-    klassen:   _currentProfile?.klassen || [],
+    rijder_id:   _currentUser.id,
+    event_id:    ev.id,
+    klasse:      klasse      || null,
+    startnummer: startnummer || null,
   });
 
   if (error && error.code !== '23505') {
@@ -874,6 +884,8 @@ async function _toonBevestiging() {
       id: crypto.randomUUID(),
       event_id: ev.id,
       rijder_id: _currentUser.id,
+      klasse:      klasse      || null,
+      startnummer: startnummer || null,
       bevestigd_op: new Date().toISOString(),
       evenementen: ev,
     });
@@ -893,6 +905,7 @@ async function _toonBevestiging() {
       <div class="ev-confirm-name">${ev.naam}</div>
       <div class="ev-confirm-meta" style="margin-top:6px;">📅 ${datumStr}</div>
       <div class="ev-confirm-meta">📍 ${ev.circuit}</div>
+      ${klasse ? `<div class="ev-confirm-meta" style="margin-top:6px;">🏁 ${klasse}${startnummer ? ' — #'+startnummer : ''}</div>` : ''}
     </div>
     <button class="bevestig-btn" onclick="sluitInschrijven()">Sluiten</button>`;
 }
@@ -993,9 +1006,48 @@ function enableInschrijfEdit() {
     <label class="field-label">Telefoonnummer</label>
     <input id="inp-tel" class="field-input" type="tel" value="${acc.telefoon}" />
     ${kartEditHtml}
-    <button class="bevestig-btn" style="margin-top:1.8rem;" onclick="bevestigInschrijving()">Opslaan & bevestigen →</button>
+    <span class="section-title">Klasse voor dit event</span>
+    ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}
+    <button class="bevestig-btn" style="margin-top:0.8rem;" onclick="bevestigInschrijving()">Opslaan & bevestigen →</button>
     <button class="annuleer-btn" onclick="openInschrijven(_currentEvent.id)">← Terug</button>
   `;
+}
+
+// ── Klasse kiezen voor event ──────────────────
+function selectKlasseVoorEvent(item) {
+  item.closest('.klasse-keuze-grid').querySelectorAll('.chk-item').forEach(el => el.classList.remove('on'));
+  item.classList.add('on');
+  _selectedKlasse = item.dataset.klasse;
+}
+
+function buildKlasseKeuzeHtml(klassen, startnummers) {
+  if (!klassen || klassen.length === 0) {
+    return `<p style="font-size:13px;color:#666;padding:8px 0;font-family:'Barlow',sans-serif;">
+      Geen klasse ingesteld. Stel je klasse in via <em style="color:#E02020;font-style:normal;cursor:pointer;" onclick="sluitInschrijven();openAccount()">Mijn account</em>.
+    </p>`;
+  }
+  // Zorg dat een geldige klasse geselecteerd is
+  if (!_selectedKlasse || !klassen.includes(_selectedKlasse)) _selectedKlasse = klassen[0];
+  const enkelvoud = klassen.length === 1;
+  return `
+    <p style="font-size:11px;color:#666;margin-bottom:0.5rem;font-family:'Barlow',sans-serif;">
+      ${enkelvoud ? 'Jouw klasse voor dit event:' : 'Kies de klasse waarmee je deelneemt:'}
+    </p>
+    <div class="klasse-keuze-grid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;">
+      ${klassen.map(k => {
+        const nr  = startnummers?.[k];
+        const isOn = k === _selectedKlasse;
+        return `<div class="chk-item${isOn?' on':''}" data-klasse="${k}"
+                  onclick="selectKlasseVoorEvent(this)"
+                  style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="chk-box"><span class="chk-mark">✓</span></div>
+            <span class="chk-label">${k}</span>
+          </div>
+          ${nr ? `<span style="font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:inherit;flex-shrink:0;margin-left:8px;">#${nr}</span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 function pickBenz(btn) {
@@ -1052,6 +1104,10 @@ function tog(btn) {
 async function bevestigInschrijving() {
   const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
   const isEigen = (_currentProfile?.kart_type !== 'huur');
+
+  // Lees geselecteerde klasse uit de kiezer in het formulier
+  const gekozenKlasse = document.querySelector('#inschrijf-panel .klasse-keuze-grid .chk-item.on')?.dataset.klasse;
+  if (gekozenKlasse) _selectedKlasse = gekozenKlasse;
 
   // Update profiel in Supabase
   const profiel = {

@@ -891,12 +891,11 @@ async function toonInschrijvingen(eventId) {
         const naam     = p.naam     || '';
         const vollNaam = `${voornaam} ${naam}`.trim() || '—';
         const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
-        const snrs = (p.startnummers && typeof p.startnummers === 'object') ? p.startnummers : {};
         const kartInfo = p.kart_type === 'huur'
           ? (p.huurkart_type || 'Huurkart')
-          : p.klassen?.length
-            ? p.klassen.map(k => `${k}${snrs[k] ? ' (#'+snrs[k]+')' : ''}`).join(', ')
-            : '—';
+          : r.klasse
+            ? `${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}`
+            : (p.klassen?.length ? p.klassen.join(', ') : '—');
         const regStr = formatDate(r.bevestigd_op);
         const badgeType  = p.kart_type === 'huur' ? 'huur' : 'eigen';
         const badgeLabel = p.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart';

@@ -59,14 +59,16 @@ CREATE TABLE IF NOT EXISTS inschrijvingen (
   id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
   rijder_id     UUID        REFERENCES profiles(id)     ON DELETE CASCADE,
   event_id      UUID        REFERENCES evenementen(id)  ON DELETE CASCADE,
-  klassen       TEXT[]      DEFAULT '{}',
+  klasse        TEXT,                          -- gekozen klasse voor dit event
+  startnummer   INT,                           -- bijhorend startnummer
   bevestigd_op  TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (rijder_id, event_id)
 );
 
 -- ── Migratie (bestaande DB) ───────────────────────────────
 -- Voer dit uit als de tabel al bestond zonder klassen-kolom:
--- ALTER TABLE inschrijvingen ADD COLUMN IF NOT EXISTS klassen TEXT[] DEFAULT '{}';
+-- ALTER TABLE inschrijvingen ADD COLUMN IF NOT EXISTS klasse TEXT;
+-- ALTER TABLE inschrijvingen ADD COLUMN IF NOT EXISTS startnummer INT;
 -- En als profiles nog een oude 'klasse TEXT' kolom heeft:
 -- ALTER TABLE profiles RENAME COLUMN klasse TO klassen;
 -- ALTER TABLE profiles ALTER COLUMN klassen TYPE TEXT[] USING ARRAY[klassen]::TEXT[];
