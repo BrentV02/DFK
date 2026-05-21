@@ -75,6 +75,10 @@
     #dfk-root .inschrijving-reg { font-size: 11px; color: #555; margin-top: 6px; }
     #dfk-root .uitschrijf-btn { background: none; border: 1px solid #333; border-radius: 3px; color: #666; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     #dfk-root .uitschrijf-btn:hover { border-color: #E02020; color: #E02020; }
+    #dfk-root .uitschrijf-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    #dfk-root .uitschrijf-dl { font-size: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #555; text-align: right; line-height: 1.5; }
+    #dfk-root .uitschrijf-dl.urgent { color: #cc2020; }
+    #dfk-root .uitschrijf-dl strong { font-size: 12px; color: #ff4444; }
     #dfk-root .inschrijvingen-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; }
     #dfk-root .inschrijvingen-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
 
@@ -530,31 +534,48 @@ function renderEvents() {
 
 function startCountdowns() {
   clearInterval(window._cdTimer);
-  const deadlineEls = document.querySelectorAll('.deadline-countdown');
-  const eventEls    = document.querySelectorAll('.event-countdown');
-  if (!deadlineEls.length && !eventEls.length) return;
+  const deadlineEls   = document.querySelectorAll('.deadline-countdown');
+  const eventEls      = document.querySelectorAll('.event-countdown');
+  const uitschrijfEls = document.querySelectorAll('.uitschrijf-dl[data-deadline]');
+  if (!deadlineEls.length && !eventEls.length && !uitschrijfEls.length) return;
+
   window._cdTimer = setInterval(() => {
     const now = new Date();
-    let expired = false;
+    let expiredEv  = false;
+    let expiredUit = false;
+
     deadlineEls.forEach(el => {
       const dl = new Date(el.dataset.deadline);
       const msLeft = dl - now;
-      if (msLeft <= 0) { expired = true; return; }
+      if (msLeft <= 0) { expiredEv = true; return; }
       const totMin = Math.floor(msLeft / 60000);
       const uren   = Math.floor(totMin / 60);
       const rMin   = totMin % 60;
       el.innerHTML = `⏱ Inschrijving sluit over <strong>${uren > 0 ? uren+'u '+rMin+'min' : rMin+'min'}</strong>`;
     });
+
     eventEls.forEach(el => {
       const d = new Date(el.dataset.eventdate);
       const msLeft = d - now;
-      if (msLeft <= 0) { expired = true; return; }
+      if (msLeft <= 0) { expiredEv = true; return; }
       const totMin = Math.floor(msLeft / 60000);
       const uren   = Math.floor(totMin / 60);
       const rMin   = totMin % 60;
       el.innerHTML = `Over <strong>${uren > 0 ? uren+'u '+rMin+'min' : rMin+'min'}</strong>`;
     });
-    if (expired) renderEvents();
+
+    uitschrijfEls.forEach(el => {
+      const dl = new Date(el.dataset.deadline);
+      const msLeft = dl - now;
+      if (msLeft <= 0) { expiredUit = true; return; }
+      const totMin = Math.floor(msLeft / 60000);
+      const uren   = Math.floor(totMin / 60);
+      const rMin   = totMin % 60;
+      el.innerHTML = `⏱ Sluit over <strong>${uren > 0 ? uren+'u '+rMin+'min' : rMin+'min'}</strong>`;
+    });
+
+    if (expiredEv)  renderEvents();
+    if (expiredUit) renderInschrijvingen();
   }, 10000);
 }
 
@@ -588,14 +609,51 @@ function renderInschrijvingen() {
     return;
   }
   container.innerHTML = lijst.map(r => {
-    const ev = r.evenementen;
-    const d  = new Date(ev.datum + 'T12:00:00');
+    const ev  = r.evenementen;
+    const d   = new Date(ev.datum + 'T12:00:00');
+    const now = new Date();
     const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
-    const reg = new Date(r.bevestigd_op);
+    const reg    = new Date(r.bevestigd_op);
     const regStr = `${reg.getDate()} ${MAANDEN[reg.getMonth()]} ${reg.getFullYear()} om ${reg.getHours().toString().padStart(2,'0')}:${reg.getMinutes().toString().padStart(2,'0')}`;
-    const isPast = d < new Date();
+    const isPast = d < now;
+
+    // ── Deadline-logica voor uitschrijven ──
+    const dl         = ev.deadline ? new Date(ev.deadline) : null;
+    const dlPassed   = dl && dl < now;
+
+    let rechts;
+    if (isPast) {
+      rechts = `<span style="font-size:11px;color:#444;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>`;
+    } else if (dlPassed) {
+      rechts = `<span style="font-size:11px;color:#555;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
+    } else {
+      // Knop + eventuele countdown
+      let cdHtml = '';
+      if (dl) {
+        const msLeft = dl - now;
+        const dlUur  = dl.getHours().toString().padStart(2,'0');
+        const dlMin  = dl.getMinutes().toString().padStart(2,'0');
+        const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} ${dlUur}:${dlMin}`;
+        if (msLeft < 24 * 3600 * 1000) {
+          // Minder dan 24u: live afteller
+          const totMin = Math.floor(msLeft / 60000);
+          const uren   = Math.floor(totMin / 60);
+          const rMin   = totMin % 60;
+          const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+          cdHtml = `<div class="uitschrijf-dl urgent" data-deadline="${dl.toISOString()}">⏱ Sluit over <strong>${txt}</strong></div>`;
+        } else {
+          // Meer dan 24u: vaste datum tonen
+          cdHtml = `<div class="uitschrijf-dl">Deadline<br>${tijdStr}</div>`;
+        }
+      }
+      rechts = `<div class="uitschrijf-side">
+        <button class="uitschrijf-btn" onclick="uitschrijven('${r.id}','${ev.id}')">Uitschrijven</button>
+        ${cdHtml}
+      </div>`;
+    }
+
     return `
-      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444; opacity:0.6;' : ''}">
+      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444;opacity:0.6;' : ''}">
         <div class="inschrijving-info">
           <div class="inschrijving-naam">${ev.naam}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
@@ -603,12 +661,10 @@ function renderInschrijvingen() {
           ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
           <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
         </div>
-        ${!isPast
-          ? `<button class="uitschrijf-btn" onclick="uitschrijven('${r.id}','${ev.id}')">Uitschrijven</button>`
-          : `<span style="font-size:11px;color:#555;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>`
-        }
+        ${rechts}
       </div>`;
   }).join('');
+  startCountdowns();
 }
 
 async function uitschrijven(inschrijvingId, eventId) {
