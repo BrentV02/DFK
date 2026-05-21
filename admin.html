@@ -340,6 +340,7 @@
         <div class="inschr-ev-naam" id="inschr-ev-naam"></div>
         <div class="inschr-ev-sub" id="inschr-ev-sub"></div>
       </div>
+      <button class="open-form-btn" onclick="exporteerInschrijvingen()" style="flex-shrink:0;" title="Exporteer de huidige lijst als CSV (te openen in Excel)">⬇ Exporteer CSV</button>
     </div>
     <div class="inschr-body">
       <div class="section-label" id="inschr-count" style="margin-bottom:1rem;"></div>
@@ -950,6 +951,60 @@ function sluitInschrijvingenPanel() {
   document.getElementById('inschr-overlay').classList.remove('open');
   _inschrData   = [];
   _inschrEvent  = null;
+}
+
+function exporteerInschrijvingen() {
+  // Gebruik dezelfde volgorde als de huidige weergave
+  const lijst = (_inschrFilter
+    ? _inschrData.filter(r => r.klasse === _inschrFilter)
+    : [..._inschrData]
+  ).sort((a, b) => {
+    const pa = a.profiles || {}, pb = b.profiles || {};
+    const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
+    const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
+    if (_inschrSort === 'naam')   return nA.localeCompare(nB);
+    if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
+    if (_inschrSort === 'nr')     return (a.startnummer||9999) - (b.startnummer||9999);
+    if (_inschrSort === 'datum')  return new Date(a.bevestigd_op) - new Date(b.bevestigd_op);
+    return 0;
+  });
+
+  const headers = [
+    'Naam', 'Kart type', 'Klasse', 'Startnummer',
+    'Kart in werkplaats', 'Banden in werkplaats', 'Bak in werkplaats',
+    'Benzine',
+    'Huurkart type', 'Lengte (cm)', 'Gewicht (kg)', 'Uitrusting nodig',
+  ];
+
+  const rows = lijst.map(r => {
+    const p     = r.profiles || {};
+    const naam  = `${p.voornaam||''} ${p.naam||''}`.trim();
+    const isHuur = p.kart_type === 'huur';
+    return [
+      naam,
+      isHuur ? 'Huurkart' : 'Eigen kart',
+      isHuur ? '' : (r.klasse        || ''),
+      isHuur ? '' : (r.startnummer   || ''),
+      isHuur ? '' : (p.kart_in_werkplaats    ? 'Ja' : 'Nee'),
+      isHuur ? '' : (p.banden_in_werkplaats  ? 'Ja' : 'Nee'),
+      isHuur ? '' : (p.bak_in_werkplaats     ? 'Ja' : 'Nee'),
+      isHuur ? '' : (p.benzine       || ''),
+      isHuur ? (p.huurkart_type      || '') : '',
+      isHuur ? (p.lengte             || '') : '',
+      isHuur ? (p.gewicht            || '') : '',
+      isHuur ? (Array.isArray(p.uitrusting) ? p.uitrusting.join(', ') : '') : '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`);
+  });
+
+  const csv  = [headers.map(h => `"${h}"`), ...rows].map(r => r.join(';')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const slug = (_inschrEvent?.naam || 'export').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  a.href     = url;
+  a.download = `${slug}_inschrijvingen.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function _renderInschrFilters() {
