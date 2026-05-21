@@ -6,6 +6,8 @@
   <title>DFK – Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0a0a0a; }
@@ -15,7 +17,7 @@
 
     #dfk-root .nav { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
     #dfk-root .nav-badge { background: #E02020; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; margin-left: 10px; }
-    #dfk-root .nav-back { font-size: 12px; color: #666; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; }
+    #dfk-root .nav-back { font-size: 12px; color: #666; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; background: none; border: none; }
     #dfk-root .nav-back:hover { color: #ccc; }
 
     #dfk-root .layout { display: grid; grid-template-columns: 1fr; gap: 0; flex: 1; }
@@ -64,7 +66,7 @@
     #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
     #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020; }
-    #dfk-root input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
+    #dfk-root input[type="date"], #dfk-root input[type="datetime-local"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
     #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
@@ -114,6 +116,7 @@
     #dfk-root .ev-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #dfk-root .ev-meta { font-size: 12px; color: #666; margin-top: 2px; }
     #dfk-root .ev-deadline { font-size: 11px; color: #888; margin-top: 3px; }
+    #dfk-root .ev-inschrijvingen { font-size: 11px; color: #E02020; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .ev-actions { display: flex; gap: 6px; flex-shrink: 0; }
     #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #888; }
     #dfk-root .ev-btn:hover { color: #fff; border-color: #555; }
@@ -128,19 +131,8 @@
     #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease; pointer-events: none; }
     #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
     #dfk-root .toast.yellow { background: #3a3a00; color: #ffff44; border: 1px solid #888800; }
+    #dfk-root .toast.red { background: #3a0000; color: #ff6666; border: 1px solid #880000; }
     #dfk-root .toast.show { transform: translateX(-50%) translateY(0); }
-
-    #dfk-root .tab-nav { display: flex; background: #111; border-bottom: 1px solid #222; padding: 0 2rem; }
-    #dfk-root .tab-nav-btn { padding: 14px 22px; background: transparent; border: none; border-bottom: 3px solid transparent; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; cursor: pointer; margin-bottom: -1px; transition: color 0.2s; }
-    #dfk-root .tab-nav-btn:hover { color: #ccc; }
-    #dfk-root .tab-nav-btn.on { color: #fff; border-bottom-color: #E02020; }
-    #dfk-root .tab-panel { display: none; flex: 1; flex-direction: column; }
-    #dfk-root .tab-panel.on { display: flex; }
-    #dfk-root .account-col { max-width: 520px; width: 100%; margin: 2rem auto; padding: 0 2rem; }
-    #dfk-root .kart-keuze-row { display: flex; gap: 12px; margin-bottom: 1.5rem; }
-    #dfk-root .kart-type-btn { flex: 1; padding: 18px 12px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-    #dfk-root .kart-type-btn:hover { border-color: #555; color: #ccc; }
-    #dfk-root .kart-type-btn.on { background: #2a1010; border-color: #E02020; color: #fff; }
 
     #dfk-root .nav-tabs { display: flex; height: 100%; margin-left: 1.5rem; }
     #dfk-root .nav-tab { display: flex; align-items: center; padding: 0 20px; height: 100%; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; cursor: pointer; border: none; border-bottom: 3px solid transparent; background: transparent; transition: color 0.15s; margin-bottom: -3px; }
@@ -161,7 +153,9 @@
     #dfk-root .rider-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
     #dfk-root .rider-badge.eigen { background: #1a3a1a; color: #4ccc4c; }
     #dfk-root .rider-badge.huur { background: #1a2a3a; color: #4caaf0; }
+    #dfk-root .rider-badge.admin { background: #3a1a00; color: #ffaa44; }
     #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    #dfk-root .rol-select { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 5px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -178,6 +172,10 @@
         <button class="nav-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
         <button class="nav-tab" onclick="switchAdminTab('rijders')">Rijders</button>
       </div>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="evenementen.html" class="nav-back">← Terug naar site</a>
+      <button class="nav-back" onclick="uitloggen()" style="padding:6px 12px; border:1px solid #2a2a2a; border-radius:3px;">Uitloggen</button>
     </div>
   </nav>
 
@@ -199,7 +197,7 @@
         <button class="open-form-btn" onclick="toggleEventForm()">＋ Toevoegen</button>
       </div>
       <div class="section-label">Komende evenementen</div>
-      <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">📅</div>Nog geen evenementen toegevoegd</div></div>
+      <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">⏳</div>Laden...</div></div>
       <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
       <div class="event-list" id="past-list"><div class="empty"><div class="empty-icon">🏁</div>Geen afgelopen evenementen</div></div>
     </div>
@@ -263,468 +261,545 @@
       <button class="reset-btn" onclick="cancelEdit()">Annuleren / leegmaken</button>
     </div>
   </div>
-  </div><!-- einde panel-evenementen -->
+  </div>
 
   <!-- PANEL: RIJDERS -->
   <div id="panel-rijders" class="admin-panel">
     <div class="layout">
-
       <div class="left-col">
         <div class="col-header">
           <div>
             <div class="page-title">Rijders</div>
-            <p class="page-sub" style="margin-bottom:0;">Overzicht van alle geregistreerde accounts</p>
+            <p class="page-sub" style="margin-bottom:0;">Alle geregistreerde accounts</p>
           </div>
-          <button class="open-form-btn" onclick="nieuwRijder()">＋ Toevoegen</button>
         </div>
         <div class="section-label">Alle rijders</div>
         <div class="rider-list" id="rider-list">
-          <div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>
+          <div class="empty"><div class="empty-icon">⏳</div>Laden...</div>
         </div>
       </div>
-
       <div class="right-col" id="rider-detail"></div>
-
     </div>
-  </div><!-- einde panel-rijders -->
+  </div>
 
   <div class="toast green" id="toast"></div>
 </div>
 
 <script>
-  const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-  const DAGEN = ['zo','ma','di','wo','do','vr','za'];
-  let events = [], circuits = [], deadlineHistory = [];
-  let editIndex = -1;
+const MAANDEN    = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const DAGEN      = ['zo','ma','di','wo','do','vr','za'];
+const BENZ_LABELS = ['Ik neem altijd zelf benzine mee','Ik pak altijd benzine bij DFK','Training: zelf — Wedstrijd: bij DFK'];
 
-  function load() {
-    try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) { events = []; }
-    try { circuits = JSON.parse(localStorage.getItem('dfk_circuits') || '[]'); } catch(e) { circuits = []; }
-    try { deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]'); } catch(e) { deadlineHistory = []; }
+// ── State ─────────────────────────────────────
+let _adminProfile   = null;
+let _allEvents      = [];
+let _inschrijvingen = {}; // eventId → count
+let _allRijders     = [];
+let circuits        = [];
+let deadlineHistory = [];
+let editEventId     = null; // UUID of event being edited
+let editRijderId    = null; // UUID of rider being edited
+
+// ── Init ─────────────────────────────────────
+(async () => {
+  try {
+    const result = await requireAdmin();
+    if (!result) return;
+    _adminProfile = result.profile;
+    circuits        = JSON.parse(localStorage.getItem('dfk_circuits') || '[]');
+    deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
     renderCircuitSelect();
     renderDeadlineChips();
-    renderEvents();
+    await loadEvents();
+  } catch(e) {
+    console.error('Admin init fout:', e);
+    showToast('Laad fout: ' + e.message, 'red');
   }
+})();
 
-  function save() { localStorage.setItem('dfk_events', JSON.stringify(events)); }
-  function saveCircuits() { localStorage.setItem('dfk_circuits', JSON.stringify(circuits)); }
-  function saveDeadlines() { localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory)); }
+async function uitloggen() {
+  await _supabase.auth.signOut();
+  window.location.href = 'index.html';
+}
 
-  function renderCircuitSelect(selected) {
-    const sel = document.getElementById('f-circuit');
-    const current = selected || sel.value;
-    sel.innerHTML = '<option value="">Selecteer circuit...</option>' + circuits.map(c => `<option value="${c}"${c===current?' selected':''}>${c}</option>`).join('');
+// ── Evenementen laden ─────────────────────────
+async function loadEvents() {
+  const { data, error } = await _supabase
+    .from('evenementen')
+    .select('*')
+    .order('datum', { ascending: true });
+  if (error) { showToast('Fout bij laden: ' + error.message, 'red'); return; }
+  _allEvents = data || [];
+
+  // Laad inschrijvingen-tellingen
+  const { data: inData } = await _supabase
+    .from('inschrijvingen')
+    .select('event_id');
+  _inschrijvingen = {};
+  (inData || []).forEach(r => {
+    _inschrijvingen[r.event_id] = (_inschrijvingen[r.event_id] || 0) + 1;
+  });
+
+  renderEvents();
+}
+
+// ── Evenementen renderen ──────────────────────
+function renderEvents() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = _allEvents.filter(e => new Date(e.datum + 'T12:00:00') >= today);
+  const past     = _allEvents.filter(e => new Date(e.datum + 'T12:00:00') <  today);
+  renderList('upcoming-list', upcoming, '📅', 'Nog geen evenementen toegevoegd', false);
+  renderList('past-list',     past,     '🏁', 'Geen afgelopen evenementen',      true);
+}
+
+function renderList(containerId, list, icon, emptyMsg, isPast) {
+  const container = document.getElementById(containerId);
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`;
+    return;
   }
+  container.innerHTML = list.map(ev => {
+    const d = new Date(ev.datum + 'T12:00:00');
+    const isEditing = ev.id === editEventId;
+    const deadlineTxt = ev.deadline ? `⏱ ${formatDate(ev.deadline)}` : '';
+    const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
+    const inCount = _inschrijvingen[ev.id] || 0;
+    return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}">
+      <div class="ev-date-block">
+        <div class="ev-day">${d.getDate()}</div>
+        <div class="ev-month">${MAANDEN[d.getMonth()]}</div>
+      </div>
+      <div class="ev-divider"></div>
+      <div class="ev-info">
+        <div class="ev-name">${ev.naam}</div>
+        <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type || ''}</div>
+        ${klassen.length ? `<div class="ev-meta">${klassen.join(' · ')}</div>` : ''}
+        ${deadlineTxt ? `<div class="ev-deadline">${deadlineTxt}</div>` : ''}
+        ${inCount > 0 ? `<div class="ev-inschrijvingen">▶ ${inCount} ingeschreven</div>` : ''}
+      </div>
+      <div class="ev-actions">
+        <button class="ev-btn edit" onclick="editEvent('${ev.id}')">✎</button>
+        <button class="ev-btn del"  onclick="deleteEvent('${ev.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  function addCircuit() {
-    const input = document.getElementById('f-circuit-nieuw');
-    const naam = input.value.trim();
-    if (!naam) return;
-    if (circuits.includes(naam)) { alert('Dit circuit staat al in de lijst.'); return; }
-    circuits.push(naam); circuits.sort();
-    saveCircuits(); renderCircuitSelect(naam);
-    document.getElementById('f-circuit').value = naam;
-    input.value = '';
-    showToast('Circuit toegevoegd!', 'green');
-  }
+// ── Formulier helpers ─────────────────────────
+function toggleChk(item) { item.classList.toggle('on'); }
 
-  document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.activeElement.id === 'f-circuit-nieuw') addCircuit(); });
+function resetForm() {
+  document.getElementById('f-naam').value    = '';
+  document.getElementById('f-datum').value   = '';
+  document.getElementById('f-type').value    = '';
+  document.getElementById('f-circuit').value = '';
+  document.getElementById('f-circuit-nieuw').value = '';
+  document.getElementById('f-deadline').value = '';
+  document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
+}
 
-  function renderDeadlineChips() {
-    const container = document.getElementById('dl-chips');
-    if (deadlineHistory.length === 0) { container.innerHTML = ''; return; }
-    container.innerHTML = '<span class="dl-chips-label">Eerder gebruikt:</span>' +
-      deadlineHistory.map((dl, i) => `<span class="dl-chip" onclick="pickDeadline('${dl}')">⏱ ${formatDate(dl)}<span class="dl-chip-del" onclick="removeDeadline(event,${i})">✕</span></span>`).join('');
-  }
+function cancelEdit() {
+  editEventId = null;
+  resetForm();
+  document.getElementById('form-title').textContent = 'Toevoegen';
+  document.getElementById('form-sub').textContent   = 'Vul het formulier in om een nieuw evenement aan te maken';
+  document.getElementById('edit-banner').classList.remove('show');
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '+ Evenement toevoegen';
+  btn.classList.remove('edit-mode');
+  renderEvents();
+}
 
-  function pickDeadline(val) { document.getElementById('f-deadline').value = val; }
-  function removeDeadline(e, idx) { e.stopPropagation(); deadlineHistory.splice(idx, 1); saveDeadlines(); renderDeadlineChips(); }
-  function saveDeadlineToHistory(val) { if (!val) return; deadlineHistory = [val, ...deadlineHistory.filter(d => d !== val)].slice(0, 8); saveDeadlines(); renderDeadlineChips(); }
+function editEvent(id) {
+  const ev = _allEvents.find(e => e.id === id);
+  if (!ev) return;
+  toggleEventForm(true);
+  editEventId = id;
 
-  function toggleChk(item) { item.classList.toggle('on'); }
+  document.getElementById('f-naam').value  = ev.naam;
+  document.getElementById('f-datum').value = ev.datum;
+  document.getElementById('f-type').value  = ev.type || '';
+  renderCircuitSelect(ev.circuit);
 
-  function resetForm() {
-    document.getElementById('f-naam').value = '';
-    document.getElementById('f-datum').value = '';
-    document.getElementById('f-type').value = '';
-    document.getElementById('f-circuit').value = '';
-    document.getElementById('f-circuit-nieuw').value = '';
+  // deadline: convert from ISO to datetime-local format
+  if (ev.deadline) {
+    const d = new Date(ev.deadline);
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 16);
+    document.getElementById('f-deadline').value = local;
+  } else {
     document.getElementById('f-deadline').value = '';
-    document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
   }
 
-  function cancelEdit() {
-    editIndex = -1; resetForm();
-    document.getElementById('form-title').textContent = 'Toevoegen';
-    document.getElementById('form-sub').textContent = 'Vul het formulier in om een nieuw evenement aan te maken';
-    document.getElementById('edit-banner').classList.remove('show');
-    const btn = document.getElementById('submit-btn');
-    btn.textContent = '+ Evenement toevoegen'; btn.classList.remove('edit-mode');
-    renderEvents();
+  const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
+  document.querySelectorAll('#klassen-grid .chk-item').forEach(i =>
+    i.classList.toggle('on', klassen.includes(i.dataset.klasse)));
+
+  document.getElementById('form-title').textContent = 'Aanpassen';
+  document.getElementById('form-sub').textContent   = 'Pas de gegevens aan en sla op';
+  document.getElementById('edit-banner').classList.add('show');
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '✓ Wijzigingen opslaan';
+  btn.classList.add('edit-mode');
+  renderEvents();
+  document.querySelector('.right-col').scrollTop = 0;
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Dit evenement verwijderen? Alle inschrijvingen gaan ook verloren.')) return;
+  const { error } = await _supabase.from('evenementen').delete().eq('id', id);
+  if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+  if (editEventId === id) cancelEdit();
+  await loadEvents();
+  showToast('Evenement verwijderd', 'yellow');
+}
+
+async function submitForm() {
+  const naam    = document.getElementById('f-naam').value.trim();
+  const datum   = document.getElementById('f-datum').value;
+  const type    = document.getElementById('f-type').value;
+  const circuit = document.getElementById('f-circuit').value;
+  const dlRaw   = document.getElementById('f-deadline').value;
+  const klassen = [...document.querySelectorAll('#klassen-grid .chk-item.on')].map(i => i.dataset.klasse);
+
+  if (!naam || !datum || !circuit || !type) {
+    showToast('Vul naam, datum, type en circuit in', 'red'); return;
   }
 
-  function editEvent(idx) {
-    toggleEventForm(true);
-    editIndex = idx;
-    const ev = events[idx];
-    document.getElementById('f-naam').value = ev.naam;
-    document.getElementById('f-datum').value = ev.datum;
-    document.getElementById('f-type').value = ev.type;
-    renderCircuitSelect(ev.circuit);
-    document.getElementById('f-deadline').value = ev.deadline || '';
-    document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.toggle('on', ev.klassen.includes(i.dataset.klasse)));
-    document.getElementById('form-title').textContent = 'Aanpassen';
-    document.getElementById('form-sub').textContent = 'Pas de gegevens aan en sla op';
-    document.getElementById('edit-banner').classList.add('show');
-    const btn = document.getElementById('submit-btn');
-    btn.textContent = '✓ Wijzigingen opslaan'; btn.classList.add('edit-mode');
-    renderEvents();
-    document.querySelector('.right-col').scrollTop = 0;
+  // Converteer deadline naar ISO (datetime-local geeft lokale tijd)
+  const deadline = dlRaw ? new Date(dlRaw).toISOString() : null;
+
+  saveDeadlineToHistory(dlRaw);
+
+  const ev = { naam, datum, type, circuit, deadline, klassen };
+  let error;
+
+  if (editEventId) {
+    ({ error } = await _supabase.from('evenementen').update(ev).eq('id', editEventId));
+    if (!error) showToast('Evenement aangepast!', 'yellow');
+  } else {
+    ({ error } = await _supabase.from('evenementen').insert(ev));
+    if (!error) showToast('Evenement toegevoegd!', 'green');
   }
 
-  function deleteEvent(idx) {
-    if (editIndex === idx) cancelEdit();
-    events.splice(idx, 1); save(); renderEvents();
-    showToast('Evenement verwijderd', 'yellow');
+  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
+  await loadEvents();
+  cancelEdit();
+}
+
+// ── Circuit helpers ───────────────────────────
+function renderCircuitSelect(selected) {
+  const sel = document.getElementById('f-circuit');
+  const cur = selected || sel.value;
+  sel.innerHTML = '<option value="">Selecteer circuit...</option>' +
+    circuits.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function addCircuit() {
+  const input = document.getElementById('f-circuit-nieuw');
+  const naam  = input.value.trim();
+  if (!naam) return;
+  if (circuits.includes(naam)) { showToast('Circuit bestaat al', 'yellow'); return; }
+  circuits.push(naam); circuits.sort();
+  localStorage.setItem('dfk_circuits', JSON.stringify(circuits));
+  renderCircuitSelect(naam);
+  document.getElementById('f-circuit').value = naam;
+  input.value = '';
+  showToast('Circuit toegevoegd!', 'green');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement.id === 'f-circuit-nieuw') addCircuit();
+});
+
+// ── Deadline chips ────────────────────────────
+function renderDeadlineChips() {
+  const c = document.getElementById('dl-chips');
+  if (!deadlineHistory.length) { c.innerHTML = ''; return; }
+  c.innerHTML = '<span class="dl-chips-label">Eerder gebruikt:</span>' +
+    deadlineHistory.map((dl, i) =>
+      `<span class="dl-chip" onclick="pickDeadline('${dl}')">⏱ ${formatDate(dl)}<span class="dl-chip-del" onclick="removeDeadline(event,${i})">✕</span></span>`
+    ).join('');
+}
+function pickDeadline(val) { document.getElementById('f-deadline').value = val; }
+function removeDeadline(e, i) {
+  e.stopPropagation();
+  deadlineHistory.splice(i, 1);
+  localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory));
+  renderDeadlineChips();
+}
+function saveDeadlineToHistory(val) {
+  if (!val) return;
+  deadlineHistory = [val, ...deadlineHistory.filter(d => d !== val)].slice(0, 8);
+  localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory));
+  renderDeadlineChips();
+}
+
+// ── Evenement form tonen/verbergen ────────────
+function toggleEventForm(forceOpen) {
+  const layout = document.querySelector('#panel-evenementen .layout');
+  const isOpen = layout.classList.contains('show-right');
+  if (forceOpen === true || !isOpen) {
+    layout.classList.add('show-right');
+  } else {
+    layout.classList.remove('show-right');
+    cancelEdit();
   }
+}
 
-  function submitForm() {
-    const naam = document.getElementById('f-naam').value.trim();
-    const datum = document.getElementById('f-datum').value;
-    const type = document.getElementById('f-type').value;
-    const circuit = document.getElementById('f-circuit').value;
-    const deadline = document.getElementById('f-deadline').value;
-    const klassen = [...document.querySelectorAll('#klassen-grid .chk-item.on')].map(i => i.dataset.klasse);
-    if (!naam || !datum || !circuit || !type) { alert('Vul minstens naam, datum, type en circuit in.'); return; }
-    saveDeadlineToHistory(deadline);
-    const ev = { naam, datum, type, circuit, deadline, klassen };
-    if (editIndex >= 0) { events[editIndex] = ev; showToast('Evenement aangepast!', 'yellow'); }
-    else { events.push(ev); showToast('Evenement toegevoegd!', 'green'); }
-    events.sort((a, b) => new Date(a.datum) - new Date(b.datum));
-    save(); cancelEdit();
+// ── Tab wisseling ─────────────────────────────
+function switchAdminTab(tab) {
+  const isEv = tab === 'evenementen';
+  document.querySelectorAll('#dfk-root .nav-tab').forEach((b, i) =>
+    b.classList.toggle('on', isEv ? i === 0 : i === 1));
+  document.querySelectorAll('#dfk-root .mobile-tab').forEach((b, i) =>
+    b.classList.toggle('on', isEv ? i === 0 : i === 1));
+  document.getElementById('panel-evenementen').classList.toggle('on', isEv);
+  document.getElementById('panel-rijders').classList.toggle('on', !isEv);
+  if (!isEv) loadRijders();
+}
+
+// ── Rijders ───────────────────────────────────
+async function loadRijders() {
+  const container = document.getElementById('rider-list');
+  container.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>';
+  const { data, error } = await _supabase
+    .from('profiles')
+    .select('*')
+    .order('naam', { ascending: true });
+  if (error) { container.innerHTML = `<div class="empty">Fout: ${error.message}</div>`; return; }
+  _allRijders = data || [];
+  renderRijders();
+}
+
+function renderRijders() {
+  const container = document.getElementById('rider-list');
+  if (_allRijders.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>';
+    return;
   }
+  container.innerHTML = _allRijders.map(r => {
+    const voornaam = r.voornaam || '';
+    const naam     = r.naam     || '';
+    const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+    const isEditing = r.id === editRijderId;
+    const badgeType  = r.rol === 'admin' ? 'admin' : (r.kart_type === 'huur' ? 'huur' : 'eigen');
+    const badgeLabel = r.rol === 'admin' ? 'Admin' : (r.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart');
+    return `<div class="rider-row${isEditing?' editing':''}" onclick="editRijder('${r.id}')">
+      <div class="rider-avatar">${ini}</div>
+      <div class="rider-info">
+        <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="rider-meta">${r.klasse ? r.klasse : (r.huurkart_type || '—')}${r.startnummer ? ' · #'+r.startnummer : ''}</div>
+      </div>
+      <div class="rider-actions">
+        <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder('${r.id}')">✎</button>
+        <button class="ev-btn del"  onclick="deleteRijder(event,'${r.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  function renderEvents() {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = events.map((e,i) => ({...e, _idx: i})).filter(e => new Date(e.datum) >= today);
-    const past = events.map((e,i) => ({...e, _idx: i})).filter(e => new Date(e.datum) < today);
-    renderList('upcoming-list', upcoming, '📅', 'Nog geen evenementen toegevoegd', false);
-    renderList('past-list', past, '🏁', 'Geen afgelopen evenementen', true);
-  }
+function editRijder(id) {
+  editRijderId = id;
+  const r = _allRijders.find(x => x.id === id);
+  renderRijders();
+  document.querySelector('#panel-rijders .layout').classList.add('show-right');
+  const detail = document.getElementById('rider-detail');
+  detail.style.display = 'block';
+  detail.innerHTML = rijderFormHTML(r);
+}
 
-  function renderList(containerId, list, icon, emptyMsg, isPast) {
-    const container = document.getElementById(containerId);
-    if (list.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`; return; }
-    container.innerHTML = list.map(ev => {
-      const d = new Date(ev.datum);
-      const isEditing = ev._idx === editIndex;
-      const deadlineTxt = ev.deadline ? `⏱ ${formatDate(ev.deadline)}` : '';
-      return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}">
-        <div class="ev-date-block"><div class="ev-day">${d.getDate()}</div><div class="ev-month">${MAANDEN[d.getMonth()]}</div></div>
-        <div class="ev-divider"></div>
-        <div class="ev-info">
-          <div class="ev-name">${ev.naam}</div>
-          <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type}</div>
-          ${ev.klassen.length ? `<div class="ev-meta">${ev.klassen.join(' · ')}</div>` : ''}
-          ${deadlineTxt ? `<div class="ev-deadline">${deadlineTxt}</div>` : ''}
-        </div>
-        <div class="ev-actions">
-          <button class="ev-btn edit" onclick="editEvent(${ev._idx})">✎ Aanpassen</button>
-          <button class="ev-btn del" onclick="deleteEvent(${ev._idx})">Verwijder</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
+function rijderFormHTML(r) {
+  const kt = r?.kart_type || 'eigen';
+  const eigenVis = kt !== 'huur' ? 'block' : 'none';
+  const huurVis  = kt === 'huur' ? 'block' : 'none';
+  const kamp = r?.kampioenschappen || [];
+  const uitr = r?.uitrusting || [];
+  const benzine = r?.benzine || '';
 
-  function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return `${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} om ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-  }
+  const chk = (label, arr) => `
+    <div class="chk-item${arr.includes(label)?' on':''}" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div>
+      <span class="chk-label">${label}</span>
+    </div>`;
 
-  function showToast(msg, color) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.className = `toast ${color} show`;
-    setTimeout(() => t.classList.remove('show'), 2500);
-  }
+  const togRow = (label, isJa) => `
+    <div class="toggle-row"><span>${label}</span>
+      <div class="toggle-group">
+        <button class="tog-btn yes${isJa?' on':''}" onclick="tog(this)">Ja</button>
+        <button class="tog-btn no${!isJa?' on':''}"  onclick="tog(this)">Nee</button>
+      </div>
+    </div>`;
 
-  load();
+  const benzIdx = BENZ_LABELS.findIndex(l => l === benzine);
 
-  // ── Evenement formulier tonen/verbergen ────────────────────
-  function toggleEventForm(forceOpen) {
-    const layout = document.querySelector('#panel-evenementen .layout');
-    const isOpen = layout.classList.contains('show-right');
-    if (forceOpen === true || !isOpen) {
-      layout.classList.add('show-right');
-    } else {
-      layout.classList.remove('show-right');
-      cancelEdit();
-    }
-  }
+  return `
+    <button class="close-panel-btn" onclick="cancelRijderEdit()">✕ Sluiten</button>
+    <div class="page-title" style="margin-bottom:4px;">${(r?.voornaam||'')} ${(r?.naam||'')}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">Rijder aanpassen</p>
 
-  // ── Tab wisseling ──────────────────────────────────────────
-  function switchAdminTab(tab) {
-    const isEv = tab === 'evenementen';
-    document.querySelectorAll('#dfk-root .nav-tab').forEach((b, i) =>
-      b.classList.toggle('on', isEv ? i === 0 : i === 1));
-    document.querySelectorAll('#dfk-root .mobile-tab').forEach((b, i) =>
-      b.classList.toggle('on', isEv ? i === 0 : i === 1));
-    document.getElementById('panel-evenementen').classList.toggle('on', isEv);
-    document.getElementById('panel-rijders').classList.toggle('on', !isEv);
-    if (!isEv) renderRijders();
-  }
+    <div class="section-label">Rol</div>
+    <select class="rol-select field-select" id="r-rol" style="margin-bottom:1.5rem;">
+      <option value="rijder"${r?.rol==='rijder'?' selected':''}>Rijder</option>
+      <option value="admin"${r?.rol==='admin'?' selected':''}>Admin</option>
+    </select>
 
-  // ── Rijders ────────────────────────────────────────────────
-  let rijders = [];
-  let editRijderIndex = -1;
+    <div class="section-label">Persoonlijke gegevens</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r?.voornaam||''}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r?.naam||''}" /></div>
+    </div>
+    <label class="field-label">Geboortedatum rijder</label>
+    <input class="field-input" id="r-geb" type="date" value="${r?.geboortedatum||''}" />
+    <label class="field-label">Telefoonnummer contactpersoon</label>
+    <input class="field-input" id="r-tel" type="tel" value="${r?.telefoon||''}" />
 
-  function loadRijders() {
-    try { rijders = JSON.parse(localStorage.getItem('dfk_rijders') || '[]'); } catch(e) { rijders = []; }
-  }
-  function saveRijders() { localStorage.setItem('dfk_rijders', JSON.stringify(rijders)); }
+    <div class="section-label">Kart type</div>
+    <div class="r-kart-keuze">
+      <button class="r-kart-type-btn${kt!=='huur'?' on':''}" onclick="pickKartTypeAdmin(this)">🏎️ Eigen kart</button>
+      <button class="r-kart-type-btn${kt==='huur'?' on':''}"  onclick="pickKartTypeAdmin(this)">🔑 Huur kart</button>
+    </div>
 
-  function renderRijders() {
-    loadRijders();
-    const container = document.getElementById('rider-list');
-    if (rijders.length === 0) {
-      container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>';
-      return;
-    }
-    container.innerHTML = rijders.map((r, i) => {
-      const initialen = ((r.voornaam||'?')[0] + (r.naam||'?')[0]).toUpperCase();
-      const badgeType = r.kartType === 'huur' ? 'huur' : 'eigen';
-      const badgeLabel = r.kartType === 'huur' ? 'Huurkart' : 'Eigen kart';
-      const isEditing = i === editRijderIndex;
-      return `<div class="rider-row${isEditing ? ' editing' : ''}" onclick="editRijder(${i})">
-        <div class="rider-avatar">${initialen}</div>
-        <div class="rider-info">
-          <div class="rider-name">${r.voornaam || ''} ${r.naam || ''}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
-          <div class="rider-meta">${r.email || ''}${r.klasse ? ' · ' + r.klasse : ''}</div>
-        </div>
-        <div class="rider-actions">
-          <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder(${i})">✎ Aanpassen</button>
-          <button class="ev-btn del" onclick="deleteRijder(event,${i})">Verwijder</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  function nieuwRijder() {
-    editRijderIndex = -1;
-    renderRijders();
-    document.querySelector('#panel-rijders .layout').classList.add('show-right');
-    const detail = document.getElementById('rider-detail');
-    detail.style.display = 'block';
-    detail.innerHTML = rijderFormHTML(null, -1);
-  }
-
-  function rijderFormHTML(r, idx) {
-    const isNieuw = idx === -1;
-    const kt = r?.kartType || 'eigen';
-    const eigenVis = kt === 'eigen' ? 'block' : 'none';
-    const huurVis  = kt === 'huur'  ? 'block' : 'none';
-    const kamp = r?.kampioenschappen || [];
-    const mat  = r?.werkplaats || {};
-    const benz = r?.benzine || '';
-    const uitr = r?.uitrusting || [];
-
-    const chk = (label, arr) => `
-      <div class="chk-item${arr.includes(label)?' on':''}" onclick="toggleChk(this)">
-        <div class="chk-box"><span class="chk-mark">✓</span></div>
-        <span class="chk-label">${label}</span>
-      </div>`;
-
-    return `
-      <button class="close-panel-btn" onclick="cancelRijderEdit()">✕ Sluiten</button>
-      <div class="page-title" style="margin-bottom:4px;">${isNieuw ? 'Nieuw account' : (r.voornaam||'') + ' ' + (r.naam||'')}</div>
-      <p class="page-sub" style="margin-bottom:1.5rem;">${isNieuw ? 'Vul de gegevens in' : 'Account aanpassen'}</p>
-
-      <div class="section-label">Persoonlijke gegevens</div>
+    <!-- EIGEN KART -->
+    <div id="r-eigen-sectie" style="display:${eigenVis}">
+      <div class="section-label">Kart & Competitie</div>
       <div class="two-col">
-        <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r?.voornaam||''}" placeholder="Jan" /></div>
-        <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r?.naam||''}" placeholder="Janssen" /></div>
-      </div>
-      <label class="field-label">Geboortedatum rijder</label>
-      <input class="field-input" id="r-geb" type="date" value="${r?.geboortedatum||''}" />
-      <label class="field-label">E-mailadres</label>
-      <input class="field-input" id="r-email" type="email" value="${r?.email||''}" placeholder="jouw@email.be" />
-      <label class="field-label">Telefoonnummer contactpersoon</label>
-      <input class="field-input" id="r-tel" type="tel" value="${r?.tel||''}" placeholder="+32 477 00 00 00" />
-      <label class="field-label">Wachtwoord${isNieuw ? '' : ' (leeg = niet wijzigen)'}</label>
-      <input class="field-input" id="r-ww" type="password" placeholder="Minimaal 8 tekens" />
-
-      <div class="section-label">Kart type</div>
-      <div class="r-kart-keuze">
-        <button class="r-kart-type-btn${kt==='eigen'?' on':''}" onclick="pickKartTypeAdmin(this)">🏎️ Eigen kart</button>
-        <button class="r-kart-type-btn${kt==='huur'?' on':''}"  onclick="pickKartTypeAdmin(this)">🔑 Huur kart</button>
-      </div>
-
-      <!-- EIGEN KART -->
-      <div id="r-eigen-sectie" style="display:${eigenVis}">
-        <div class="section-label">Kart & Competitie</div>
-        <div class="two-col">
-          <div>
-            <label class="field-label">Klasse</label>
-            <select class="field-select" id="r-klasse" style="margin-bottom:0;">
-              <option value="">Selecteer...</option>
-              ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'].map(k=>`<option${r?.klasse===k?' selected':''}>${k}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label class="field-label">Startnummer</label>
-            <input class="field-input" id="r-startnr" type="number" value="${r?.startnummer||''}" placeholder="bijv. 42" style="margin-bottom:0;" />
-          </div>
+        <div>
+          <label class="field-label">Klasse</label>
+          <select class="field-select" id="r-klasse" style="margin-bottom:0;">
+            <option value="">Selecteer...</option>
+            ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax']
+              .map(k=>`<option${r?.klasse===k?' selected':''}>${k}</option>`).join('')}
+          </select>
         </div>
-
-        <label class="field-label" style="margin-top:1rem;">Kampioenschap(pen)</label>
-        <p class="hint">Meerdere keuzes mogelijk</p>
-        <div class="chk-grid" id="r-kamp-grid">
-          ${['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'].map(k=>chk(k,kamp)).join('')}
-        </div>
-
-        <div class="section-label">Materiaal in werkplaats</div>
-        <div class="toggle-row">
-          <span>Kart in onze werkplaats</span>
-          <div class="toggle-group">
-            <button class="tog-btn yes${mat.kart==='ja'?' on':''}" onclick="tog(this)">Ja</button>
-            <button class="tog-btn no${mat.kart==='nee'?' on':''}"  onclick="tog(this)">Nee</button>
-          </div>
-        </div>
-        <div class="toggle-row">
-          <span>Banden in onze werkplaats</span>
-          <div class="toggle-group">
-            <button class="tog-btn yes${mat.banden==='ja'?' on':''}" onclick="tog(this)">Ja</button>
-            <button class="tog-btn no${mat.banden==='nee'?' on':''}"  onclick="tog(this)">Nee</button>
-          </div>
-        </div>
-        <div class="toggle-row">
-          <span>Bak met materiaal in werkplaats</span>
-          <div class="toggle-group">
-            <button class="tog-btn yes${mat.bak==='ja'?' on':''}" onclick="tog(this)">Ja</button>
-            <button class="tog-btn no${mat.bak==='nee'?' on':''}"  onclick="tog(this)">Nee</button>
-          </div>
-        </div>
-
-        <div class="section-label">Benzine</div>
-        <div class="benzine-opts" id="r-benz-opts">
-          <button class="benz-btn${benz==='zelf'?' on':''}"      onclick="pickBenzAdmin(this)">⛽ Ik neem altijd zelf benzine mee</button>
-          <button class="benz-btn${benz==='dfk'?' on':''}"       onclick="pickBenzAdmin(this)">⛽ Ik pak altijd benzine bij DFK</button>
-          <button class="benz-btn${benz==='gemengd'?' on':''}"   onclick="pickBenzAdmin(this)">⛽ Training: zelf — Wedstrijd: bij DFK</button>
+        <div>
+          <label class="field-label">Startnummer</label>
+          <input class="field-input" id="r-startnr" type="number" value="${r?.startnummer||''}" style="margin-bottom:0;" />
         </div>
       </div>
-
-      <!-- HUUR KART -->
-      <div id="r-huur-sectie" style="display:${huurVis}">
-        <div class="section-label">Rijder afmetingen</div>
-        <div class="two-col">
-          <div><label class="field-label">Lengte (cm)</label><input class="field-input" id="r-lengte" type="number" value="${r?.lengte||''}" placeholder="bijv. 165" style="margin-bottom:0;" /></div>
-          <div><label class="field-label">Gewicht (kg)</label><input class="field-input" id="r-gewicht" type="number" value="${r?.gewicht||''}" placeholder="bijv. 65" style="margin-bottom:0;" /></div>
-        </div>
-
-        <div class="section-label">Kart huren</div>
-        <label class="field-label">Type kart</label>
-        <select class="field-select" id="r-huurkart">
-          <option value="">Selecteer een kart...</option>
-          ${['Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax Max'].map(k=>`<option${r?.huurkartType===k?' selected':''}>${k}</option>`).join('')}
-        </select>
-
-        <div class="section-label">Benodigde uitrusting</div>
-        <p class="hint">Meerdere keuzes mogelijk</p>
-        <div class="chk-grid" id="r-uitr-grid">
-          ${['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(k=>chk(k,uitr)).join('')}
-        </div>
+      <label class="field-label" style="margin-top:1rem;">Kampioenschap(pen)</label>
+      <div class="chk-grid" id="r-kamp-grid">
+        ${['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'].map(k=>chk(k,kamp)).join('')}
       </div>
+      <div class="section-label">Materiaal in werkplaats</div>
+      ${togRow('Kart in onze werkplaats',        !!r?.kart_in_werkplaats)}
+      ${togRow('Banden in onze werkplaats',       !!r?.banden_in_werkplaats)}
+      ${togRow('Bak met materiaal in werkplaats', !!r?.bak_in_werkplaats)}
+      <div class="section-label">Benzine</div>
+      <div class="benzine-opts" id="r-benz-opts">
+        ${BENZ_LABELS.map((lbl, i) => `<button class="benz-btn${i===benzIdx?' on':''}" onclick="pickBenzAdmin(this)">⛽&nbsp; ${lbl}</button>`).join('')}
+      </div>
+    </div>
 
-      <button class="add-btn" onclick="saveRijder(${idx})" style="margin-top:1rem;">${isNieuw ? '＋ Account aanmaken' : '✓ Wijzigingen opslaan'}</button>
-      <button class="reset-btn" onclick="cancelRijderEdit()">Annuleren</button>`;
-  }
+    <!-- HUUR KART -->
+    <div id="r-huur-sectie" style="display:${huurVis}">
+      <div class="section-label">Rijder afmetingen</div>
+      <div class="two-col">
+        <div><label class="field-label">Lengte (cm)</label><input class="field-input" id="r-lengte" type="number" value="${r?.lengte||''}" style="margin-bottom:0;" /></div>
+        <div><label class="field-label">Gewicht (kg)</label><input class="field-input" id="r-gewicht" type="number" value="${r?.gewicht||''}" style="margin-bottom:0;" /></div>
+      </div>
+      <div class="section-label">Kart huren</div>
+      <label class="field-label">Type kart</label>
+      <select class="field-select" id="r-huurkart">
+        <option value="">Selecteer een kart...</option>
+        ${['Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax Max']
+          .map(k=>`<option${r?.huurkart_type===k?' selected':''}>${k}</option>`).join('')}
+      </select>
+      <div class="section-label">Benodigde uitrusting</div>
+      <div class="chk-grid" id="r-uitr-grid">
+        ${['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(k=>chk(k,uitr)).join('')}
+      </div>
+    </div>
 
-  function editRijder(idx) {
-    editRijderIndex = idx;
-    const r = rijders[idx];
-    renderRijders();
-    document.querySelector('#panel-rijders .layout').classList.add('show-right');
-    const detail = document.getElementById('rider-detail');
-    detail.style.display = 'block';
-    detail.innerHTML = rijderFormHTML(r, idx);
-  }
+    <button class="add-btn" onclick="saveRijder('${r?.id}')" style="margin-top:1rem;">✓ Wijzigingen opslaan</button>
+    <button class="reset-btn" onclick="cancelRijderEdit()">Annuleren</button>`;
+}
 
-  function pickKartTypeAdmin(btn) {
-    btn.closest('.r-kart-keuze').querySelectorAll('.r-kart-type-btn').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    const isEigen = btn.textContent.includes('Eigen');
-    document.getElementById('r-eigen-sectie').style.display = isEigen ? 'block' : 'none';
-    document.getElementById('r-huur-sectie').style.display  = isEigen ? 'none'  : 'block';
-  }
+function pickKartTypeAdmin(btn) {
+  btn.closest('.r-kart-keuze').querySelectorAll('.r-kart-type-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const isEigen = btn.textContent.includes('Eigen');
+  document.getElementById('r-eigen-sectie').style.display = isEigen ? 'block' : 'none';
+  document.getElementById('r-huur-sectie').style.display  = isEigen ? 'none'  : 'block';
+}
 
-  function pickBenzAdmin(btn) {
-    btn.closest('#r-benz-opts').querySelectorAll('.benz-btn').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-  }
+function pickBenzAdmin(btn) {
+  btn.closest('#r-benz-opts').querySelectorAll('.benz-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
 
-  function saveRijder(idx) {
-    const voornaam = document.getElementById('r-voornaam').value.trim();
-    const naam     = document.getElementById('r-naam').value.trim();
-    if (!voornaam || !naam) { alert('Vul minstens voornaam en naam in.'); return; }
+function tog(btn) {
+  btn.closest('.toggle-group').querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
 
-    const isEigen = document.getElementById('r-eigen-sectie').style.display !== 'none';
-    const kartType = isEigen ? 'eigen' : 'huur';
+async function saveRijder(id) {
+  const voornaam = (document.getElementById('r-voornaam')?.value || '').trim();
+  const naam     = (document.getElementById('r-naam')?.value     || '').trim();
+  if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
 
-    const werkplaatsTogs = document.querySelectorAll('#r-eigen-sectie .toggle-row');
-    const werkplaats = {
-      kart:   werkplaatsTogs[0]?.querySelector('.tog-btn.yes.on') ? 'ja' : werkplaatsTogs[0]?.querySelector('.tog-btn.no.on') ? 'nee' : '',
-      banden: werkplaatsTogs[1]?.querySelector('.tog-btn.yes.on') ? 'ja' : werkplaatsTogs[1]?.querySelector('.tog-btn.no.on') ? 'nee' : '',
-      bak:    werkplaatsTogs[2]?.querySelector('.tog-btn.yes.on') ? 'ja' : werkplaatsTogs[2]?.querySelector('.tog-btn.no.on') ? 'nee' : '',
-    };
-    const benzineBtn = document.querySelector('#r-benz-opts .benz-btn.on');
-    const benzineMap = ['zelf','dfk','gemengd'];
-    const benzine = benzineBtn ? benzineMap[['zelf benzine','benzine bij DFK','Training'].findIndex(s => benzineBtn.textContent.includes(s))] || '' : '';
+  const isEigen  = document.getElementById('r-eigen-sectie').style.display !== 'none';
+  const benzEl   = document.querySelector('#r-benz-opts .benz-btn.on');
+  const benzIdx  = benzEl ? [...document.querySelectorAll('#r-benz-opts .benz-btn')].indexOf(benzEl) : -1;
+  const togRows  = document.querySelectorAll('#r-eigen-sectie .toggle-row');
 
-    const kampioenschappen = [...document.querySelectorAll('#r-kamp-grid .chk-item.on')].map(i => i.querySelector('.chk-label').textContent);
-    const uitrusting       = [...document.querySelectorAll('#r-uitr-grid .chk-item.on')].map(i => i.querySelector('.chk-label').textContent);
+  const profiel = {
+    voornaam,
+    naam,
+    geboortedatum:    document.getElementById('r-geb')?.value || null,
+    telefoon:         document.getElementById('r-tel')?.value || null,
+    rol:              document.getElementById('r-rol')?.value || 'rijder',
+    kart_type:        isEigen ? 'eigen' : 'huur',
+    klasse:           isEigen ? (document.getElementById('r-klasse')?.value || null) : null,
+    startnummer:      isEigen ? (parseInt(document.getElementById('r-startnr')?.value) || null) : null,
+    kampioenschappen: isEigen ? [...document.querySelectorAll('#r-kamp-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
+    kart_in_werkplaats:   isEigen ? !!(togRows[0]?.querySelector('.tog-btn.yes.on')) : null,
+    banden_in_werkplaats: isEigen ? !!(togRows[1]?.querySelector('.tog-btn.yes.on')) : null,
+    bak_in_werkplaats:    isEigen ? !!(togRows[2]?.querySelector('.tog-btn.yes.on')) : null,
+    benzine:          isEigen ? (benzIdx >= 0 ? BENZ_LABELS[benzIdx] : null) : null,
+    lengte:           !isEigen ? (parseInt(document.getElementById('r-lengte')?.value) || null) : null,
+    gewicht:          !isEigen ? (parseInt(document.getElementById('r-gewicht')?.value) || null) : null,
+    huurkart_type:    !isEigen ? (document.getElementById('r-huurkart')?.value || null) : null,
+    uitrusting:       !isEigen ? [...document.querySelectorAll('#r-uitr-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
+  };
 
-    const data = {
-      voornaam, naam,
-      geboortedatum: document.getElementById('r-geb').value,
-      email:         document.getElementById('r-email').value.trim(),
-      tel:           document.getElementById('r-tel').value.trim(),
-      kartType,
-      klasse:        document.getElementById('r-klasse')?.value || '',
-      startnummer:   document.getElementById('r-startnr')?.value || '',
-      kampioenschappen, werkplaats, benzine,
-      lengte:        document.getElementById('r-lengte')?.value || '',
-      gewicht:       document.getElementById('r-gewicht')?.value || '',
-      huurkartType:  document.getElementById('r-huurkart')?.value || '',
-      uitrusting,
-    };
+  const { error } = await _supabase.from('profiles').update(profiel).eq('id', id);
+  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
 
-    if (idx === -1) {
-      rijders.push(data);
-      showToast('Account aangemaakt!', 'green');
-    } else {
-      rijders[idx] = { ...rijders[idx], ...data };
-      showToast('Rijder opgeslagen!', 'green');
-    }
-    saveRijders();
-    editRijderIndex = -1;
-    cancelRijderEdit();
-  }
+  showToast('Rijder opgeslagen!', 'green');
+  await loadRijders();
+  cancelRijderEdit();
+}
 
-  function cancelRijderEdit() {
-    editRijderIndex = -1;
-    renderRijders();
-    document.querySelector('#panel-rijders .layout').classList.remove('show-right');
-    document.getElementById('rider-detail').style.display = '';
-  }
+async function deleteRijder(e, id) {
+  e.stopPropagation();
+  if (!confirm('Profiel van deze rijder verwijderen?\n\nLet op: het account blijft bestaan maar het profiel wordt gewist.')) return;
+  const { error } = await _supabase.from('profiles').delete().eq('id', id);
+  if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+  if (editRijderId === id) cancelRijderEdit();
+  await loadRijders();
+  showToast('Profiel verwijderd', 'yellow');
+}
 
-  function deleteRijder(e, idx) {
-    e.stopPropagation();
-    if (!confirm('Rijder verwijderen?')) return;
-    if (editRijderIndex === idx) cancelRijderEdit();
-    rijders.splice(idx, 1);
-    saveRijders();
-    renderRijders();
-    showToast('Rijder verwijderd', 'yellow');
-  }
+function cancelRijderEdit() {
+  editRijderId = null;
+  renderRijders();
+  document.querySelector('#panel-rijders .layout').classList.remove('show-right');
+  document.getElementById('rider-detail').style.display = '';
+}
+
+// ── Hulpfuncties ──────────────────────────────
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} om ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `toast ${color} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 </script>
 </body>
 </html>
