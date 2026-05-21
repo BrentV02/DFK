@@ -57,6 +57,10 @@
     #dfk-root .scroll-panel::-webkit-scrollbar-track { background: #111; }
     #dfk-root .scroll-panel::-webkit-scrollbar-thumb { background: #E02020; border-radius: 2px; }
     #dfk-root .hint { font-size: 11px; color: #666; font-family: 'Barlow', sans-serif; margin-bottom: 0.6rem; margin-top: -0.4rem; }
+    #dfk-root .kart-keuze-row { display: flex; gap: 10px; margin-bottom: 1.2rem; }
+    #dfk-root .kart-type-btn { flex: 1; padding: 13px 10px; background: #1c1c1c !important; border: 1px solid #444 !important; border-radius: 3px; color: #888 !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-align: center; }
+    #dfk-root .kart-type-btn:hover { border-color: #666 !important; color: #ccc !important; }
+    #dfk-root .kart-type-btn.on { background: #2a1010 !important; border-color: #E02020 !important; color: #fff !important; }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
@@ -117,73 +121,123 @@
         <label class="field-label">Wachtwoord</label>
         <input class="field-input" type="password" placeholder="Minimaal 8 tekens" />
 
-        <span class="section-title">Kart & Competitie</span>
+        <div class="kart-keuze-row">
+          <button class="kart-type-btn" onclick="pickKartType(this)">🏎️ Eigen kart</button>
+          <button class="kart-type-btn" onclick="pickKartType(this)">🔑 Huur kart</button>
+        </div>
 
-        <div class="two-col">
-          <div>
-            <label class="field-label">Klasse</label>
-            <select class="field-select">
-              <option value="">Selecteer...</option>
-              <option>Iame Mini</option>
-              <option>KA100</option>
-              <option>X30 Junior</option>
-              <option>X30 Senior</option>
-              <option>Iame Super Shifter</option>
-              <option>Formula Honda Cadet</option>
-              <option>Formula Honda Junior</option>
-              <option>Formula Honda Senior</option>
-              <option>Rotax</option>
-            </select>
+        <div id="eigen-kart-sectie" style="display:none;">
+
+          <span class="section-title">Kart & Competitie</span>
+
+          <div class="two-col">
+            <div>
+              <label class="field-label">Klasse</label>
+              <select class="field-select">
+                <option value="">Selecteer...</option>
+                <option>Iame Mini</option>
+                <option>KA100</option>
+                <option>X30 Junior</option>
+                <option>X30 Senior</option>
+                <option>Iame Super Shifter</option>
+                <option>Formula Honda Cadet</option>
+                <option>Formula Honda Junior</option>
+                <option>Formula Honda Senior</option>
+                <option>Rotax</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Startnummer</label>
+              <input class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
+            </div>
           </div>
-          <div>
-            <label class="field-label">Startnummer</label>
-            <input class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
+
+          <label class="field-label">Kampioenschap(pen)</label>
+          <p class="hint">Meerdere keuzes mogelijk</p>
+          <div class="chk-grid">
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Club Venray</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Hobby</span></div>
           </div>
-        </div>
 
-        <label class="field-label">Kampioenschap(pen)</label>
-        <p class="hint">Meerdere keuzes mogelijk</p>
-        <div class="chk-grid">
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Club Venray</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Hobby</span></div>
-        </div>
+          <span class="section-title">Materiaal in werkplaats</span>
 
-        <span class="section-title">Materiaal in werkplaats</span>
-
-        <div class="toggle-row">
-          <span>Kart in onze werkplaats</span>
-          <div class="toggle-group">
-            <button class="tog-btn yes" onclick="tog(this)">Ja</button>
-            <button class="tog-btn no" onclick="tog(this)">Nee</button>
+          <div class="toggle-row">
+            <span>Kart in onze werkplaats</span>
+            <div class="toggle-group">
+              <button class="tog-btn yes" onclick="tog(this)">Ja</button>
+              <button class="tog-btn no" onclick="tog(this)">Nee</button>
+            </div>
           </div>
-        </div>
-        <div class="toggle-row">
-          <span>Banden in onze werkplaats</span>
-          <div class="toggle-group">
-            <button class="tog-btn yes" onclick="tog(this)">Ja</button>
-            <button class="tog-btn no" onclick="tog(this)">Nee</button>
+          <div class="toggle-row">
+            <span>Banden in onze werkplaats</span>
+            <div class="toggle-group">
+              <button class="tog-btn yes" onclick="tog(this)">Ja</button>
+              <button class="tog-btn no" onclick="tog(this)">Nee</button>
+            </div>
           </div>
-        </div>
-        <div class="toggle-row">
-          <span>Bak met materiaal in werkplaats</span>
-          <div class="toggle-group">
-            <button class="tog-btn yes" onclick="tog(this)">Ja</button>
-            <button class="tog-btn no" onclick="tog(this)">Nee</button>
+          <div class="toggle-row">
+            <span>Bak met materiaal in werkplaats</span>
+            <div class="toggle-group">
+              <button class="tog-btn yes" onclick="tog(this)">Ja</button>
+              <button class="tog-btn no" onclick="tog(this)">Nee</button>
+            </div>
           </div>
+
+          <span class="section-title">Benzine</span>
+          <div class="benzine-opts">
+            <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik neem altijd zelf benzine mee</button>
+            <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik pak altijd benzine bij DFK</button>
+            <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
+          </div>
+
+          <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+          <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
+
         </div>
 
-        <span class="section-title">Benzine</span>
-        <div class="benzine-opts">
-          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik neem altijd zelf benzine mee</button>
-          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik pak altijd benzine bij DFK</button>
-          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
-        </div>
+        <div id="huur-kart-sectie" style="display:none;">
 
-        <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
-        <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
+          <span class="section-title">Rijder afmetingen</span>
+
+          <div class="two-col">
+            <div>
+              <label class="field-label">Lengte (cm)</label>
+              <input class="field-input" type="number" placeholder="bijv. 165" style="margin-bottom:0" />
+            </div>
+            <div>
+              <label class="field-label">Gewicht (kg)</label>
+              <input class="field-input" type="number" placeholder="bijv. 65" style="margin-bottom:0" />
+            </div>
+          </div>
+
+          <span class="section-title">Kart huren</span>
+
+          <label class="field-label">Type kart</label>
+          <select class="field-select">
+            <option value="">Selecteer een kart...</option>
+            <option>Formula Honda Cadet</option>
+            <option>Formula Honda Junior</option>
+            <option>Formula Honda Senior</option>
+            <option>Rotax Max</option>
+          </select>
+
+          <span class="section-title">Benodigde uitrusting</span>
+          <p class="hint">Meerdere keuzes mogelijk</p>
+          <div class="chk-grid">
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Helm</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Pak</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Handschoenen</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Schoenen</span></div>
+            <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Ribprotector</span></div>
+          </div>
+
+          <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+          <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
+
+        </div>
 
       </div>
     </div>
@@ -206,6 +260,13 @@ function tog(btn) {
 function pickBenz(btn) {
   document.querySelectorAll('#dfk-root .benz-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
+}
+function pickKartType(btn) {
+  document.querySelectorAll('#dfk-root .kart-type-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const isEigen = btn.textContent.includes('Eigen');
+  document.getElementById('eigen-kart-sectie').style.display = isEigen ? 'block' : 'none';
+  document.getElementById('huur-kart-sectie').style.display = isEigen ? 'none' : 'block';
 }
 function toggleChk(item) {
   item.classList.toggle('on');
