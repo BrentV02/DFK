@@ -954,55 +954,151 @@ function sluitInschrijvingenPanel() {
 }
 
 function exporteerInschrijvingen() {
-  // Gebruik dezelfde volgorde als de huidige weergave
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+
+  // Zelfde sortering als het scherm
   const lijst = (_inschrFilter
     ? _inschrData.filter(r => r.klasse === _inschrFilter)
     : [..._inschrData]
   ).sort((a, b) => {
-    const pa = a.profiles || {}, pb = b.profiles || {};
+    const pa = a.profiles||{}, pb = b.profiles||{};
     const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
     const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
-    if (_inschrSort === 'naam')   return nA.localeCompare(nB);
-    if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
-    if (_inschrSort === 'nr')     return (a.startnummer||9999) - (b.startnummer||9999);
-    if (_inschrSort === 'datum')  return new Date(a.bevestigd_op) - new Date(b.bevestigd_op);
+    if (_inschrSort==='naam')   return nA.localeCompare(nB);
+    if (_inschrSort==='naam_z') return nB.localeCompare(nA);
+    if (_inschrSort==='nr')     return (a.startnummer||9999)-(b.startnummer||9999);
+    if (_inschrSort==='datum')  return new Date(a.bevestigd_op)-new Date(b.bevestigd_op);
     return 0;
   });
 
-  const headers = [
-    'Naam', 'Kart type', 'Klasse', 'Startnummer',
-    'Kart in werkplaats', 'Banden in werkplaats', 'Bak in werkplaats',
-    'Benzine',
-    'Huurkart type', 'Lengte (cm)', 'Gewicht (kg)', 'Uitrusting nodig',
-  ];
+  const ev  = _inschrEvent;
+  const d   = ev ? new Date(ev.datum+'T12:00:00') : new Date();
+  const datumStr = `${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
+  const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-  const rows = lijst.map(r => {
-    const p     = r.profiles || {};
-    const naam  = `${p.voornaam||''} ${p.naam||''}`.trim();
+  // ── Cel-helpers ──────────────────────────────
+  const cel = (val, sid, asNum) => {
+    const isNum = asNum && val !== '' && val !== null && !isNaN(Number(val));
+    return `<Cell ss:StyleID="${sid}"><Data ss:Type="${isNum?'Number':'String'}">${isNum ? Number(val) : esc(val)}</Data></Cell>`;
+  };
+  const leeg  = sid => `<Cell ss:StyleID="${sid}"/>`;
+  const merge = (val, sid, span) =>
+    `<Cell ss:StyleID="${sid}" ss:MergeAcross="${span}"><Data ss:Type="String">${esc(val)}</Data></Cell>`;
+
+  // ── Data rijen ───────────────────────────────
+  const dataRijen = lijst.map((r, i) => {
+    const p      = r.profiles || {};
+    const naam   = `${p.voornaam||''} ${p.naam||''}`.trim();
     const isHuur = p.kart_type === 'huur';
-    return [
-      naam,
-      isHuur ? 'Huurkart' : 'Eigen kart',
-      isHuur ? '' : (r.klasse        || ''),
-      isHuur ? '' : (r.startnummer   || ''),
-      isHuur ? '' : (p.kart_in_werkplaats    ? 'Ja' : 'Nee'),
-      isHuur ? '' : (p.banden_in_werkplaats  ? 'Ja' : 'Nee'),
-      isHuur ? '' : (p.bak_in_werkplaats     ? 'Ja' : 'Nee'),
-      isHuur ? '' : (p.benzine       || ''),
-      isHuur ? (p.huurkart_type      || '') : '',
-      isHuur ? (p.lengte             || '') : '',
-      isHuur ? (p.gewicht            || '') : '',
-      isHuur ? (Array.isArray(p.uitrusting) ? p.uitrusting.join(', ') : '') : '',
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`);
+    const e      = i % 2 === 0;
+    const sT = e?'sE':'sO', sC = e?'sEC':'sOC',
+          sN = e?'sEN':'sON', sW = e?'sEW':'sOW';
+    const vink = v => v ? '✓' : '';
+
+    return `<Row>
+      ${isHuur ? leeg(sN) : cel(r.startnummer??'', sN, true)}
+      ${cel(naam, sT)}
+      ${cel(isHuur ? '' : (r.klasse||''), sT)}
+      ${cel(isHuur ? 'Huurkart' : 'Eigen kart', sC)}
+      ${isHuur ? leeg(sW) : cel(vink(p.kart_in_werkplaats),   sW)}
+      ${isHuur ? leeg(sW) : cel(vink(p.banden_in_werkplaats), sW)}
+      ${isHuur ? leeg(sW) : cel(vink(p.bak_in_werkplaats),    sW)}
+      ${cel(isHuur ? '' : (p.benzine||''), sT)}
+      ${cel(isHuur ? (p.huurkart_type||'') : '', sT)}
+      ${cel(isHuur ? `${p.lengte?p.lengte+' cm':'—'} / ${p.gewicht?p.gewicht+' kg':'—'}` : '', sC)}
+      ${cel(isHuur ? (Array.isArray(p.uitrusting)?p.uitrusting.join(', '):'') : '', sT)}
+    </Row>`;
   });
 
-  const csv  = [headers.map(h => `"${h}"`), ...rows].map(r => r.join(';')).join('\r\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const subtitel = `${datumStr}  ·  ${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Klasse: '+_inschrFilter:''}`;
+
+  // ── SpreadsheetML XML ────────────────────────
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+ <Style ss:ID="Default"><Font ss:FontName="Calibri" ss:Size="10"/><Alignment ss:Vertical="Center"/></Style>
+ <Style ss:ID="sTitel">
+  <Font ss:FontName="Calibri" ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/>
+  <Interior ss:Color="#111111" ss:Pattern="Solid"/>
+  <Alignment ss:Vertical="Center" ss:Horizontal="Left"/>
+ </Style>
+ <Style ss:ID="sSub">
+  <Font ss:FontName="Calibri" ss:Size="10" ss:Color="#999999"/>
+  <Interior ss:Color="#111111" ss:Pattern="Solid"/>
+  <Alignment ss:Vertical="Center" ss:Horizontal="Left"/>
+  <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="3" ss:Color="#E02020"/></Borders>
+ </Style>
+ <Style ss:ID="sHL">
+  <Font ss:FontName="Calibri" ss:Bold="1" ss:Size="10" ss:Color="#FFFFFF"/>
+  <Interior ss:Color="#CC1A1A" ss:Pattern="Solid"/>
+  <Alignment ss:Vertical="Center" ss:Horizontal="Left" ss:WrapText="1"/>
+  <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#FF5555"/></Borders>
+ </Style>
+ <Style ss:ID="sHC">
+  <Font ss:FontName="Calibri" ss:Bold="1" ss:Size="10" ss:Color="#FFFFFF"/>
+  <Interior ss:Color="#CC1A1A" ss:Pattern="Solid"/>
+  <Alignment ss:Vertical="Center" ss:Horizontal="Center" ss:WrapText="1"/>
+  <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#FF5555"/></Borders>
+ </Style>
+ <Style ss:ID="sE"> <Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Left"/></Style>
+ <Style ss:ID="sO"> <Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Left"/></Style>
+ <Style ss:ID="sEC"><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+ <Style ss:ID="sOC"><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#111111"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+ <Style ss:ID="sEN"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="13" ss:Color="#CC1A1A"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+ <Style ss:ID="sON"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="13" ss:Color="#CC1A1A"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+ <Style ss:ID="sEW"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1A7A1A"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+ <Style ss:ID="sOW"><Font ss:FontName="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1A7A1A"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+</Styles>
+<Worksheet ss:Name="Inschrijvingen">
+ <Table ss:DefaultRowHeight="20">
+  <Column ss:Width="42"/>
+  <Column ss:Width="145"/>
+  <Column ss:Width="110"/>
+  <Column ss:Width="70"/>
+  <Column ss:Width="52"/>
+  <Column ss:Width="60"/>
+  <Column ss:Width="46"/>
+  <Column ss:Width="195"/>
+  <Column ss:Width="125"/>
+  <Column ss:Width="88"/>
+  <Column ss:Width="145"/>
+  <Row ss:Height="34">${merge(ev?.naam||'Inschrijvingen','sTitel',10)}</Row>
+  <Row ss:Height="18">${merge(subtitel,'sSub',10)}</Row>
+  <Row ss:Height="30">
+   <Cell ss:StyleID="sHC"><Data ss:Type="String">#</Data></Cell>
+   <Cell ss:StyleID="sHL"><Data ss:Type="String">Naam</Data></Cell>
+   <Cell ss:StyleID="sHL"><Data ss:Type="String">Klasse</Data></Cell>
+   <Cell ss:StyleID="sHC"><Data ss:Type="String">Kart type</Data></Cell>
+   <Cell ss:StyleID="sHC"><Data ss:Type="String">Kart WP</Data></Cell>
+   <Cell ss:StyleID="sHC"><Data ss:Type="String">Banden WP</Data></Cell>
+   <Cell ss:StyleID="sHC"><Data ss:Type="String">Bak WP</Data></Cell>
+   <Cell ss:StyleID="sHL"><Data ss:Type="String">Benzine</Data></Cell>
+   <Cell ss:StyleID="sHL"><Data ss:Type="String">Huurkart type</Data></Cell>
+   <Cell ss:StyleID="sHC"><Data ss:Type="String">Lengte / Gewicht</Data></Cell>
+   <Cell ss:StyleID="sHL"><Data ss:Type="String">Uitrusting nodig</Data></Cell>
+  </Row>
+  ${dataRijen.join('\n  ')}
+ </Table>
+ <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+  <FreezePanes/>
+  <FrozenNoSplit/>
+  <SplitHorizontal>3</SplitHorizontal>
+  <TopRowBottomPane>3</TopRowBottomPane>
+  <ActivePane>2</ActivePane>
+ </WorksheetOptions>
+</Worksheet>
+</Workbook>`;
+
+  const blob = new Blob(['﻿'+xml], {type:'application/vnd.ms-excel;charset=utf-8;'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  const slug = (_inschrEvent?.naam || 'export').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  const slug = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
   a.href     = url;
-  a.download = `${slug}_inschrijvingen.csv`;
+  a.download = `${slug}_inschrijvingen.xls`;
   a.click();
   URL.revokeObjectURL(url);
 }
