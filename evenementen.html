@@ -206,6 +206,10 @@
       <div class="events-grid" id="events-grid">
         <div class="events-empty"><div class="events-empty-icon">⏳</div>Evenementen laden...</div>
       </div>
+      <div id="past-section" style="display:none; margin-top:2.5rem;">
+        <div class="section-label" style="color:#555; border-color:#1e1e1e;">Afgelopen evenementen</div>
+        <div class="events-grid" id="past-grid"></div>
+      </div>
     </div>
   </div>
 
@@ -398,15 +402,26 @@ async function uitloggen() {
 
 // ── Evenementen renderen ─────────────────────
 function renderEvents() {
-  const grid = document.getElementById('events-grid');
+  const grid     = document.getElementById('events-grid');
+  const pastGrid = document.getElementById('past-grid');
+  const pastSec  = document.getElementById('past-section');
+
   if (_allEvents.length === 0) {
     grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn nog geen evenementen gepland.</div>`;
+    pastSec.style.display = 'none';
     return;
   }
   const now   = new Date();
   const today = new Date(); today.setHours(0,0,0,0);
 
-  grid.innerHTML = _allEvents.map(ev => {
+  const upcoming = _allEvents.filter(ev => new Date(ev.datum + 'T12:00:00') >= today);
+  const past     = _allEvents.filter(ev => new Date(ev.datum + 'T12:00:00') <  today).reverse(); // meest recent bovenaan
+
+  if (upcoming.length === 0) {
+    grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn geen komende evenementen gepland.</div>`;
+  }
+
+  const buildCard = ev => {
     const d       = new Date(ev.datum + 'T12:00:00');
     const isPast  = d < today;
     const dagenOver = Math.round((d - today) / 86400000);
@@ -472,9 +487,9 @@ function renderEvents() {
       inschrijfBtn = `<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')">Inschrijven →</button>`;
     }
 
-    const topStyle = `style="${isPast ? 'background:#444;' : ''} align-items:flex-start;"`;
+    const topStyle = `style="${isPast ? 'background:#555;' : ''} align-items:flex-start;"`;
     return `
-      <div class="event-card">
+      <div class="event-card" style="${isPast ? 'opacity:0.7;' : ''}">
         <div class="event-card-top" ${topStyle}>
           <div>
             <span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span>
@@ -490,7 +505,20 @@ function renderEvents() {
           <div class="event-footer">${inschrijfBtn}</div>
         </div>
       </div>`;
-  }).join('');
+  };
+
+  // Komende evenementen
+  if (upcoming.length > 0) {
+    grid.innerHTML = upcoming.map(buildCard).join('');
+  }
+
+  // Afgelopen evenementen
+  if (past.length > 0) {
+    pastSec.style.display = '';
+    pastGrid.innerHTML = past.map(buildCard).join('');
+  } else {
+    pastSec.style.display = 'none';
+  }
 
   startCountdowns();
 }
