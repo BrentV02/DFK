@@ -7,7 +7,13 @@
 const SUPABASE_URL  = 'https://peycptkmzttxsqalwbtg.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_wyecy0yXOa9kd3YG-VHPpw_xKxxPEFW';
 
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession:     true,
+    detectSessionInUrl: false,   // e-mail+wachtwoord heeft geen URL-token nodig
+    autoRefreshToken:   true,
+  }
+});
 
 // ── Auth helpers ──────────────────────────────
 
