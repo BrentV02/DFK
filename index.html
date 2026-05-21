@@ -65,6 +65,8 @@
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 <body>
 
@@ -86,11 +88,12 @@
     <!-- LOGIN -->
     <div id="p-login" class="panel on">
       <label class="field-label">E-mailadres</label>
-      <input class="field-input" type="email" placeholder="jouw@email.be" />
+      <input id="login-email" class="field-input" type="email" placeholder="jouw@email.be" />
       <label class="field-label">Wachtwoord</label>
-      <input class="field-input" type="password" placeholder="••••••••" />
-      <button class="submit-btn" onclick="window.location.href='evenementen.html'">Inloggen →</button>
-      <button class="forgot">Wachtwoord vergeten?</button>
+      <input id="login-pw" class="field-input" type="password" placeholder="••••••••" />
+      <p id="login-msg" style="font-size:12px; color:#E02020; margin-bottom:0.6rem; min-height:18px; font-family:'Barlow',sans-serif;"></p>
+      <button class="submit-btn" onclick="doLogin()">Inloggen →</button>
+      <button class="forgot" onclick="doResetPassword()">Wachtwoord vergeten?</button>
     </div>
 
     <!-- REGISTRATIE -->
@@ -102,25 +105,26 @@
         <div class="two-col">
           <div>
             <label class="field-label">Voornaam</label>
-            <input class="field-input" type="text" placeholder="Jan" />
+            <input id="reg-voornaam" class="field-input" type="text" placeholder="Jan" />
           </div>
           <div>
             <label class="field-label">Naam</label>
-            <input class="field-input" type="text" placeholder="Janssen" />
+            <input id="reg-naam" class="field-input" type="text" placeholder="Janssen" />
           </div>
         </div>
 
         <label class="field-label">Geboortedatum rijder</label>
-        <input class="field-input" type="date" />
+        <input id="reg-geboorte" class="field-input" type="date" />
 
         <label class="field-label">E-mailadres</label>
-        <input class="field-input" type="email" placeholder="jouw@email.be" />
+        <input id="reg-email" class="field-input" type="email" placeholder="jouw@email.be" />
 
         <label class="field-label">Telefoonnummer contactpersoon</label>
-        <input class="field-input" type="tel" placeholder="+32 477 00 00 00" />
+        <input id="reg-tel" class="field-input" type="tel" placeholder="+32 477 00 00 00" />
 
         <label class="field-label">Wachtwoord</label>
-        <input class="field-input" type="password" placeholder="Minimaal 8 tekens" />
+        <input id="reg-pw" class="field-input" type="password" placeholder="Minimaal 8 tekens" />
+        <p id="reg-msg" style="font-size:12px; color:#E02020; margin-bottom:0.6rem; min-height:18px; font-family:'Barlow',sans-serif;"></p>
 
         <p style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:3px; text-transform:uppercase; color:#ffffff; text-align:center; margin-bottom:0.8rem;">Selecteer om door te gaan</p>
 
@@ -136,7 +140,7 @@
           <div class="two-col">
             <div>
               <label class="field-label">Klasse</label>
-              <select class="field-select">
+              <select id="reg-klasse" class="field-select">
                 <option value="">Selecteer...</option>
                 <option>Iame Mini</option>
                 <option>KA100</option>
@@ -151,7 +155,7 @@
             </div>
             <div>
               <label class="field-label">Startnummer</label>
-              <input class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
+              <input id="reg-startnr" class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
             </div>
           </div>
 
@@ -197,7 +201,7 @@
           </div>
 
           <p style="font-size:12px; color:#666; text-align:center; margin-top:1rem; margin-bottom:0.4rem; font-family:'Barlow',sans-serif; line-height:1.5;">Je kan je gegevens achteraf altijd aanpassen via <em style="color:#E02020; font-style:normal;">Mijn account</em>.</p>
-          <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+          <button id="btn-eigen" class="submit-btn" onclick="doRegister()">Account aanmaken →</button>
           <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
 
         </div>
@@ -209,18 +213,18 @@
           <div class="two-col">
             <div>
               <label class="field-label">Lengte (cm)</label>
-              <input class="field-input" type="number" placeholder="bijv. 165" style="margin-bottom:0" />
+              <input id="reg-lengte" class="field-input" type="number" placeholder="bijv. 165" style="margin-bottom:0" />
             </div>
             <div>
               <label class="field-label">Gewicht (kg)</label>
-              <input class="field-input" type="number" placeholder="bijv. 65" style="margin-bottom:0" />
+              <input id="reg-gewicht" class="field-input" type="number" placeholder="bijv. 65" style="margin-bottom:0" />
             </div>
           </div>
 
           <span class="section-title">Kart huren</span>
 
           <label class="field-label">Type kart</label>
-          <select class="field-select">
+          <select id="reg-huurkart" class="field-select">
             <option value="">Selecteer een kart...</option>
             <option>Formula Honda Cadet</option>
             <option>Formula Honda Junior</option>
@@ -239,7 +243,7 @@
           </div>
 
           <p style="font-size:12px; color:#666; text-align:center; margin-top:1rem; margin-bottom:0.4rem; font-family:'Barlow',sans-serif; line-height:1.5;">Je kan je gegevens achteraf altijd aanpassen via <em style="color:#E02020; font-style:normal;">Mijn account</em>.</p>
-          <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+          <button id="btn-huur" class="submit-btn" onclick="doRegister()">Account aanmaken →</button>
           <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
 
         </div>
@@ -254,16 +258,15 @@
 </div>
 
 <script>
+// ── UI helpers ────────────────────────────────
 function sw(tab) {
-  document.querySelectorAll('#dfk-root .tab-btn').forEach((b,i) => {
-    b.classList.toggle('on', (tab==='login'&&i===0)||(tab==='reg'&&i===1));
-  });
+  document.querySelectorAll('#dfk-root .tab-btn').forEach((b,i) =>
+    b.classList.toggle('on', (tab==='login'&&i===0)||(tab==='reg'&&i===1)));
   document.getElementById('p-login').classList.toggle('on', tab==='login');
   document.getElementById('p-reg').classList.toggle('on', tab==='reg');
 }
 function tog(btn) {
-  const grp = btn.closest('.toggle-group');
-  grp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  btn.closest('.toggle-group').querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
 }
 function pickBenz(btn) {
@@ -275,10 +278,143 @@ function pickKartType(btn) {
   btn.classList.add('on');
   const isEigen = btn.textContent.includes('Eigen');
   document.getElementById('eigen-kart-sectie').style.display = isEigen ? 'block' : 'none';
-  document.getElementById('huur-kart-sectie').style.display = isEigen ? 'none' : 'block';
+  document.getElementById('huur-kart-sectie').style.display  = isEigen ? 'none'  : 'block';
 }
-function toggleChk(item) {
-  item.classList.toggle('on');
+function toggleChk(item) { item.classList.toggle('on'); }
+
+function setMsg(id, tekst, ok = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = tekst;
+  el.style.color = ok ? '#4cff4c' : '#E02020';
+  if (tekst) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function checkSupabase() {
+  if (typeof _supabase === 'undefined') {
+    alert('Kan geen verbinding maken met de server.\n\nOpen het bestand via een lokale webserver (bv. VS Code Live Server) in plaats van direct als bestand.');
+    return false;
+  }
+  return true;
+}
+
+// ── Init: redirect als al ingelogd ────────────
+(async () => {
+  try {
+    const session = await getSession();
+    if (session) window.location.href = 'evenementen.html';
+  } catch(e) { /* geen sessie of Supabase niet geladen */ }
+})();
+
+// ── Inloggen ──────────────────────────────────
+async function doLogin() {
+  if (!checkSupabase()) return;
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  setMsg('login-msg', '');
+
+  if (!email || !pw) { setMsg('login-msg', 'Vul e-mail en wachtwoord in.'); return; }
+
+  const btn = document.querySelector('#p-login .submit-btn');
+  btn.textContent = 'Bezig...'; btn.disabled = true;
+
+  try {
+    const { error } = await _supabase.auth.signInWithPassword({ email, password: pw });
+    if (error) {
+      setMsg('login-msg', 'Ongeldig e-mailadres of wachtwoord.');
+      btn.textContent = 'Inloggen →'; btn.disabled = false;
+    } else {
+      window.location.href = 'evenementen.html';
+    }
+  } catch(e) {
+    setMsg('login-msg', 'Verbindingsfout: ' + e.message);
+    btn.textContent = 'Inloggen →'; btn.disabled = false;
+  }
+}
+
+// ── Wachtwoord reset ──────────────────────────
+async function doResetPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { setMsg('login-msg', 'Vul eerst je e-mailadres in.'); return; }
+  await _supabase.auth.resetPasswordForEmail(email);
+  setMsg('login-msg', 'Reset-link verstuurd naar ' + email, true);
+}
+
+// ── Account aanmaken ──────────────────────────
+async function doRegister() {
+  if (!checkSupabase()) return;
+
+  const voornaam = document.getElementById('reg-voornaam').value.trim();
+  const naam     = document.getElementById('reg-naam').value.trim();
+  const geboorte = document.getElementById('reg-geboorte').value;
+  const email    = document.getElementById('reg-email').value.trim();
+  const tel      = document.getElementById('reg-tel').value.trim();
+  const pw       = document.getElementById('reg-pw').value;
+  setMsg('reg-msg', '');
+
+  const isEigen = document.getElementById('eigen-kart-sectie').style.display !== 'none';
+  const isHuur  = document.getElementById('huur-kart-sectie').style.display  !== 'none';
+
+  if (!voornaam || !naam || !email || !pw) { setMsg('reg-msg', 'Vul alle verplichte velden in.'); return; }
+  if (pw.length < 8)                        { setMsg('reg-msg', 'Wachtwoord moet minimaal 8 tekens zijn.'); return; }
+  if (!isEigen && !isHuur)                  { setMsg('reg-msg', 'Selecteer eerst eigen kart of huur kart.'); return; }
+
+  const btn = document.getElementById(isEigen ? 'btn-eigen' : 'btn-huur');
+  btn.textContent = 'Bezig...'; btn.disabled = true;
+
+  try {
+    // 1. Registreer via Supabase Auth
+    const { data, error } = await _supabase.auth.signUp({ email, password: pw });
+    if (error) {
+      setMsg('reg-msg', error.message.includes('already') ? 'Dit e-mailadres is al in gebruik.' : error.message);
+      btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+      return;
+    }
+
+    const userId = data.user?.id;
+    if (!userId) {
+      setMsg('reg-msg', 'Account aangemaakt! Controleer je e-mail om te bevestigen, dan kan je inloggen.');
+      btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+      return;
+    }
+
+    // 2. Bouw profiel op
+    let profiel = { id: userId, voornaam, naam, geboortedatum: geboorte || null, telefoon: tel, kart_type: isEigen ? 'eigen' : 'huur' };
+
+    if (isEigen) {
+      const togRows = document.querySelectorAll('#eigen-kart-sectie .toggle-row');
+      const benzEl  = document.querySelector('#eigen-kart-sectie .benz-btn.on');
+      Object.assign(profiel, {
+        klasse:               document.getElementById('reg-klasse').value || null,
+        startnummer:          parseInt(document.getElementById('reg-startnr').value) || null,
+        kampioenschappen:     [...document.querySelectorAll('#eigen-kart-sectie .chk-item.on .chk-label')].map(e => e.textContent.trim()),
+        kart_in_werkplaats:   !!(togRows[0]?.querySelector('.tog-btn.yes.on')),
+        banden_in_werkplaats: !!(togRows[1]?.querySelector('.tog-btn.yes.on')),
+        bak_in_werkplaats:    !!(togRows[2]?.querySelector('.tog-btn.yes.on')),
+        benzine:              benzEl ? benzEl.textContent.replace(/⛽\s*/, '').trim() : null,
+      });
+    } else {
+      Object.assign(profiel, {
+        lengte:        parseInt(document.getElementById('reg-lengte').value)  || null,
+        gewicht:       parseInt(document.getElementById('reg-gewicht').value) || null,
+        huurkart_type: document.getElementById('reg-huurkart').value          || null,
+        uitrusting:    [...document.querySelectorAll('#huur-kart-sectie .chk-item.on .chk-label')].map(e => e.textContent.trim()),
+      });
+    }
+
+    // 3. Sla profiel op in Supabase
+    const { error: profErr } = await _supabase.from('profiles').upsert(profiel);
+    if (profErr) console.warn('Profiel opslaan mislukt:', profErr.message);
+
+    // 4. Succes
+    btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+    setMsg('reg-msg', '✓ Account aangemaakt! Je kan nu inloggen.', true);
+    setTimeout(() => sw('login'), 1800);
+
+  } catch(e) {
+    setMsg('reg-msg', 'Fout: ' + e.message);
+    btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+  }
 }
 </script>
 </body>
