@@ -108,6 +108,36 @@
     #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
     #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
     #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
+
+    /* ── Inschrijven bevestigingspaneel ── */
+    #dfk-root .inschrijf-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; }
+    #dfk-root .inschrijf-overlay.open { display: block; }
+    #dfk-root .inschrijf-panel { position: fixed; top: 0; right: -520px; width: 500px; height: 100vh; background: #141414; border-left: 3px solid #E02020; z-index: 600; display: flex; flex-direction: column; transition: right 0.25s ease; overflow-y: auto; }
+    #dfk-root .inschrijf-panel.open { right: 0; }
+    #dfk-root .ev-confirm-box { background: #1a0808; border: 1px solid #3a1010; border-left: 3px solid #E02020; border-radius: 3px; padding: 16px; margin-bottom: 1.4rem; }
+    #dfk-root .ev-confirm-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 1px; margin-bottom: 6px; }
+    #dfk-root .ev-confirm-meta { font-size: 13px; color: #aaa; }
+    #dfk-root .cf-field { margin-bottom: 0.85rem; }
+    #dfk-root .cf-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #555; margin-bottom: 3px; }
+    #dfk-root .cf-value { font-size: 14px; color: #ccc; }
+    #dfk-root .cf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.85rem; }
+    #dfk-root .cf-two .cf-field { margin-bottom: 0; }
+    #dfk-root .confirm-vraag { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin: 1.8rem 0 0.4rem; }
+    #dfk-root .confirm-hint { font-size: 13px; color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
+    #dfk-root .bevestig-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
+    #dfk-root .bevestig-btn:hover { background: #c01010; }
+    #dfk-root .annuleer-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #666; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .annuleer-btn:hover { color: #ccc; border-color: #444; }
+    @media (max-width: 768px) {
+      #dfk-root .inschrijf-panel { width: 100%; right: -100%; }
+    }
+    /* Inschrijf-paneel velden altijd bewerkbaar, ook als root locked is */
+    #dfk-root.locked #inschrijf-panel .field-input { background: #1c1c1c; border-color: #333; color: #fff; pointer-events: auto; }
+    #dfk-root.locked #inschrijf-panel .field-select { background: #1c1c1c; border-color: #333; color: #fff; pointer-events: auto; }
+    #dfk-root.locked #inschrijf-panel .tog-btn { pointer-events: auto; }
+    #dfk-root.locked #inschrijf-panel .chk-item { pointer-events: auto; }
+    #dfk-root.locked #inschrijf-panel .benz-btn { pointer-events: auto; }
+    #dfk-root #inschrijf-panel input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
   </style>
 </head>
 <body>
@@ -144,6 +174,15 @@
   </div>
 
   <div class="overlay" id="overlay" onclick="closeAccount()"></div>
+
+  <div class="inschrijf-overlay" id="inschrijf-overlay" onclick="sluitInschrijven()"></div>
+  <div class="inschrijf-panel" id="inschrijf-panel">
+    <div class="panel-header">
+      <span class="panel-title">Inschrijven</span>
+      <button class="panel-close" onclick="sluitInschrijven()">✕</button>
+    </div>
+    <div class="panel-body" id="inschrijf-body"></div>
+  </div>
 
   <div class="account-panel" id="account-panel">
     <div class="panel-header">
@@ -224,7 +263,7 @@ function renderEvents() {
     return;
   }
   const today = new Date(); today.setHours(0,0,0,0);
-  grid.innerHTML = events.map(ev => {
+  grid.innerHTML = events.map((ev, idx) => {
     const d = new Date(ev.datum);
     const isPast = d < today;
     const dagenOver = Math.round((d - today) / 86400000);
@@ -243,7 +282,7 @@ function renderEvents() {
     const klassenHtml = ev.klassen.length ? ev.klassen.map(k => `<span class="class-tag">${k}</span>`).join('') : '<span class="class-tag">Alle klassen</span>';
     const topStyle = isPast ? 'style="background:#444;"' : '';
     const footerDagen = isPast ? `<span class="event-days" style="color:#555;">Afgelopen</span>` : `<span class="event-days">Over <span>${dagenOver}</span> dag${dagenOver===1?'':'en'}</span>`;
-    const inschrijfBtn = isPast ? `<button class="inschrijf-btn vol">Gesloten</button>` : `<button class="inschrijf-btn">Inschrijven →</button>`;
+    const inschrijfBtn = isPast ? `<button class="inschrijf-btn vol">Gesloten</button>` : `<button class="inschrijf-btn" onclick="openInschrijven(${idx})">Inschrijven →</button>`;
     return `<div class="event-card"><div class="event-card-top" ${topStyle}><span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span><span class="event-badge">${isPast ? 'Afgelopen' : ev.type}</span></div><div class="event-body"><div class="event-name">${ev.naam}</div><div class="event-circuit">📍 ${ev.circuit}</div>${deadlineHtml}<div class="event-classes">${klassenHtml}</div><div class="event-footer">${footerDagen}${inschrijfBtn}</div></div></div>`;
   }).join('');
 }
@@ -258,6 +297,203 @@ function closeAccount() { document.getElementById('overlay').classList.remove('o
 function tog(btn) { const grp = btn.closest('.toggle-group'); grp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
 function pickBenz(btn) { document.querySelectorAll('#dfk-root .benz-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
 function toggleChk(item) { item.classList.toggle('on'); }
+
+let currentInschrijfIdx = null;
+
+function openInschrijven(idx) {
+  let events = [];
+  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
+  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
+  currentInschrijfIdx = idx;
+  const ev = events[idx];
+  if (!ev) return;
+
+  const d = new Date(ev.datum);
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+
+  // Lees accountgegevens uit het accountpaneel (DOM)
+  const ap = document.getElementById('account-panel');
+  const inputs = ap.querySelectorAll('.field-input');
+  const voornaam    = inputs[0] ? inputs[0].value : '';
+  const naam        = inputs[1] ? inputs[1].value : '';
+  const geboorte    = inputs[2] ? inputs[2].value : '';
+  const email       = inputs[3] ? inputs[3].value : '';
+  const telefoon    = inputs[4] ? inputs[4].value : '';
+  const klasse      = ap.querySelector('.field-select') ? ap.querySelector('.field-select').value : '';
+  const startnummer = inputs[6] ? inputs[6].value : '';
+
+  // Kampioenschappen – welke zijn geselecteerd
+  const KAMPIOENSCHAPPEN = ['Iame Benelux', 'NK Iame', 'GK4', 'Club Venray', 'Hobby'];
+  const selectedKamp = new Set([...ap.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim()));
+
+  // Werkplaats toggle states
+  const toggleRows = ap.querySelectorAll('.toggle-row');
+  const kartWp   = toggleRows[0] && toggleRows[0].querySelector('.tog-btn.yes.on') ? true : false;
+  const bandenWp = toggleRows[1] && toggleRows[1].querySelector('.tog-btn.yes.on') ? true : false;
+  const bakWp    = toggleRows[2] && toggleRows[2].querySelector('.tog-btn.yes.on') ? true : false;
+
+  // Benzine – welke knop is actief
+  const benzEl  = ap.querySelector('.benz-btn.on');
+  const allBenz = [...ap.querySelectorAll('.benz-btn')];
+  const benzIdx = benzEl ? allBenz.indexOf(benzEl) : 1;
+  const BENZ_OPTIES = [
+    '⛽&nbsp; Ik neem altijd zelf benzine mee',
+    '⛽&nbsp; Ik pak altijd benzine bij DFK',
+    '⛽&nbsp; Training: zelf — Wedstrijd: bij DFK'
+  ];
+
+  // Klasse opties
+  const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter',
+                   'Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
+  const klasseOpts = KLASSEN.map(k => `<option${k === klasse ? ' selected' : ''}>${k}</option>`).join('');
+
+  // Kampioenschappen chk-items HTML
+  const kampHtml = KAMPIOENSCHAPPEN.map(k => `
+    <div class="chk-item${selectedKamp.has(k) ? ' on' : ''}" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div>
+      <span class="chk-label">${k}</span>
+    </div>`).join('');
+
+  // Benzine knoppen HTML
+  const benzHtml = BENZ_OPTIES.map((txt, i) =>
+    `<button class="benz-btn${i === benzIdx ? ' on' : ''}" onclick="pickBenzInschrijf(this)">${txt}</button>`
+  ).join('');
+
+  // Toggle rij helper
+  const togRow = (label, isYes) => `
+    <div class="toggle-row">
+      <span>${label}</span>
+      <div class="toggle-group">
+        <button class="tog-btn yes${isYes ? ' on' : ''}" onclick="tog(this)">Ja</button>
+        <button class="tog-btn no${!isYes ? ' on' : ''}" onclick="tog(this)">Nee</button>
+      </div>
+    </div>`;
+
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div class="ev-confirm-box">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+    </div>
+
+    <p style="font-size:13px; color:#666; margin-bottom:1.4rem; line-height:1.5;">Controleer je gegevens en pas aan indien nodig voordat je bevestigt.</p>
+
+    <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input id="inp-voornaam" class="field-input" type="text" value="${voornaam}" /></div>
+      <div><label class="field-label">Naam</label><input id="inp-naam" class="field-input" type="text" value="${naam}" /></div>
+    </div>
+    <label class="field-label">Geboortedatum rijder</label>
+    <input id="inp-geboorte" class="field-input" type="date" value="${geboorte}" />
+    <label class="field-label">E-mailadres</label>
+    <input id="inp-email" class="field-input" type="email" value="${email}" />
+    <label class="field-label">Telefoonnummer</label>
+    <input id="inp-tel" class="field-input" type="tel" value="${telefoon}" />
+
+    <span class="section-title">Kart & Competitie</span>
+    <div class="two-col">
+      <div>
+        <label class="field-label">Klasse</label>
+        <select id="inp-klasse" class="field-select">${klasseOpts}</select>
+      </div>
+      <div><label class="field-label">Startnummer</label><input id="inp-startnr" class="field-input" type="number" value="${startnummer}" style="margin-bottom:0;" /></div>
+    </div>
+    <label class="field-label" style="margin-top:1rem; display:block;">Kampioenschappen</label>
+    <div class="chk-grid">${kampHtml}</div>
+
+    <span class="section-title">Materiaal in werkplaats</span>
+    ${togRow('Kart in onze werkplaats', kartWp)}
+    ${togRow('Banden in onze werkplaats', bandenWp)}
+    ${togRow('Bak met materiaal in werkplaats', bakWp)}
+
+    <span class="section-title">Benzine</span>
+    <div class="benzine-opts" id="inp-benz-opts">${benzHtml}</div>
+
+    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:24px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin:1.8rem 0 0.4rem;">Is alles correct?</div>
+    <p style="font-size:13px; color:#666; margin-bottom:1.4rem; line-height:1.5;">Bevestig je inschrijving of annuleer om terug te gaan.</p>
+
+    <button class="bevestig-btn" onclick="bevestigInschrijving()">Bevestigen →</button>
+    <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
+  `;
+
+  document.getElementById('inschrijf-overlay').classList.add('open');
+  document.getElementById('inschrijf-panel').classList.add('open');
+}
+
+function sluitInschrijven() {
+  document.getElementById('inschrijf-overlay').classList.remove('open');
+  document.getElementById('inschrijf-panel').classList.remove('open');
+  currentInschrijfIdx = null;
+}
+
+function pickBenzInschrijf(btn) {
+  btn.closest('.benzine-opts').querySelectorAll('.benz-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function bevestigInschrijving() {
+  // Lees gewijzigde waarden uit het inschrijf-paneel
+  const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const voornaam    = get('inp-voornaam');
+  const naam        = get('inp-naam');
+  const geboorte    = get('inp-geboorte');
+  const email       = get('inp-email');
+  const telefoon    = get('inp-tel');
+  const klasse      = get('inp-klasse');
+  const startnummer = get('inp-startnr');
+
+  // Sync terug naar het accountpaneel (DOM)
+  const ap = document.getElementById('account-panel');
+  const apInputs = ap.querySelectorAll('.field-input');
+  if (apInputs[0]) apInputs[0].value = voornaam;
+  if (apInputs[1]) apInputs[1].value = naam;
+  if (apInputs[2]) apInputs[2].value = geboorte;
+  if (apInputs[3]) apInputs[3].value = email;
+  if (apInputs[4]) apInputs[4].value = telefoon;
+  const apSelect = ap.querySelector('.field-select');
+  if (apSelect) apSelect.value = klasse;
+  if (apInputs[6]) apInputs[6].value = startnummer;
+
+  // Sync kampioenschappen
+  const inpKamp = [...document.querySelectorAll('#inschrijf-panel .chk-item')];
+  const apKamp  = [...ap.querySelectorAll('.chk-item')];
+  inpKamp.forEach((item, i) => {
+    if (apKamp[i]) { apKamp[i].classList.toggle('on', item.classList.contains('on')); }
+  });
+
+  // Sync werkplaats toggles
+  const inpTogGrps = [...document.querySelectorAll('#inschrijf-panel .toggle-group')];
+  const apTogGrps  = [...ap.querySelectorAll('.toggle-group')];
+  inpTogGrps.forEach((grp, i) => {
+    if (!apTogGrps[i]) return;
+    const isYes = !!grp.querySelector('.tog-btn.yes.on');
+    apTogGrps[i].querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+    const target = apTogGrps[i].querySelector(isYes ? '.tog-btn.yes' : '.tog-btn.no');
+    if (target) target.classList.add('on');
+  });
+
+  // Sync benzine
+  const inpBenzOn = document.querySelector('#inschrijf-panel .benz-btn.on');
+  if (inpBenzOn) {
+    const benzIdx = [...document.querySelectorAll('#inschrijf-panel .benz-btn')].indexOf(inpBenzOn);
+    ap.querySelectorAll('.benz-btn').forEach((b, i) => b.classList.toggle('on', i === benzIdx));
+  }
+
+  // Toon bevestigingsmelding
+  let events = [];
+  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
+  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
+  const ev = events[currentInschrijfIdx];
+  const evNaam = ev ? ev.naam : 'het evenement';
+
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div style="text-align:center; padding:3.5rem 1rem;">
+      <div style="font-size:52px; margin-bottom:1.2rem;">✅</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin-bottom:0.6rem;">Inschrijving bevestigd!</div>
+      <p style="font-size:14px; color:#888; margin-bottom:2.2rem; line-height:1.6;">Je bent ingeschreven voor<br><strong style="color:#fff;">${evNaam}</strong>.</p>
+      <button class="bevestig-btn" onclick="sluitInschrijven()" style="max-width:280px; margin:0 auto;">Sluiten</button>
+    </div>
+  `;
+}
 </script>
 </body>
 </html>

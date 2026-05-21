@@ -6,7 +6,7 @@
   <title>DFK – Inloggen</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0a0a0a; min-height: 100vh; }
+    html, body { background: #0a0a0a; min-height: 100vh; overflow-x: hidden; max-width: 100%; }
 
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap');
 
@@ -16,14 +16,15 @@
     #dfk-root .bot-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #E02020; }
     #dfk-root .logo { text-align: center; margin-bottom: 2rem; }
     #dfk-root .logo-line { width: 40px; height: 3px; background: #E02020; margin: 10px auto 0; display: block; }
-    #dfk-root .card { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 4px; width: 100%; max-width: 460px; padding: 2rem; }
+    #dfk-root .card { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 4px; width: 100%; max-width: 460px; padding: 2rem; overflow-x: hidden; }
     #dfk-root .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; }
     #dfk-root .tab-btn { flex: 1; padding: 10px; border-radius: 3px; border: 1px solid #555 !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; background-color: transparent !important; color: #cccccc !important; }
     #dfk-root .tab-btn.on { background-color: #E02020 !important; color: #ffffff !important; border-color: #E02020 !important; }
     #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
     #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-input { display: block; width: 100%; min-width: 0; max-width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020 !important; }
+    #dfk-root input[type="date"] { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
     #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
@@ -52,7 +53,7 @@
     #dfk-root .panel.on { display: block; }
     #dfk-root .terms { font-size: 11px; color: #555; text-align: center; margin-top: 1rem; line-height: 1.6; font-family: 'Barlow', sans-serif; }
     #dfk-root .terms em { color: #E02020; font-style: normal; cursor: pointer; }
-    #dfk-root .scroll-panel { max-height: 480px; overflow-y: auto; padding-right: 6px; }
+    #dfk-root .scroll-panel { max-height: 480px; overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
     #dfk-root .scroll-panel::-webkit-scrollbar { width: 4px; }
     #dfk-root .scroll-panel::-webkit-scrollbar-track { background: #111; }
     #dfk-root .scroll-panel::-webkit-scrollbar-thumb { background: #E02020; border-radius: 2px; }
@@ -120,6 +121,8 @@
 
         <label class="field-label">Wachtwoord</label>
         <input class="field-input" type="password" placeholder="Minimaal 8 tekens" />
+
+        <p style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:3px; text-transform:uppercase; color:#ffffff; text-align:center; margin-bottom:0.8rem;">Selecteer om door te gaan</p>
 
         <div class="kart-keuze-row">
           <button class="kart-type-btn" onclick="pickKartType(this)">🏎️ Eigen kart</button>
@@ -193,6 +196,7 @@
             <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
           </div>
 
+          <p style="font-size:12px; color:#666; text-align:center; margin-top:1rem; margin-bottom:0.4rem; font-family:'Barlow',sans-serif; line-height:1.5;">Je kan je gegevens achteraf altijd aanpassen via <em style="color:#E02020; font-style:normal;">Mijn account</em>.</p>
           <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
           <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
 
@@ -234,6 +238,7 @@
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Ribprotector</span></div>
           </div>
 
+          <p style="font-size:12px; color:#666; text-align:center; margin-top:1rem; margin-bottom:0.4rem; font-family:'Barlow',sans-serif; line-height:1.5;">Je kan je gegevens achteraf altijd aanpassen via <em style="color:#E02020; font-style:normal;">Mijn account</em>.</p>
           <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
           <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
 
@@ -242,6 +247,10 @@
       </div>
     </div>
   </div>
+</div>
+
+<div style="text-align:center; padding:1.5rem;">
+  <a href="admin.html" style="font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#333; text-decoration:none; border:1px solid #222; padding:6px 14px; border-radius:3px;">⚙ Admin</a>
 </div>
 
 <script>

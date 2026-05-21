@@ -18,9 +18,44 @@
     #dfk-root .nav-back { font-size: 12px; color: #666; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; }
     #dfk-root .nav-back:hover { color: #ccc; }
 
-    #dfk-root .layout { display: grid; grid-template-columns: 1fr 420px; gap: 0; flex: 1; }
-    #dfk-root .left-col { padding: 2rem; border-right: 1px solid #1e1e1e; overflow-y: auto; }
-    #dfk-root .right-col { padding: 2rem; background: #0d0d0d; overflow-y: auto; }
+    #dfk-root .layout { display: grid; grid-template-columns: 1fr; gap: 0; flex: 1; }
+    #dfk-root .layout.show-right { grid-template-columns: 1fr 420px; }
+    #dfk-root .left-col { padding: 2rem; overflow-y: auto; }
+    #dfk-root .layout.show-right .left-col { border-right: 1px solid #1e1e1e; }
+    #dfk-root .right-col { display: none; padding: 2rem; background: #0d0d0d; overflow-y: auto; overflow-x: hidden; }
+    #dfk-root .layout.show-right .right-col { display: block; }
+    #dfk-root .col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.8rem; }
+    #dfk-root .col-header .page-title { margin-bottom: 0; }
+    #dfk-root .open-form-btn { padding: 8px 16px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+    #dfk-root .open-form-btn:hover { background: #c01010; }
+    #dfk-root .close-panel-btn { display: block; width: 100%; padding: 9px; background: transparent; color: #444; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 1.5rem; text-align: center; }
+    #dfk-root .close-panel-btn:hover { color: #888; border-color: #333; }
+
+    #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
+    #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
+    #dfk-root .toggle-group { display: flex; gap: 6px; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #888; }
+    #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
+    #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
+    #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
+    #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
+    #dfk-root .r-kart-keuze { display: flex; gap: 10px; margin-bottom: 1.2rem; }
+    #dfk-root .r-kart-type-btn { flex: 1; padding: 13px 10px; background: #1c1c1c; border: 1px solid #444; border-radius: 3px; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-align: center; }
+    #dfk-root .r-kart-type-btn.on { background: #2a1010; border-color: #E02020; color: #fff; }
+
+    #dfk-root .mobile-tab-bar { display: none; background: #111; border-bottom: 3px solid #1a1a1a; position: sticky; top: 60px; z-index: 99; }
+    #dfk-root .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
+    #dfk-root .mobile-tab.on { color: #fff; border-bottom-color: #E02020; }
+
+    @media (max-width: 768px) {
+      #dfk-root .nav-tabs { display: none !important; }
+      #dfk-root .nav-back { font-size: 11px; }
+      #dfk-root .mobile-tab-bar { display: flex; }
+      #dfk-root .layout.show-right { grid-template-columns: 1fr; }
+      #dfk-root .layout.show-right .left-col { display: none; }
+      #dfk-root .layout.show-right .right-col { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 200; overflow-y: auto; padding: 1.5rem; }
+    }
 
     #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
     #dfk-root .page-sub { font-size: 13px; color: #666; margin-bottom: 1.8rem; }
@@ -29,6 +64,7 @@
     #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
     #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020; }
+    #dfk-root input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
     #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
@@ -105,6 +141,27 @@
     #dfk-root .kart-type-btn { flex: 1; padding: 18px 12px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
     #dfk-root .kart-type-btn:hover { border-color: #555; color: #ccc; }
     #dfk-root .kart-type-btn.on { background: #2a1010; border-color: #E02020; color: #fff; }
+
+    #dfk-root .nav-tabs { display: flex; height: 100%; margin-left: 1.5rem; }
+    #dfk-root .nav-tab { display: flex; align-items: center; padding: 0 20px; height: 100%; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; cursor: pointer; border: none; border-bottom: 3px solid transparent; background: transparent; transition: color 0.15s; margin-bottom: -3px; }
+    #dfk-root .nav-tab:hover { color: #ccc; }
+    #dfk-root .nav-tab.on { color: #fff; border-bottom-color: #E02020; }
+
+    #dfk-root .admin-panel { display: none; flex: 1; flex-direction: column; }
+    #dfk-root .admin-panel.on { display: flex; }
+
+    #dfk-root .rider-list { display: flex; flex-direction: column; gap: 10px; }
+    #dfk-root .rider-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .rider-row:hover { border-color: #444; }
+    #dfk-root .rider-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
+    #dfk-root .rider-avatar { width: 40px; height: 40px; background: #E02020; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 16px; color: #fff; flex-shrink: 0; }
+    #dfk-root .rider-info { flex: 1; min-width: 0; }
+    #dfk-root .rider-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .rider-meta { font-size: 12px; color: #666; margin-top: 2px; }
+    #dfk-root .rider-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
+    #dfk-root .rider-badge.eigen { background: #1a3a1a; color: #4ccc4c; }
+    #dfk-root .rider-badge.huur { background: #1a2a3a; color: #4caaf0; }
+    #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -112,18 +169,35 @@
 <div id="dfk-root">
 
   <nav class="nav">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
-      <span class="nav-badge">Admin</span>
+    <div style="display:flex; align-items:center; height:100%;">
+      <div style="display:flex; align-items:center; gap:12px; padding-right:1rem; border-right:1px solid #222;">
+        <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
+        <span class="nav-badge">Admin</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
+        <button class="nav-tab" onclick="switchAdminTab('rijders')">Rijders</button>
+      </div>
     </div>
-    <a class="nav-back" href="evenementen.html">← Terug naar evenementen</a>
   </nav>
 
+  <div class="mobile-tab-bar">
+    <button class="mobile-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
+    <button class="mobile-tab" onclick="switchAdminTab('rijders')">Rijders</button>
+  </div>
+
+  <!-- PANEL: EVENEMENTEN -->
+  <div id="panel-evenementen" class="admin-panel on">
   <div class="layout">
 
     <div class="left-col">
-      <div class="page-title">Evenementen</div>
-      <p class="page-sub">Overzicht van alle ingevoerde evenementen</p>
+      <div class="col-header">
+        <div>
+          <div class="page-title">Evenementen</div>
+          <p class="page-sub" style="margin-bottom:0;">Overzicht van alle ingevoerde evenementen</p>
+        </div>
+        <button class="open-form-btn" onclick="toggleEventForm()">＋ Toevoegen</button>
+      </div>
       <div class="section-label">Komende evenementen</div>
       <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">📅</div>Nog geen evenementen toegevoegd</div></div>
       <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
@@ -131,6 +205,7 @@
     </div>
 
     <div class="right-col">
+      <button class="close-panel-btn" onclick="toggleEventForm()">✕ Sluiten</button>
       <div class="page-title" id="form-title">Toevoegen</div>
       <p class="page-sub" id="form-sub">Vul het formulier in om een nieuw evenement aan te maken</p>
 
@@ -188,6 +263,30 @@
       <button class="reset-btn" onclick="cancelEdit()">Annuleren / leegmaken</button>
     </div>
   </div>
+  </div><!-- einde panel-evenementen -->
+
+  <!-- PANEL: RIJDERS -->
+  <div id="panel-rijders" class="admin-panel">
+    <div class="layout">
+
+      <div class="left-col">
+        <div class="col-header">
+          <div>
+            <div class="page-title">Rijders</div>
+            <p class="page-sub" style="margin-bottom:0;">Overzicht van alle geregistreerde accounts</p>
+          </div>
+          <button class="open-form-btn" onclick="nieuwRijder()">＋ Toevoegen</button>
+        </div>
+        <div class="section-label">Alle rijders</div>
+        <div class="rider-list" id="rider-list">
+          <div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>
+        </div>
+      </div>
+
+      <div class="right-col" id="rider-detail"></div>
+
+    </div>
+  </div><!-- einde panel-rijders -->
 
   <div class="toast green" id="toast"></div>
 </div>
@@ -265,6 +364,7 @@
   }
 
   function editEvent(idx) {
+    toggleEventForm(true);
     editIndex = idx;
     const ev = events[idx];
     document.getElementById('f-naam').value = ev.naam;
@@ -348,6 +448,283 @@
   }
 
   load();
+
+  // ── Evenement formulier tonen/verbergen ────────────────────
+  function toggleEventForm(forceOpen) {
+    const layout = document.querySelector('#panel-evenementen .layout');
+    const isOpen = layout.classList.contains('show-right');
+    if (forceOpen === true || !isOpen) {
+      layout.classList.add('show-right');
+    } else {
+      layout.classList.remove('show-right');
+      cancelEdit();
+    }
+  }
+
+  // ── Tab wisseling ──────────────────────────────────────────
+  function switchAdminTab(tab) {
+    const isEv = tab === 'evenementen';
+    document.querySelectorAll('#dfk-root .nav-tab').forEach((b, i) =>
+      b.classList.toggle('on', isEv ? i === 0 : i === 1));
+    document.querySelectorAll('#dfk-root .mobile-tab').forEach((b, i) =>
+      b.classList.toggle('on', isEv ? i === 0 : i === 1));
+    document.getElementById('panel-evenementen').classList.toggle('on', isEv);
+    document.getElementById('panel-rijders').classList.toggle('on', !isEv);
+    if (!isEv) renderRijders();
+  }
+
+  // ── Rijders ────────────────────────────────────────────────
+  let rijders = [];
+  let editRijderIndex = -1;
+
+  function loadRijders() {
+    try { rijders = JSON.parse(localStorage.getItem('dfk_rijders') || '[]'); } catch(e) { rijders = []; }
+  }
+  function saveRijders() { localStorage.setItem('dfk_rijders', JSON.stringify(rijders)); }
+
+  function renderRijders() {
+    loadRijders();
+    const container = document.getElementById('rider-list');
+    if (rijders.length === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>';
+      return;
+    }
+    container.innerHTML = rijders.map((r, i) => {
+      const initialen = ((r.voornaam||'?')[0] + (r.naam||'?')[0]).toUpperCase();
+      const badgeType = r.kartType === 'huur' ? 'huur' : 'eigen';
+      const badgeLabel = r.kartType === 'huur' ? 'Huurkart' : 'Eigen kart';
+      const isEditing = i === editRijderIndex;
+      return `<div class="rider-row${isEditing ? ' editing' : ''}" onclick="editRijder(${i})">
+        <div class="rider-avatar">${initialen}</div>
+        <div class="rider-info">
+          <div class="rider-name">${r.voornaam || ''} ${r.naam || ''}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+          <div class="rider-meta">${r.email || ''}${r.klasse ? ' · ' + r.klasse : ''}</div>
+        </div>
+        <div class="rider-actions">
+          <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder(${i})">✎ Aanpassen</button>
+          <button class="ev-btn del" onclick="deleteRijder(event,${i})">Verwijder</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function nieuwRijder() {
+    editRijderIndex = -1;
+    renderRijders();
+    document.querySelector('#panel-rijders .layout').classList.add('show-right');
+    const detail = document.getElementById('rider-detail');
+    detail.style.display = 'block';
+    detail.innerHTML = rijderFormHTML(null, -1);
+  }
+
+  function rijderFormHTML(r, idx) {
+    const isNieuw = idx === -1;
+    const kt = r?.kartType || 'eigen';
+    const eigenVis = kt === 'eigen' ? 'block' : 'none';
+    const huurVis  = kt === 'huur'  ? 'block' : 'none';
+    const kamp = r?.kampioenschappen || [];
+    const mat  = r?.werkplaats || {};
+    const benz = r?.benzine || '';
+    const uitr = r?.uitrusting || [];
+
+    const chk = (label, arr) => `
+      <div class="chk-item${arr.includes(label)?' on':''}" onclick="toggleChk(this)">
+        <div class="chk-box"><span class="chk-mark">✓</span></div>
+        <span class="chk-label">${label}</span>
+      </div>`;
+
+    return `
+      <button class="close-panel-btn" onclick="cancelRijderEdit()">✕ Sluiten</button>
+      <div class="page-title" style="margin-bottom:4px;">${isNieuw ? 'Nieuw account' : (r.voornaam||'') + ' ' + (r.naam||'')}</div>
+      <p class="page-sub" style="margin-bottom:1.5rem;">${isNieuw ? 'Vul de gegevens in' : 'Account aanpassen'}</p>
+
+      <div class="section-label">Persoonlijke gegevens</div>
+      <div class="two-col">
+        <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r?.voornaam||''}" placeholder="Jan" /></div>
+        <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r?.naam||''}" placeholder="Janssen" /></div>
+      </div>
+      <label class="field-label">Geboortedatum rijder</label>
+      <input class="field-input" id="r-geb" type="date" value="${r?.geboortedatum||''}" />
+      <label class="field-label">E-mailadres</label>
+      <input class="field-input" id="r-email" type="email" value="${r?.email||''}" placeholder="jouw@email.be" />
+      <label class="field-label">Telefoonnummer contactpersoon</label>
+      <input class="field-input" id="r-tel" type="tel" value="${r?.tel||''}" placeholder="+32 477 00 00 00" />
+      <label class="field-label">Wachtwoord${isNieuw ? '' : ' (leeg = niet wijzigen)'}</label>
+      <input class="field-input" id="r-ww" type="password" placeholder="Minimaal 8 tekens" />
+
+      <div class="section-label">Kart type</div>
+      <div class="r-kart-keuze">
+        <button class="r-kart-type-btn${kt==='eigen'?' on':''}" onclick="pickKartTypeAdmin(this)">🏎️ Eigen kart</button>
+        <button class="r-kart-type-btn${kt==='huur'?' on':''}"  onclick="pickKartTypeAdmin(this)">🔑 Huur kart</button>
+      </div>
+
+      <!-- EIGEN KART -->
+      <div id="r-eigen-sectie" style="display:${eigenVis}">
+        <div class="section-label">Kart & Competitie</div>
+        <div class="two-col">
+          <div>
+            <label class="field-label">Klasse</label>
+            <select class="field-select" id="r-klasse" style="margin-bottom:0;">
+              <option value="">Selecteer...</option>
+              ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'].map(k=>`<option${r?.klasse===k?' selected':''}>${k}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Startnummer</label>
+            <input class="field-input" id="r-startnr" type="number" value="${r?.startnummer||''}" placeholder="bijv. 42" style="margin-bottom:0;" />
+          </div>
+        </div>
+
+        <label class="field-label" style="margin-top:1rem;">Kampioenschap(pen)</label>
+        <p class="hint">Meerdere keuzes mogelijk</p>
+        <div class="chk-grid" id="r-kamp-grid">
+          ${['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'].map(k=>chk(k,kamp)).join('')}
+        </div>
+
+        <div class="section-label">Materiaal in werkplaats</div>
+        <div class="toggle-row">
+          <span>Kart in onze werkplaats</span>
+          <div class="toggle-group">
+            <button class="tog-btn yes${mat.kart==='ja'?' on':''}" onclick="tog(this)">Ja</button>
+            <button class="tog-btn no${mat.kart==='nee'?' on':''}"  onclick="tog(this)">Nee</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span>Banden in onze werkplaats</span>
+          <div class="toggle-group">
+            <button class="tog-btn yes${mat.banden==='ja'?' on':''}" onclick="tog(this)">Ja</button>
+            <button class="tog-btn no${mat.banden==='nee'?' on':''}"  onclick="tog(this)">Nee</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span>Bak met materiaal in werkplaats</span>
+          <div class="toggle-group">
+            <button class="tog-btn yes${mat.bak==='ja'?' on':''}" onclick="tog(this)">Ja</button>
+            <button class="tog-btn no${mat.bak==='nee'?' on':''}"  onclick="tog(this)">Nee</button>
+          </div>
+        </div>
+
+        <div class="section-label">Benzine</div>
+        <div class="benzine-opts" id="r-benz-opts">
+          <button class="benz-btn${benz==='zelf'?' on':''}"      onclick="pickBenzAdmin(this)">⛽ Ik neem altijd zelf benzine mee</button>
+          <button class="benz-btn${benz==='dfk'?' on':''}"       onclick="pickBenzAdmin(this)">⛽ Ik pak altijd benzine bij DFK</button>
+          <button class="benz-btn${benz==='gemengd'?' on':''}"   onclick="pickBenzAdmin(this)">⛽ Training: zelf — Wedstrijd: bij DFK</button>
+        </div>
+      </div>
+
+      <!-- HUUR KART -->
+      <div id="r-huur-sectie" style="display:${huurVis}">
+        <div class="section-label">Rijder afmetingen</div>
+        <div class="two-col">
+          <div><label class="field-label">Lengte (cm)</label><input class="field-input" id="r-lengte" type="number" value="${r?.lengte||''}" placeholder="bijv. 165" style="margin-bottom:0;" /></div>
+          <div><label class="field-label">Gewicht (kg)</label><input class="field-input" id="r-gewicht" type="number" value="${r?.gewicht||''}" placeholder="bijv. 65" style="margin-bottom:0;" /></div>
+        </div>
+
+        <div class="section-label">Kart huren</div>
+        <label class="field-label">Type kart</label>
+        <select class="field-select" id="r-huurkart">
+          <option value="">Selecteer een kart...</option>
+          ${['Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax Max'].map(k=>`<option${r?.huurkartType===k?' selected':''}>${k}</option>`).join('')}
+        </select>
+
+        <div class="section-label">Benodigde uitrusting</div>
+        <p class="hint">Meerdere keuzes mogelijk</p>
+        <div class="chk-grid" id="r-uitr-grid">
+          ${['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(k=>chk(k,uitr)).join('')}
+        </div>
+      </div>
+
+      <button class="add-btn" onclick="saveRijder(${idx})" style="margin-top:1rem;">${isNieuw ? '＋ Account aanmaken' : '✓ Wijzigingen opslaan'}</button>
+      <button class="reset-btn" onclick="cancelRijderEdit()">Annuleren</button>`;
+  }
+
+  function editRijder(idx) {
+    editRijderIndex = idx;
+    const r = rijders[idx];
+    renderRijders();
+    document.querySelector('#panel-rijders .layout').classList.add('show-right');
+    const detail = document.getElementById('rider-detail');
+    detail.style.display = 'block';
+    detail.innerHTML = rijderFormHTML(r, idx);
+  }
+
+  function pickKartTypeAdmin(btn) {
+    btn.closest('.r-kart-keuze').querySelectorAll('.r-kart-type-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    const isEigen = btn.textContent.includes('Eigen');
+    document.getElementById('r-eigen-sectie').style.display = isEigen ? 'block' : 'none';
+    document.getElementById('r-huur-sectie').style.display  = isEigen ? 'none'  : 'block';
+  }
+
+  function pickBenzAdmin(btn) {
+    btn.closest('#r-benz-opts').querySelectorAll('.benz-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+
+  function saveRijder(idx) {
+    const voornaam = document.getElementById('r-voornaam').value.trim();
+    const naam     = document.getElementById('r-naam').value.trim();
+    if (!voornaam || !naam) { alert('Vul minstens voornaam en naam in.'); return; }
+
+    const isEigen = document.getElementById('r-eigen-sectie').style.display !== 'none';
+    const kartType = isEigen ? 'eigen' : 'huur';
+
+    const werkplaatsTogs = document.querySelectorAll('#r-eigen-sectie .toggle-row');
+    const werkplaats = {
+      kart:   werkplaatsTogs[0]?.querySelector('.tog-btn.yes.on') ? 'ja' : werkplaatsTogs[0]?.querySelector('.tog-btn.no.on') ? 'nee' : '',
+      banden: werkplaatsTogs[1]?.querySelector('.tog-btn.yes.on') ? 'ja' : werkplaatsTogs[1]?.querySelector('.tog-btn.no.on') ? 'nee' : '',
+      bak:    werkplaatsTogs[2]?.querySelector('.tog-btn.yes.on') ? 'ja' : werkplaatsTogs[2]?.querySelector('.tog-btn.no.on') ? 'nee' : '',
+    };
+    const benzineBtn = document.querySelector('#r-benz-opts .benz-btn.on');
+    const benzineMap = ['zelf','dfk','gemengd'];
+    const benzine = benzineBtn ? benzineMap[['zelf benzine','benzine bij DFK','Training'].findIndex(s => benzineBtn.textContent.includes(s))] || '' : '';
+
+    const kampioenschappen = [...document.querySelectorAll('#r-kamp-grid .chk-item.on')].map(i => i.querySelector('.chk-label').textContent);
+    const uitrusting       = [...document.querySelectorAll('#r-uitr-grid .chk-item.on')].map(i => i.querySelector('.chk-label').textContent);
+
+    const data = {
+      voornaam, naam,
+      geboortedatum: document.getElementById('r-geb').value,
+      email:         document.getElementById('r-email').value.trim(),
+      tel:           document.getElementById('r-tel').value.trim(),
+      kartType,
+      klasse:        document.getElementById('r-klasse')?.value || '',
+      startnummer:   document.getElementById('r-startnr')?.value || '',
+      kampioenschappen, werkplaats, benzine,
+      lengte:        document.getElementById('r-lengte')?.value || '',
+      gewicht:       document.getElementById('r-gewicht')?.value || '',
+      huurkartType:  document.getElementById('r-huurkart')?.value || '',
+      uitrusting,
+    };
+
+    if (idx === -1) {
+      rijders.push(data);
+      showToast('Account aangemaakt!', 'green');
+    } else {
+      rijders[idx] = { ...rijders[idx], ...data };
+      showToast('Rijder opgeslagen!', 'green');
+    }
+    saveRijders();
+    editRijderIndex = -1;
+    cancelRijderEdit();
+  }
+
+  function cancelRijderEdit() {
+    editRijderIndex = -1;
+    renderRijders();
+    document.querySelector('#panel-rijders .layout').classList.remove('show-right');
+    document.getElementById('rider-detail').style.display = '';
+  }
+
+  function deleteRijder(e, idx) {
+    e.stopPropagation();
+    if (!confirm('Rijder verwijderen?')) return;
+    if (editRijderIndex === idx) cancelRijderEdit();
+    rijders.splice(idx, 1);
+    saveRijders();
+    renderRijders();
+    showToast('Rijder verwijderd', 'yellow');
+  }
 </script>
 </body>
 </html>
