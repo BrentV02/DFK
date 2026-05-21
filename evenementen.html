@@ -46,6 +46,8 @@
     #dfk-root .event-circuit { font-size: 13px; color: #888; margin-bottom: 12px; }
     #dfk-root .event-deadline { font-size: 11px; color: #666; margin-bottom: 10px; }
     #dfk-root .event-deadline.urgent { color: #E02020; }
+    #dfk-root .countdown-top { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.85); margin-top: 5px; }
+    #dfk-root .countdown-top strong { color: #fff; font-size: 12px; }
     #dfk-root .event-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     #dfk-root .class-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 3px 8px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .event-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #1e1e1e; padding-top: 12px; }
@@ -262,31 +264,96 @@ function renderEvents() {
     grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn nog geen evenementen gepland.</div>`;
     return;
   }
+  const now = new Date();
   const today = new Date(); today.setHours(0,0,0,0);
   grid.innerHTML = events.map((ev, idx) => {
     const d = new Date(ev.datum);
     const isPast = d < today;
     const dagenOver = Math.round((d - today) / 86400000);
     let deadlineHtml = '';
+    let deadlinePassed = false;
     if (ev.deadline) {
       const dl = new Date(ev.deadline);
+      deadlinePassed = dl < now;
+      const msLeft = dl - now;
+      const isWithin24h = msLeft > 0 && msLeft < 24 * 3600 * 1000;
       const dagenTotDeadline = Math.round((dl - today) / 86400000);
       const urgent = dagenTotDeadline >= 0 && dagenTotDeadline <= 7;
-      const uur = dl.getHours().toString().padStart(2,'0');
-      const min = dl.getMinutes().toString().padStart(2,'0');
-      const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} om ${uur}:${min}`;
-      deadlineHtml = dagenTotDeadline < 0
-        ? `<div class="event-deadline">⏱ Inschrijving gesloten</div>`
-        : `<div class="event-deadline${urgent ? ' urgent' : ''}">⏱ Deadline: ${tijdStr}${urgent ? ' — nog ' + dagenTotDeadline + ' dag(en)!' : ''}</div>`;
+      const dlUur = dl.getHours().toString().padStart(2,'0');
+      const dlMin = dl.getMinutes().toString().padStart(2,'0');
+      const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} om ${dlUur}:${dlMin}`;
+      if (deadlinePassed) {
+        deadlineHtml = `<div class="event-deadline">⏱ Inschrijving gesloten</div>`;
+      } else if (isWithin24h) {
+        const totMin = Math.floor(msLeft / 60000);
+        const uren   = Math.floor(totMin / 60);
+        const rMin   = totMin % 60;
+        const txt = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+        deadlineHtml = `<div class="event-deadline urgent deadline-countdown" data-deadline="${dl.toISOString()}">⏱ Inschrijving sluit over <strong>${txt}</strong></div>`;
+      } else {
+        deadlineHtml = `<div class="event-deadline${urgent ? ' urgent' : ''}">⏱ Deadline: ${tijdStr}${urgent ? ' — nog ' + dagenTotDeadline + ' dag(en)!' : ''}</div>`;
+      }
     }
+    const isGesloten = isPast || deadlinePassed;
     const klassenHtml = ev.klassen.length ? ev.klassen.map(k => `<span class="class-tag">${k}</span>`).join('') : '<span class="class-tag">Alle klassen</span>';
-    const topStyle = isPast ? 'style="background:#444;"' : '';
-    const footerDagen = isPast ? `<span class="event-days" style="color:#555;">Afgelopen</span>` : `<span class="event-days">Over <span>${dagenOver}</span> dag${dagenOver===1?'':'en'}</span>`;
-    const inschrijfBtn = isPast ? `<button class="inschrijf-btn vol">Gesloten</button>` : `<button class="inschrijf-btn" onclick="openInschrijven(${idx})">Inschrijven →</button>`;
-    return `<div class="event-card"><div class="event-card-top" ${topStyle}><span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span><span class="event-badge">${isPast ? 'Afgelopen' : ev.type}</span></div><div class="event-body"><div class="event-name">${ev.naam}</div><div class="event-circuit">📍 ${ev.circuit}</div>${deadlineHtml}<div class="event-classes">${klassenHtml}</div><div class="event-footer">${footerDagen}${inschrijfBtn}</div></div></div>`;
+    // Aftelklok/dagenteller naar eventdatum — bovenaan de kaart
+    let eventTopHtml = '';
+    if (isPast) {
+      eventTopHtml = `<div class="countdown-top" style="color:rgba(255,255,255,0.5);">Afgelopen</div>`;
+    } else {
+      const msToEvent = d - now;
+      if (msToEvent > 0 && msToEvent < 24 * 3600 * 1000) {
+        const totMin = Math.floor(msToEvent / 60000);
+        const uren   = Math.floor(totMin / 60);
+        const rMin   = totMin % 60;
+        const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+        eventTopHtml = `<div class="countdown-top event-countdown" data-eventdate="${d.toISOString()}">Over <strong>${txt}</strong></div>`;
+      } else {
+        eventTopHtml = `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
+      }
+    }
+    const topStyleStr = [isPast ? 'background:#444;' : '', 'align-items:flex-start;'].join(' ');
+    const topStyle = `style="${topStyleStr}"`;
+    const inschrijfBtn = isGesloten ? `<button class="inschrijf-btn vol">Inschrijving gesloten</button>` : `<button class="inschrijf-btn" onclick="openInschrijven(${idx})">Inschrijven →</button>`;
+    return `<div class="event-card"><div class="event-card-top" ${topStyle}><div><span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span>${eventTopHtml}</div><span class="event-badge" style="margin-top:2px;">${isPast ? 'Afgelopen' : ev.type}</span></div><div class="event-body"><div class="event-name">${ev.naam}</div><div class="event-circuit">📍 ${ev.circuit}</div>${deadlineHtml}<div class="event-classes">${klassenHtml}</div><div class="event-footer">${inschrijfBtn}</div></div></div>`;
   }).join('');
+  startCountdowns();
 }
 renderEvents();
+
+function startCountdowns() {
+  clearInterval(window._cdTimer);
+  const deadlineEls = document.querySelectorAll('.deadline-countdown');
+  const eventEls    = document.querySelectorAll('.event-countdown');
+  if (!deadlineEls.length && !eventEls.length) return;
+  window._cdTimer = setInterval(() => {
+    const now = new Date();
+    let expired = false;
+    // Aftelklok deadline (in kaartbody)
+    deadlineEls.forEach(el => {
+      const dl = new Date(el.dataset.deadline);
+      const msLeft = dl - now;
+      if (msLeft <= 0) { expired = true; return; }
+      const totMin = Math.floor(msLeft / 60000);
+      const uren   = Math.floor(totMin / 60);
+      const rMin   = totMin % 60;
+      const txt = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+      el.innerHTML = `⏱ Inschrijving sluit over <strong>${txt}</strong>`;
+    });
+    // Aftelklok eventdatum (bovenaan kaart)
+    eventEls.forEach(el => {
+      const d = new Date(el.dataset.eventdate);
+      const msLeft = d - now;
+      if (msLeft <= 0) { expired = true; return; }
+      const totMin = Math.floor(msLeft / 60000);
+      const uren   = Math.floor(totMin / 60);
+      const rMin   = totMin % 60;
+      const txt = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+      el.innerHTML = `Over <strong>${txt}</strong>`;
+    });
+    if (expired) renderEvents();
+  }, 10000);
+}
 
 function enableEdit() { document.getElementById('dfk-root').classList.remove('locked'); }
 function disableEdit() { document.getElementById('dfk-root').classList.add('locked'); }
@@ -300,6 +367,56 @@ function toggleChk(item) { item.classList.toggle('on'); }
 
 let currentInschrijfIdx = null;
 
+// Hulpfunctie: lees huidige accountdata uit het accountpaneel
+function _getAccountData() {
+  const ap = document.getElementById('account-panel');
+  const inputs = ap.querySelectorAll('.field-input');
+  const benzEl  = ap.querySelector('.benz-btn.on');
+  const allBenz = [...ap.querySelectorAll('.benz-btn')];
+  const toggleRows = ap.querySelectorAll('.toggle-row');
+  return {
+    voornaam:    inputs[0] ? inputs[0].value : '',
+    naam:        inputs[1] ? inputs[1].value : '',
+    geboorte:    inputs[2] ? inputs[2].value : '',
+    email:       inputs[3] ? inputs[3].value : '',
+    telefoon:    inputs[4] ? inputs[4].value : '',
+    klasse:      ap.querySelector('.field-select') ? ap.querySelector('.field-select').value : '',
+    startnummer: inputs[6] ? inputs[6].value : '',
+    kampioenen:  [...ap.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim()),
+    kartWp:      !!(toggleRows[0] && toggleRows[0].querySelector('.tog-btn.yes.on')),
+    bandenWp:    !!(toggleRows[1] && toggleRows[1].querySelector('.tog-btn.yes.on')),
+    bakWp:       !!(toggleRows[2] && toggleRows[2].querySelector('.tog-btn.yes.on')),
+    benzIdx:     benzEl ? allBenz.indexOf(benzEl) : 1,
+  };
+}
+
+// Hulpfunctie: toon bevestigingsmelding na inschrijving
+function _toonBevestiging() {
+  let events = [];
+  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
+  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
+  const ev = events[currentInschrijfIdx];
+  const evNaam = ev ? ev.naam : 'het evenement';
+  let datumStr = '', circuitStr = '';
+  if (ev) {
+    const d = new Date(ev.datum);
+    datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+    circuitStr = ev.circuit;
+  }
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
+      <div style="font-size:52px; margin-bottom:1rem;">✅</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin-bottom:0.4rem;">Inschrijving bevestigd!</div>
+      <p style="font-size:13px; color:#888; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
+    </div>
+    <div class="ev-confirm-box" style="margin-bottom:2rem;">
+      <div class="ev-confirm-name">${evNaam}</div>
+      <div class="ev-confirm-meta" style="margin-top:6px;">📅 ${datumStr}</div>
+      <div class="ev-confirm-meta">📍 ${circuitStr}</div>
+    </div>
+    <button class="bevestig-btn" onclick="sluitInschrijven()">Sluiten</button>`;
+}
+
 function openInschrijven(idx) {
   let events = [];
   try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
@@ -310,59 +427,95 @@ function openInschrijven(idx) {
 
   const d = new Date(ev.datum);
   const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  const acc = _getAccountData();
 
-  // Lees accountgegevens uit het accountpaneel (DOM)
-  const ap = document.getElementById('account-panel');
-  const inputs = ap.querySelectorAll('.field-input');
-  const voornaam    = inputs[0] ? inputs[0].value : '';
-  const naam        = inputs[1] ? inputs[1].value : '';
-  const geboorte    = inputs[2] ? inputs[2].value : '';
-  const email       = inputs[3] ? inputs[3].value : '';
-  const telefoon    = inputs[4] ? inputs[4].value : '';
-  const klasse      = ap.querySelector('.field-select') ? ap.querySelector('.field-select').value : '';
-  const startnummer = inputs[6] ? inputs[6].value : '';
+  // Geboortedatum leesbaar
+  let gebStr = acc.geboorte;
+  if (acc.geboorte) {
+    const gd = new Date(acc.geboorte);
+    gebStr = `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()}`;
+  }
 
-  // Kampioenschappen – welke zijn geselecteerd
+  const BENZ_LABELS = [
+    'Ik neem altijd zelf benzine mee',
+    'Ik pak altijd benzine bij DFK',
+    'Training: zelf — Wedstrijd: bij DFK'
+  ];
+
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div class="ev-confirm-box">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+    </div>
+
+    <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
+    <div class="cf-two">
+      <div class="cf-field"><span class="cf-label">Voornaam</span><span class="cf-value">${acc.voornaam}</span></div>
+      <div class="cf-field"><span class="cf-label">Naam</span><span class="cf-value">${acc.naam}</span></div>
+    </div>
+    <div class="cf-field"><span class="cf-label">Geboortedatum</span><span class="cf-value">${gebStr}</span></div>
+    <div class="cf-field"><span class="cf-label">E-mailadres</span><span class="cf-value">${acc.email}</span></div>
+    <div class="cf-field"><span class="cf-label">Telefoonnummer</span><span class="cf-value">${acc.telefoon}</span></div>
+
+    <span class="section-title">Kart & Competitie</span>
+    <div class="cf-two">
+      <div class="cf-field"><span class="cf-label">Klasse</span><span class="cf-value">${acc.klasse}</span></div>
+      <div class="cf-field"><span class="cf-label">Startnummer</span><span class="cf-value">#${acc.startnummer}</span></div>
+    </div>
+    <div class="cf-field"><span class="cf-label">Kampioenschappen</span><span class="cf-value">${acc.kampioenen.join(', ') || '—'}</span></div>
+
+    <span class="section-title">Materiaal & Benzine</span>
+    <div class="cf-field"><span class="cf-label">Kart in werkplaats</span><span class="cf-value">${acc.kartWp ? 'Ja' : 'Nee'}</span></div>
+    <div class="cf-field"><span class="cf-label">Banden in werkplaats</span><span class="cf-value">${acc.bandenWp ? 'Ja' : 'Nee'}</span></div>
+    <div class="cf-field"><span class="cf-label">Bak in werkplaats</span><span class="cf-value">${acc.bakWp ? 'Ja' : 'Nee'}</span></div>
+    <div class="cf-field"><span class="cf-label">Benzine</span><span class="cf-value">${BENZ_LABELS[acc.benzIdx] || '—'}</span></div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin:1.8rem 0 0.5rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Is alles correct?</div>
+      <button class="edit-btn" onclick="enableInschrijfEdit()">✎ Aanpassen</button>
+    </div>
+    <p style="font-size:13px; color:#666; margin-bottom:1.4rem; line-height:1.5;">Kloppen er gegevens niet? Klik op Aanpassen.</p>
+
+    <button class="bevestig-btn" onclick="_toonBevestiging()">Bevestigen →</button>
+    <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
+  `;
+
+  document.getElementById('inschrijf-overlay').classList.add('open');
+  document.getElementById('inschrijf-panel').classList.add('open');
+}
+
+function enableInschrijfEdit() {
+  let events = [];
+  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
+  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
+  const ev = events[currentInschrijfIdx];
+  if (!ev) return;
+
+  const d = new Date(ev.datum);
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  const acc = _getAccountData();
+
   const KAMPIOENSCHAPPEN = ['Iame Benelux', 'NK Iame', 'GK4', 'Club Venray', 'Hobby'];
-  const selectedKamp = new Set([...ap.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim()));
-
-  // Werkplaats toggle states
-  const toggleRows = ap.querySelectorAll('.toggle-row');
-  const kartWp   = toggleRows[0] && toggleRows[0].querySelector('.tog-btn.yes.on') ? true : false;
-  const bandenWp = toggleRows[1] && toggleRows[1].querySelector('.tog-btn.yes.on') ? true : false;
-  const bakWp    = toggleRows[2] && toggleRows[2].querySelector('.tog-btn.yes.on') ? true : false;
-
-  // Benzine – welke knop is actief
-  const benzEl  = ap.querySelector('.benz-btn.on');
-  const allBenz = [...ap.querySelectorAll('.benz-btn')];
-  const benzIdx = benzEl ? allBenz.indexOf(benzEl) : 1;
+  const selectedKamp = new Set(acc.kampioenen);
+  const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter',
+                   'Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
   const BENZ_OPTIES = [
     '⛽&nbsp; Ik neem altijd zelf benzine mee',
     '⛽&nbsp; Ik pak altijd benzine bij DFK',
     '⛽&nbsp; Training: zelf — Wedstrijd: bij DFK'
   ];
 
-  // Klasse opties
-  const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter',
-                   'Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
-  const klasseOpts = KLASSEN.map(k => `<option${k === klasse ? ' selected' : ''}>${k}</option>`).join('');
-
-  // Kampioenschappen chk-items HTML
+  const klasseOpts = KLASSEN.map(k => `<option${k === acc.klasse ? ' selected' : ''}>${k}</option>`).join('');
   const kampHtml = KAMPIOENSCHAPPEN.map(k => `
     <div class="chk-item${selectedKamp.has(k) ? ' on' : ''}" onclick="toggleChk(this)">
       <div class="chk-box"><span class="chk-mark">✓</span></div>
       <span class="chk-label">${k}</span>
     </div>`).join('');
-
-  // Benzine knoppen HTML
   const benzHtml = BENZ_OPTIES.map((txt, i) =>
-    `<button class="benz-btn${i === benzIdx ? ' on' : ''}" onclick="pickBenzInschrijf(this)">${txt}</button>`
+    `<button class="benz-btn${i === acc.benzIdx ? ' on' : ''}" onclick="pickBenzInschrijf(this)">${txt}</button>`
   ).join('');
-
-  // Toggle rij helper
   const togRow = (label, isYes) => `
-    <div class="toggle-row">
-      <span>${label}</span>
+    <div class="toggle-row"><span>${label}</span>
       <div class="toggle-group">
         <button class="tog-btn yes${isYes ? ' on' : ''}" onclick="tog(this)">Ja</button>
         <button class="tog-btn no${!isYes ? ' on' : ''}" onclick="tog(this)">Nee</button>
@@ -375,48 +528,37 @@ function openInschrijven(idx) {
       <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
     </div>
 
-    <p style="font-size:13px; color:#666; margin-bottom:1.4rem; line-height:1.5;">Controleer je gegevens en pas aan indien nodig voordat je bevestigt.</p>
-
     <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
     <div class="two-col">
-      <div><label class="field-label">Voornaam</label><input id="inp-voornaam" class="field-input" type="text" value="${voornaam}" /></div>
-      <div><label class="field-label">Naam</label><input id="inp-naam" class="field-input" type="text" value="${naam}" /></div>
+      <div><label class="field-label">Voornaam</label><input id="inp-voornaam" class="field-input" type="text" value="${acc.voornaam}" /></div>
+      <div><label class="field-label">Naam</label><input id="inp-naam" class="field-input" type="text" value="${acc.naam}" /></div>
     </div>
     <label class="field-label">Geboortedatum rijder</label>
-    <input id="inp-geboorte" class="field-input" type="date" value="${geboorte}" />
+    <input id="inp-geboorte" class="field-input" type="date" value="${acc.geboorte}" />
     <label class="field-label">E-mailadres</label>
-    <input id="inp-email" class="field-input" type="email" value="${email}" />
+    <input id="inp-email" class="field-input" type="email" value="${acc.email}" />
     <label class="field-label">Telefoonnummer</label>
-    <input id="inp-tel" class="field-input" type="tel" value="${telefoon}" />
+    <input id="inp-tel" class="field-input" type="tel" value="${acc.telefoon}" />
 
     <span class="section-title">Kart & Competitie</span>
     <div class="two-col">
-      <div>
-        <label class="field-label">Klasse</label>
-        <select id="inp-klasse" class="field-select">${klasseOpts}</select>
-      </div>
-      <div><label class="field-label">Startnummer</label><input id="inp-startnr" class="field-input" type="number" value="${startnummer}" style="margin-bottom:0;" /></div>
+      <div><label class="field-label">Klasse</label><select id="inp-klasse" class="field-select">${klasseOpts}</select></div>
+      <div><label class="field-label">Startnummer</label><input id="inp-startnr" class="field-input" type="number" value="${acc.startnummer}" style="margin-bottom:0;" /></div>
     </div>
     <label class="field-label" style="margin-top:1rem; display:block;">Kampioenschappen</label>
     <div class="chk-grid">${kampHtml}</div>
 
     <span class="section-title">Materiaal in werkplaats</span>
-    ${togRow('Kart in onze werkplaats', kartWp)}
-    ${togRow('Banden in onze werkplaats', bandenWp)}
-    ${togRow('Bak met materiaal in werkplaats', bakWp)}
+    ${togRow('Kart in onze werkplaats', acc.kartWp)}
+    ${togRow('Banden in onze werkplaats', acc.bandenWp)}
+    ${togRow('Bak met materiaal in werkplaats', acc.bakWp)}
 
     <span class="section-title">Benzine</span>
-    <div class="benzine-opts" id="inp-benz-opts">${benzHtml}</div>
+    <div class="benzine-opts">${benzHtml}</div>
 
-    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:24px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin:1.8rem 0 0.4rem;">Is alles correct?</div>
-    <p style="font-size:13px; color:#666; margin-bottom:1.4rem; line-height:1.5;">Bevestig je inschrijving of annuleer om terug te gaan.</p>
-
-    <button class="bevestig-btn" onclick="bevestigInschrijving()">Bevestigen →</button>
-    <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
+    <button class="bevestig-btn" style="margin-top:1.8rem;" onclick="bevestigInschrijving()">Opslaan & bevestigen →</button>
+    <button class="annuleer-btn" onclick="openInschrijven(currentInschrijfIdx)">← Terug</button>
   `;
-
-  document.getElementById('inschrijf-overlay').classList.add('open');
-  document.getElementById('inschrijf-panel').classList.add('open');
 }
 
 function sluitInschrijven() {
@@ -431,44 +573,34 @@ function pickBenzInschrijf(btn) {
 }
 
 function bevestigInschrijving() {
-  // Lees gewijzigde waarden uit het inschrijf-paneel
+  // Lees gewijzigde waarden uit de bewerkbare velden
   const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-  const voornaam    = get('inp-voornaam');
-  const naam        = get('inp-naam');
-  const geboorte    = get('inp-geboorte');
-  const email       = get('inp-email');
-  const telefoon    = get('inp-tel');
-  const klasse      = get('inp-klasse');
-  const startnummer = get('inp-startnr');
 
   // Sync terug naar het accountpaneel (DOM)
   const ap = document.getElementById('account-panel');
   const apInputs = ap.querySelectorAll('.field-input');
-  if (apInputs[0]) apInputs[0].value = voornaam;
-  if (apInputs[1]) apInputs[1].value = naam;
-  if (apInputs[2]) apInputs[2].value = geboorte;
-  if (apInputs[3]) apInputs[3].value = email;
-  if (apInputs[4]) apInputs[4].value = telefoon;
+  if (apInputs[0]) apInputs[0].value = get('inp-voornaam');
+  if (apInputs[1]) apInputs[1].value = get('inp-naam');
+  if (apInputs[2]) apInputs[2].value = get('inp-geboorte');
+  if (apInputs[3]) apInputs[3].value = get('inp-email');
+  if (apInputs[4]) apInputs[4].value = get('inp-tel');
   const apSelect = ap.querySelector('.field-select');
-  if (apSelect) apSelect.value = klasse;
-  if (apInputs[6]) apInputs[6].value = startnummer;
+  if (apSelect) apSelect.value = get('inp-klasse');
+  if (apInputs[6]) apInputs[6].value = get('inp-startnr');
 
   // Sync kampioenschappen
   const inpKamp = [...document.querySelectorAll('#inschrijf-panel .chk-item')];
   const apKamp  = [...ap.querySelectorAll('.chk-item')];
-  inpKamp.forEach((item, i) => {
-    if (apKamp[i]) { apKamp[i].classList.toggle('on', item.classList.contains('on')); }
-  });
+  inpKamp.forEach((item, i) => { if (apKamp[i]) apKamp[i].classList.toggle('on', item.classList.contains('on')); });
 
   // Sync werkplaats toggles
-  const inpTogGrps = [...document.querySelectorAll('#inschrijf-panel .toggle-group')];
-  const apTogGrps  = [...ap.querySelectorAll('.toggle-group')];
-  inpTogGrps.forEach((grp, i) => {
-    if (!apTogGrps[i]) return;
+  [...document.querySelectorAll('#inschrijf-panel .toggle-group')].forEach((grp, i) => {
+    const apGrp = ap.querySelectorAll('.toggle-group')[i];
+    if (!apGrp) return;
     const isYes = !!grp.querySelector('.tog-btn.yes.on');
-    apTogGrps[i].querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
-    const target = apTogGrps[i].querySelector(isYes ? '.tog-btn.yes' : '.tog-btn.no');
-    if (target) target.classList.add('on');
+    apGrp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+    const t = apGrp.querySelector(isYes ? '.tog-btn.yes' : '.tog-btn.no');
+    if (t) t.classList.add('on');
   });
 
   // Sync benzine
@@ -478,21 +610,7 @@ function bevestigInschrijving() {
     ap.querySelectorAll('.benz-btn').forEach((b, i) => b.classList.toggle('on', i === benzIdx));
   }
 
-  // Toon bevestigingsmelding
-  let events = [];
-  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
-  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
-  const ev = events[currentInschrijfIdx];
-  const evNaam = ev ? ev.naam : 'het evenement';
-
-  document.getElementById('inschrijf-body').innerHTML = `
-    <div style="text-align:center; padding:3.5rem 1rem;">
-      <div style="font-size:52px; margin-bottom:1.2rem;">✅</div>
-      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin-bottom:0.6rem;">Inschrijving bevestigd!</div>
-      <p style="font-size:14px; color:#888; margin-bottom:2.2rem; line-height:1.6;">Je bent ingeschreven voor<br><strong style="color:#fff;">${evNaam}</strong>.</p>
-      <button class="bevestig-btn" onclick="sluitInschrijven()" style="max-width:280px; margin:0 auto;">Sluiten</button>
-    </div>
-  `;
+  _toonBevestiging();
 }
 </script>
 </body>
