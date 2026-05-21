@@ -116,6 +116,7 @@
     #dfk-root .ev-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #dfk-root .ev-meta { font-size: 12px; color: #666; margin-top: 2px; }
     #dfk-root .ev-deadline { font-size: 11px; color: #888; margin-top: 3px; }
+    #dfk-root .ev-deadline.closed { color: #E02020; font-weight: 600; }
     #dfk-root .ev-inschrijvingen { font-size: 11px; color: #E02020; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .ev-actions { display: flex; gap: 6px; flex-shrink: 0; }
     #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #888; }
@@ -361,7 +362,13 @@ function renderList(containerId, list, icon, emptyMsg, isPast) {
   container.innerHTML = list.map(ev => {
     const d = new Date(ev.datum + 'T12:00:00');
     const isEditing = ev.id === editEventId;
-    const deadlineTxt = ev.deadline ? `⏱ ${formatDate(ev.deadline)}` : '';
+    const now = new Date();
+    const deadlinePassed = ev.deadline && new Date(ev.deadline) < now;
+    const deadlineTxt = ev.deadline
+      ? deadlinePassed
+        ? `🔒 Inschrijving gesloten (${formatDate(ev.deadline)})`
+        : `⏱ ${formatDate(ev.deadline)}`
+      : '';
     const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
     const inCount = _inschrijvingen[ev.id] || 0;
     return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}">
@@ -374,7 +381,7 @@ function renderList(containerId, list, icon, emptyMsg, isPast) {
         <div class="ev-name">${ev.naam}</div>
         <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type || ''}</div>
         ${klassen.length ? `<div class="ev-meta">${klassen.join(' · ')}</div>` : ''}
-        ${deadlineTxt ? `<div class="ev-deadline">${deadlineTxt}</div>` : ''}
+        ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}">${deadlineTxt}</div>` : ''}
         ${inCount > 0 ? `<div class="ev-inschrijvingen">▶ ${inCount} ingeschreven</div>` : ''}
       </div>
       <div class="ev-actions">
