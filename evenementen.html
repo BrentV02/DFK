@@ -59,6 +59,24 @@
     #dfk-root .events-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; grid-column: 1/-1; }
     #dfk-root .events-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
 
+    /* ── Tabs ── */
+    #dfk-root .tab-bar { background: #111; border-bottom: 3px solid #1a1a1a; display: flex; position: sticky; top: 60px; z-index: 99; }
+    #dfk-root .tab-btn { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; transition: color 0.15s; }
+    #dfk-root .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
+    #dfk-root .tab-panel { display: none; }
+    #dfk-root .tab-panel.on { display: block; }
+
+    /* ── Mijn Inschrijvingen ── */
+    #dfk-root .inschrijving-card { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    #dfk-root .inschrijving-info { flex: 1; }
+    #dfk-root .inschrijving-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
+    #dfk-root .inschrijving-meta { font-size: 13px; color: #888; margin-bottom: 2px; }
+    #dfk-root .inschrijving-reg { font-size: 11px; color: #555; margin-top: 6px; }
+    #dfk-root .uitschrijf-btn { background: none; border: 1px solid #333; border-radius: 3px; color: #666; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    #dfk-root .uitschrijf-btn:hover { border-color: #E02020; color: #E02020; }
+    #dfk-root .inschrijvingen-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; }
+    #dfk-root .inschrijvingen-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
+
     #dfk-root .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; }
     #dfk-root .overlay.open { display: block; }
     #dfk-root .account-panel { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; background: #141414; border-left: 3px solid #E02020; z-index: 400; display: flex; flex-direction: column; transition: right 0.25s ease; overflow-y: auto; }
@@ -169,11 +187,27 @@
     </div>
   </nav>
 
-  <div class="main">
-    <div class="page-title">Evenementen</div>
-    <p class="page-sub">Overzicht van alle komende races en activiteiten</p>
-    <div class="section-label">Komende evenementen</div>
-    <div class="events-grid" id="events-grid"></div>
+  <div class="tab-bar">
+    <button class="tab-btn on" onclick="switchTab('evenementen')">Evenementen</button>
+    <button class="tab-btn" onclick="switchTab('inschrijvingen')">Mijn Inschrijvingen</button>
+  </div>
+
+  <div id="tab-evenementen" class="tab-panel on">
+    <div class="main">
+      <div class="page-title">Evenementen</div>
+      <p class="page-sub">Overzicht van alle komende races en activiteiten</p>
+      <div class="section-label">Komende evenementen</div>
+      <div class="events-grid" id="events-grid"></div>
+    </div>
+  </div>
+
+  <div id="tab-inschrijvingen" class="tab-panel">
+    <div class="main">
+      <div class="page-title">Mijn Inschrijvingen</div>
+      <p class="page-sub">Overzicht van alle evenementen waarvoor je bent ingeschreven</p>
+      <div class="section-label">Inschrijvingen</div>
+      <div id="inschrijvingen-list"></div>
+    </div>
   </div>
 
   <div class="overlay" id="overlay" onclick="closeAccount()"></div>
@@ -366,6 +400,52 @@ function tog(btn) { const grp = btn.closest('.toggle-group'); grp.querySelectorA
 function pickBenz(btn) { document.querySelectorAll('#dfk-root .benz-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
 function toggleChk(item) { item.classList.toggle('on'); }
 
+function switchTab(tab) {
+  document.querySelectorAll('#dfk-root .tab-btn').forEach((b, i) =>
+    b.classList.toggle('on', tab === 'evenementen' ? i === 0 : i === 1));
+  document.getElementById('tab-evenementen').classList.toggle('on', tab === 'evenementen');
+  document.getElementById('tab-inschrijvingen').classList.toggle('on', tab === 'inschrijvingen');
+  if (tab === 'inschrijvingen') renderInschrijvingen();
+}
+
+function renderInschrijvingen() {
+  const container = document.getElementById('inschrijvingen-list');
+  let lijst = [];
+  try { lijst = JSON.parse(localStorage.getItem('dfk_inschrijvingen') || '[]'); } catch(e) {}
+  lijst.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+  if (lijst.length === 0) {
+    container.innerHTML = `<div class="inschrijvingen-empty"><div class="inschrijvingen-empty-icon">📋</div>Je hebt je nog niet ingeschreven voor een evenement.</div>`;
+    return;
+  }
+  container.innerHTML = lijst.map((r, idx) => {
+    const d = new Date(r.datum);
+    const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+    const reg = new Date(r.bevestigdOp);
+    const regStr = `${reg.getDate()} ${MAANDEN[reg.getMonth()]} ${reg.getFullYear()} om ${reg.getHours().toString().padStart(2,'0')}:${reg.getMinutes().toString().padStart(2,'0')}`;
+    const isPast = d < new Date();
+    return `
+      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444; opacity:0.6;' : ''}">
+        <div class="inschrijving-info">
+          <div class="inschrijving-naam">${r.eventNaam}</div>
+          <div class="inschrijving-meta">📅 ${datumStr}</div>
+          <div class="inschrijving-meta">📍 ${r.circuit}${r.type ? ' &nbsp;·&nbsp; ' + r.type : ''}</div>
+          <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
+        </div>
+        ${!isPast ? `<button class="uitschrijf-btn" onclick="uitschrijven(${idx})">Uitschrijven</button>` : '<span style="font-size:11px;color:#555;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>'}
+      </div>`;
+  }).join('');
+}
+
+function uitschrijven(idx) {
+  if (!confirm('Zeker dat je je wil uitschrijven?')) return;
+  let lijst = [];
+  try { lijst = JSON.parse(localStorage.getItem('dfk_inschrijvingen') || '[]'); } catch(e) {}
+  lijst.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+  lijst.splice(idx, 1);
+  localStorage.setItem('dfk_inschrijvingen', JSON.stringify(lijst));
+  renderInschrijvingen();
+}
+
 let currentInschrijfIdx = null;
 
 // Hulpfunctie: lees huidige accountdata uit het accountpaneel
@@ -391,7 +471,7 @@ function _getAccountData() {
   };
 }
 
-// Hulpfunctie: toon bevestigingsmelding na inschrijving
+// Hulpfunctie: toon bevestigingsmelding na inschrijving + sla op in localStorage
 function _toonBevestiging() {
   let events = [];
   try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
@@ -403,6 +483,14 @@ function _toonBevestiging() {
     const d = new Date(ev.datum);
     datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
     circuitStr = ev.circuit;
+    // Sla inschrijving op (voeg toe als nog niet aanwezig)
+    let lijst = [];
+    try { lijst = JSON.parse(localStorage.getItem('dfk_inschrijvingen') || '[]'); } catch(e) {}
+    const alBestaand = lijst.some(r => r.eventNaam === ev.naam && r.datum === ev.datum);
+    if (!alBestaand) {
+      lijst.push({ eventNaam: ev.naam, datum: ev.datum, circuit: ev.circuit, type: ev.type || '', bevestigdOp: new Date().toISOString() });
+      localStorage.setItem('dfk_inschrijvingen', JSON.stringify(lijst));
+    }
   }
   document.getElementById('inschrijf-body').innerHTML = `
     <div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
