@@ -337,6 +337,13 @@ function checkSupabase() {
   } catch(e) { /* geen sessie of Supabase niet geladen */ }
 })();
 
+// ── E-mail bestaat check (via Supabase RPC) ───
+async function emailBestaat(email) {
+  const { data, error } = await _supabase.rpc('email_bestaat', { email_input: email });
+  if (error) return null; // onbekend bij fout
+  return data === true;
+}
+
 // ── Inloggen ──────────────────────────────────
 async function doLogin() {
   if (!checkSupabase()) return;
@@ -352,7 +359,13 @@ async function doLogin() {
   try {
     const { error } = await _supabase.auth.signInWithPassword({ email, password: pw });
     if (error) {
-      setMsg('login-msg', 'Ongeldig e-mailadres of wachtwoord.');
+      // Controleer of het e-mailadres überhaupt bestaat
+      const bestaat = await emailBestaat(email);
+      if (bestaat === false) {
+        setMsg('login-msg', 'Geen account gevonden met dit e-mailadres. Maak eerst een account aan.');
+      } else {
+        setMsg('login-msg', 'Ongeldig wachtwoord. Probeer opnieuw of gebruik "Wachtwoord vergeten?".');
+      }
       btn.textContent = 'Inloggen →'; btn.disabled = false;
     } else {
       window.location.href = 'evenementen.html';
@@ -383,6 +396,14 @@ function checkPwMatch() {
 async function doResetPassword() {
   const email = document.getElementById('login-email').value.trim();
   if (!email) { setMsg('login-msg', 'Vul eerst je e-mailadres in.'); return; }
+
+  // Controleer of het e-mailadres bestaat voor we een reset sturen
+  const bestaat = await emailBestaat(email);
+  if (bestaat === false) {
+    setMsg('login-msg', 'Geen account gevonden met dit e-mailadres. Maak eerst een account aan.');
+    return;
+  }
+
   const redirectTo = window.location.origin + '/reset-password.html';
   await _supabase.auth.resetPasswordForEmail(email, { redirectTo });
   setMsg('login-msg', 'Reset-link verstuurd naar ' + email, true);
