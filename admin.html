@@ -1080,6 +1080,7 @@ function exporteerInschrijvingen() {
     const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
     if (_inschrSort==='naam')   return nA.localeCompare(nB);
     if (_inschrSort==='naam_z') return nB.localeCompare(nA);
+    if (_inschrSort==='klasse') return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
     if (_inschrSort==='nr')     return (a.startnummer||9999)-(b.startnummer||9999);
     if (_inschrSort==='datum')  return new Date(a.bevestigd_op)-new Date(b.bevestigd_op);
     return 0;
@@ -1202,6 +1203,7 @@ function _renderInschrFilters() {
     <select class="inschr-sort" onchange="sorteerInschrijvingen(this.value)">
       <option value="naam">Naam A → Z</option>
       <option value="naam_z">Naam Z → A</option>
+      <option value="klasse">Klasse</option>
       <option value="nr">Startnummer</option>
       <option value="datum">Inschrijfdatum</option>
     </select>`;
@@ -1232,6 +1234,7 @@ function _renderInschrGrid() {
     const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
     if (_inschrSort === 'naam')   return nA.localeCompare(nB);
     if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
+    if (_inschrSort === 'klasse') return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
     if (_inschrSort === 'nr')     return (a.startnummer||9999) - (b.startnummer||9999);
     if (_inschrSort === 'datum')  return new Date(a.bevestigd_op) - new Date(b.bevestigd_op);
     return 0;
