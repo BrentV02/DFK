@@ -1067,7 +1067,7 @@ function sluitInschrijvingenPanel() {
   _inschrEvent  = null;
 }
 
-function exporteerInschrijvingen() {
+async function exporteerInschrijvingen() {
   const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
     'juli','augustus','september','oktober','november','december'];
 
@@ -1092,6 +1092,20 @@ function exporteerInschrijvingen() {
   const datumStr = `${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
   const subtitel = `${datumStr}  ·  ${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Klasse: '+_inschrFilter:''}`;
 
+  // ── Logo laden als base64 ─────────────────────
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: canvas.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
   // ── PDF opbouwen met jsPDF ────────────────────
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -1100,6 +1114,13 @@ function exporteerInschrijvingen() {
   // Zwarte header balk
   doc.setFillColor(17, 17, 17);
   doc.rect(0, 0, W, 20, 'F');
+
+  // Logo rechts in de header
+  if (logoBase64) {
+    const logoH = 12;                              // hoogte in mm
+    const logoW = logoH * (logoBase64.w / logoBase64.h);
+    doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+  }
 
   // Rode streep
   doc.setFillColor(224, 32, 32);
@@ -1155,7 +1176,7 @@ function exporteerInschrijvingen() {
       2: { cellWidth: 50 },
     },
     margin: { left: 10, right: 10 },
-    didDrawPage: (data) => {
+    didDrawPage: () => {
       // Footer op elke pagina
       const pageCount = doc.internal.getNumberOfPages();
       const pageNr    = doc.internal.getCurrentPageInfo().pageNumber;
@@ -1170,9 +1191,12 @@ function exporteerInschrijvingen() {
     },
   });
 
-  // Downloaden
-  const slug = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
-  doc.save(`${slug}_inschrijvingen.pdf`);
+  // ── Downloaden ────────────────────────────────
+  const slug     = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
+  const dd       = String(d.getDate()).padStart(2,'0');
+  const mm       = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy     = d.getFullYear();
+  doc.save(`${slug}_${dd}-${mm}-${yyyy}.pdf`);
 }
 
 function _renderInschrFilters() {
