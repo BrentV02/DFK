@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0a0a0a; }
@@ -1068,9 +1070,8 @@ function sluitInschrijvingenPanel() {
 function exporteerInschrijvingen() {
   const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
     'juli','augustus','september','oktober','november','december'];
-  const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  // Zelfde sortering als het scherm
+  // ── Zelfde sortering als het scherm ───────────
   const lijst = (_inschrFilter
     ? _inschrData.filter(r => r.klasse === _inschrFilter)
     : [..._inschrData]
@@ -1089,67 +1090,88 @@ function exporteerInschrijvingen() {
   const ev       = _inschrEvent;
   const d        = ev ? new Date(ev.datum+'T12:00:00') : new Date();
   const datumStr = `${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
-  const subtitel = `${datumStr} · ${ev?.circuit||''} · ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Klasse: '+_inschrFilter:''}`;
-  const printDatum = new Date().toLocaleDateString('nl-BE', {day:'numeric', month:'long', year:'numeric'});
+  const subtitel = `${datumStr}  ·  ${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Klasse: '+_inschrFilter:''}`;
 
-  // ── Tabelrijen ────────────────────────────────
-  const rows = lijst.map((r, i) => {
-    const p    = r.profiles || {};
-    const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
-    const bg   = i % 2 === 0 ? '#ffffff' : '#f7f7f7';
-    return `<tr style="background:${bg}">
-      <td class="c nr">${esc(r.startnummer??'')}</td>
-      <td>${esc(naam)}</td>
-      <td>${esc(r.klasse||'')}</td>
-    </tr>`;
-  }).join('');
+  // ── PDF opbouwen met jsPDF ────────────────────
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
 
-  // ── Volledige HTML-pagina ─────────────────────
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-<meta charset="UTF-8">
-<title>${esc(ev?.naam||'Inschrijvingen')}</title>
-<style>
-  @page { size: A4 portrait; margin: 12mm 14mm; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 10pt; color: #111; background: #fff; }
-  .header  { background: #111; color: #fff; padding: 10px 14px 7px; }
-  .header h1 { font-size: 15pt; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-  .subline { background: #222; color: #999; font-size: 8pt; padding: 4px 14px 5px; border-bottom: 3px solid #E02020; margin-bottom: 14px; letter-spacing: 0.5px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { background: #CC1A1A; color: #fff; font-size: 8pt; font-weight: 700; text-align: left; padding: 6px 8px; border: 1px solid #AA0000; text-transform: uppercase; letter-spacing: 0.5px; }
-  th.c { text-align: center; }
-  td { padding: 5px 8px; border: 1px solid #e0e0e0; vertical-align: middle; font-size: 10pt; }
-  td.c { text-align: center; }
-  td.nr { font-weight: 700; font-size: 12pt; color: #111; }
-  .footer { margin-top: 12px; font-size: 7.5pt; color: #bbb; display: flex; justify-content: space-between; }
-  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-</style>
-</head>
-<body>
-<div class="header"><h1>${esc(ev?.naam||'Inschrijvingen')}</h1></div>
-<div class="subline">${esc(subtitel)}</div>
-<table>
-  <thead><tr>
-    <th class="c" style="width:40pt">#</th>
-    <th>Naam</th>
-    <th style="width:130pt">Klasse</th>
-  </tr></thead>
-  <tbody>${rows}</tbody>
-</table>
-<div class="footer">
-  <span>DFK Inschrijvingen · ${esc(ev?.naam||'')}</span>
-  <span>Afgedrukt op ${printDatum}</span>
-</div>
-<script>window.onload = function() { window.print(); };<\/script>
-</body>
-</html>`;
+  // Zwarte header balk
+  doc.setFillColor(17, 17, 17);
+  doc.rect(0, 0, W, 20, 'F');
 
-  const win = window.open('', '_blank');
-  if (!win) { alert('Sta pop-ups toe in je browser om de PDF te genereren.'); return; }
-  win.document.write(html);
-  win.document.close();
+  // Rode streep
+  doc.setFillColor(224, 32, 32);
+  doc.rect(0, 20, W, 1.5, 'F');
+
+  // Evenementnaam
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text((ev?.naam || 'Inschrijvingen').toUpperCase(), 10, 13);
+
+  // Subline
+  doc.setFillColor(30, 30, 30);
+  doc.rect(0, 21.5, W, 8, 'F');
+  doc.setTextColor(150, 150, 150);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(subtitel, 10, 27);
+
+  // Tabel
+  doc.autoTable({
+    startY: 32,
+    head: [['#', 'Naam', 'Klasse']],
+    body: lijst.map(r => {
+      const p    = r.profiles || {};
+      const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+      return [
+        r.startnummer != null ? String(r.startnummer) : '',
+        naam,
+        r.klasse || ''
+      ];
+    }),
+    styles: {
+      font: 'helvetica',
+      fontSize: 10,
+      cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+      textColor: [17, 17, 17],
+      lineColor: [220, 220, 220],
+      lineWidth: 0.2,
+    },
+    headStyles: {
+      fillColor: [204, 26, 26],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'left',
+    },
+    alternateRowStyles: { fillColor: [247, 247, 247] },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 18, fontStyle: 'bold', fontSize: 12 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 55 },
+    },
+    margin: { left: 10, right: 10 },
+    didDrawPage: (data) => {
+      // Footer op elke pagina
+      const pageCount = doc.internal.getNumberOfPages();
+      const pageNr    = doc.internal.getCurrentPageInfo().pageNumber;
+      doc.setFontSize(7);
+      doc.setTextColor(180, 180, 180);
+      doc.setFont('helvetica', 'normal');
+      const now = new Date();
+      const footerL = `DFK Inschrijvingen · ${ev?.naam||''}`;
+      const footerR = `${now.getDate()} ${MAANDEN_LANG[now.getMonth()]} ${now.getFullYear()}  ·  ${pageNr}/${pageCount}`;
+      doc.text(footerL, 10, 292);
+      doc.text(footerR, W - 10, 292, { align: 'right' });
+    },
+  });
+
+  // Downloaden
+  const slug = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
+  doc.save(`${slug}_inschrijvingen.pdf`);
 }
 
 function _renderInschrFilters() {
