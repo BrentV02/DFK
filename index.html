@@ -123,7 +123,9 @@
         <input id="reg-tel" class="field-input" type="tel" placeholder="+32 477 00 00 00" />
 
         <label class="field-label">Wachtwoord</label>
-        <input id="reg-pw" class="field-input" type="password" placeholder="Minimaal 8 tekens" />
+        <input id="reg-pw" class="field-input" type="password" placeholder="Minimaal 8 tekens" oninput="checkPwMatch()" />
+        <label class="field-label">Wachtwoord bevestigen</label>
+        <input id="reg-pw2" class="field-input" type="password" placeholder="Herhaal wachtwoord" oninput="checkPwMatch()" />
         <p id="reg-msg" style="font-size:12px; color:#E02020; margin-bottom:0.6rem; min-height:18px; font-family:'Barlow',sans-serif;"></p>
 
         <p style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:3px; text-transform:uppercase; color:#ffffff; text-align:center; margin-bottom:0.8rem;">Selecteer om door te gaan</p>
@@ -361,6 +363,22 @@ async function doLogin() {
   }
 }
 
+// ── Wachtwoord bevestiging live-check ─────────
+function checkPwMatch() {
+  const pw  = document.getElementById('reg-pw')?.value  || '';
+  const pw2 = document.getElementById('reg-pw2')?.value || '';
+  const msg = document.getElementById('reg-msg');
+  if (!msg) return;
+  if (!pw2) { msg.textContent = ''; return; }
+  if (pw === pw2) {
+    msg.style.color   = '#4cff4c';
+    msg.textContent   = '✓ Wachtwoorden komen overeen';
+  } else {
+    msg.style.color   = '#E02020';
+    msg.textContent   = 'Wachtwoorden komen niet overeen';
+  }
+}
+
 // ── Wachtwoord reset ──────────────────────────
 async function doResetPassword() {
   const email = document.getElementById('login-email').value.trim();
@@ -379,6 +397,7 @@ async function doRegister() {
   const email    = document.getElementById('reg-email').value.trim();
   const tel      = document.getElementById('reg-tel').value.trim();
   const pw       = document.getElementById('reg-pw').value;
+  const pw2      = document.getElementById('reg-pw2').value;
   setMsg('reg-msg', '');
 
   const isEigen = document.getElementById('eigen-kart-sectie').style.display !== 'none';
@@ -386,6 +405,7 @@ async function doRegister() {
 
   if (!voornaam || !naam || !email || !pw) { setMsg('reg-msg', 'Vul alle verplichte velden in.'); return; }
   if (pw.length < 8)                        { setMsg('reg-msg', 'Wachtwoord moet minimaal 8 tekens zijn.'); return; }
+  if (pw !== pw2)                           { setMsg('reg-msg', 'Wachtwoorden komen niet overeen.'); return; }
   if (!isEigen && !isHuur)                  { setMsg('reg-msg', 'Selecteer eerst eigen kart of huur kart.'); return; }
 
   const btn = document.getElementById(isEigen ? 'btn-eigen' : 'btn-huur');

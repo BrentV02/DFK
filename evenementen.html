@@ -260,7 +260,10 @@
       <label class="field-label">Telefoonnummer contactpersoon</label>
       <input id="acc-tel" class="field-input" type="tel" />
       <label class="field-label">Wachtwoord wijzigen</label>
-      <input id="acc-pw" class="field-input" type="password" placeholder="Leeg laten = ongewijzigd" />
+      <input id="acc-pw" class="field-input" type="password" placeholder="Leeg laten = ongewijzigd" oninput="checkAccPwMatch()" />
+      <label class="field-label">Wachtwoord bevestigen</label>
+      <input id="acc-pw2" class="field-input" type="password" placeholder="Herhaal nieuw wachtwoord" oninput="checkAccPwMatch()" />
+      <p id="acc-pw-msg" style="font-size:12px; min-height:16px; margin-top:-0.5rem; margin-bottom:0.8rem; font-family:'Barlow',sans-serif;"></p>
 
       <!-- Eigen kart sectie -->
       <div id="acc-eigen-sectie">
@@ -400,6 +403,23 @@ async function loadMyInschrijvingen() {
   if (!error && data) {
     _myInschrijvingen = data;
     _myEventIds = new Set(data.map(i => i.event_id));
+  }
+}
+
+// ── Wachtwoord bevestiging live-check ─────────
+function checkAccPwMatch() {
+  const pw  = document.getElementById('acc-pw')?.value  || '';
+  const pw2 = document.getElementById('acc-pw2')?.value || '';
+  const msg = document.getElementById('acc-pw-msg');
+  if (!msg) return;
+  if (!pw && !pw2) { msg.textContent = ''; return; }
+  if (!pw2) { msg.textContent = ''; return; }
+  if (pw === pw2) {
+    msg.style.color = '#4cff4c';
+    msg.textContent = '✓ Wachtwoorden komen overeen';
+  } else {
+    msg.style.color = '#E02020';
+    msg.textContent = 'Wachtwoorden komen niet overeen';
   }
 }
 
@@ -784,9 +804,11 @@ async function saveAccount() {
   }
 
   // Wachtwoord wijzigen
-  const newPw = get('acc-pw');
+  const newPw  = get('acc-pw');
+  const newPw2 = get('acc-pw2');
   if (newPw) {
-    if (newPw.length < 8) { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoord moet minimaal 8 tekens zijn.'; return; }
+    if (newPw.length < 8)  { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoord moet minimaal 8 tekens zijn.'; return; }
+    if (newPw !== newPw2)  { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoorden komen niet overeen.'; return; }
     const { error: pwErr } = await _supabase.auth.updateUser({ password: newPw });
     if (pwErr) { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoord wijzigen mislukt: '+pwErr.message; return; }
   }
