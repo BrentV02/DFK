@@ -164,6 +164,19 @@
     #dfk-root .rider-badge.huur { background: #1a2a3a; color: #4caaf0; }
     #dfk-root .rider-badge.admin { background: #3a1a00; color: #ffaa44; }
     #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    /* Compacte rijderlijst */
+    #dfk-root .rider-row { padding: 7px 12px; gap: 10px; }
+    #dfk-root .rider-avatar { width: 30px; height: 30px; font-size: 11px; flex-shrink: 0; }
+    #dfk-root .rider-name { font-size: 13px; }
+    #dfk-root .rider-meta { font-size: 11px; margin-top: 1px; }
+    /* Zoek / sort / filter toolbar */
+    #dfk-root .rijder-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    #dfk-root .rijder-zoek { flex: 1; min-width: 150px; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 8px 12px; font-size: 13px; border-radius: 3px; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .rijder-zoek::placeholder { color: #444; }
+    #dfk-root .rijder-zoek:focus { border-color: #E02020; }
+    #dfk-root .rijder-sel { background: #1c1c1c; border: 1px solid #333; color: #aaa; padding: 8px 10px; font-size: 12px; border-radius: 3px; outline: none; font-family: 'Barlow', sans-serif; cursor: pointer; }
+    #dfk-root .rijder-sel:focus { border-color: #E02020; }
+    #dfk-root .rijder-count { font-size: 11px; color: #444; font-family: 'Barlow', sans-serif; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
     #dfk-root .rol-select { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 5px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
 
     /* ── Inschrijvingen full-screen overlay ────── */
@@ -324,6 +337,22 @@
           </div>
         </div>
         <div class="section-label">Alle rijders</div>
+        <div class="rijder-toolbar">
+          <input type="text" id="rijder-zoek" class="rijder-zoek" placeholder="Zoek op naam..." oninput="renderRijders()">
+          <select id="rijder-sort" class="rijder-sel" onchange="renderRijders()">
+            <option value="naam">Naam A → Z</option>
+            <option value="naam_z">Naam Z → A</option>
+            <option value="klasse">Klasse</option>
+            <option value="kart">Kart type</option>
+          </select>
+          <select id="rijder-filter" class="rijder-sel" onchange="renderRijders()">
+            <option value="">Alle rijders</option>
+            <option value="eigen">Eigen kart</option>
+            <option value="huur">Huurkart</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div id="rijder-count" class="rijder-count"></div>
         <div class="rider-list" id="rider-list">
           <div class="empty"><div class="empty-icon">⏳</div>Laden...</div>
         </div>
@@ -688,15 +717,88 @@ async function loadRijders() {
 
 function renderRijders() {
   const container = document.getElementById('rider-list');
+
+  // ── Zoek / sort / filter waarden ophalen ──────
+  const zoek   = (document.getElementById('rijder-zoek')?.value  || '').toLowerCase().trim();
+  const sort   =  document.getElementById('rijder-sort')?.value  || 'naam';
+  const filter =  document.getElementById('rijder-filter')?.value || '';
+
+  // ── Klasse-opties dynamisch bijhouden ─────────
+  const filterSel = document.getElementById('rijder-filter');
+  if (filterSel) {
+    const huidigeVal  = filterSel.value;
+    const alleKlassen = [...new Set(_allRijders.flatMap(r => r.klassen || []))].sort();
+    let opties = `<option value="">Alle rijders</option>
+      <option value="eigen">Eigen kart</option>
+      <option value="huur">Huurkart</option>
+      <option value="admin">Admin</option>`;
+    if (alleKlassen.length) {
+      opties += `<optgroup label="── Klasse ──">` +
+        alleKlassen.map(k => `<option value="k:${k}">` + k + `</option>`).join('') +
+        `</optgroup>`;
+    }
+    filterSel.innerHTML = opties;
+    filterSel.value = huidigeVal; // herstel selectie
+  }
+
+  // ── Filter toepassen ──────────────────────────
+  let lijst = [..._allRijders];
+  if      (filter === 'eigen') lijst = lijst.filter(r => r.kart_type !== 'huur' && r.rol !== 'admin');
+  else if (filter === 'huur')  lijst = lijst.filter(r => r.kart_type === 'huur');
+  else if (filter === 'admin') lijst = lijst.filter(r => r.rol === 'admin');
+  else if (filter.startsWith('k:')) {
+    const kl = filter.slice(2);
+    lijst = lijst.filter(r => (r.klassen || []).includes(kl));
+  }
+
+  // ── Zoektekst toepassen ───────────────────────
+  if (zoek) {
+    lijst = lijst.filter(r => `${r.voornaam||''} ${r.naam||''}`.toLowerCase().includes(zoek));
+  }
+
+  // ── Sortering toepassen ───────────────────────
+  lijst.sort((a, b) => {
+    const nA = `${a.voornaam||''} ${a.naam||''}`.trim();
+    const nB = `${b.voornaam||''} ${b.naam||''}`.trim();
+    if (sort === 'naam')   return nA.localeCompare(nB);
+    if (sort === 'naam_z') return nB.localeCompare(nA);
+    if (sort === 'klasse') {
+      const kA = (a.klassen||[])[0] || '￿';
+      const kB = (b.klassen||[])[0] || '￿';
+      return kA.localeCompare(kB) || nA.localeCompare(nB);
+    }
+    if (sort === 'kart') {
+      const kA = a.kart_type === 'huur' ? (a.huurkart_type||'') : 'eigen';
+      const kB = b.kart_type === 'huur' ? (b.huurkart_type||'') : 'eigen';
+      return kA.localeCompare(kB) || nA.localeCompare(nB);
+    }
+    return 0;
+  });
+
+  // ── Teller bijwerken ──────────────────────────
+  const countEl = document.getElementById('rijder-count');
+  if (countEl) {
+    const totaal = _allRijders.length;
+    countEl.textContent = totaal === 0 ? '' :
+      lijst.length === totaal
+        ? `${totaal} rijder${totaal !== 1 ? 's' : ''}`
+        : `${lijst.length} van ${totaal} rijder${totaal !== 1 ? 's' : ''}`;
+  }
+
   if (_allRijders.length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>';
     return;
   }
-  container.innerHTML = _allRijders.map(r => {
+  if (lijst.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Geen rijders gevonden</div>';
+    return;
+  }
+
+  container.innerHTML = lijst.map(r => {
     const voornaam = r.voornaam || '';
     const naam     = r.naam     || '';
     const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
-    const isEditing = r.id === editRijderId;
+    const isEditing  = r.id === editRijderId;
     const badgeType  = r.rol === 'admin' ? 'admin' : (r.kart_type === 'huur' ? 'huur' : 'eigen');
     const badgeLabel = r.rol === 'admin' ? 'Admin' : (r.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart');
     return `<div class="rider-row${isEditing?' editing':''}" onclick="editRijder('${r.id}')">
