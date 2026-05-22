@@ -199,6 +199,10 @@
     #dfk-root .inschr-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 10px 14px; cursor: pointer; transition: border-color 0.15s; }
     #dfk-root .inschr-row:hover { border-color: #444; }
     #dfk-root .inschr-row.open { background: #161616; border-color: #333; }
+    #dfk-root .inschr-row.huur { border-left-color: #4caaf0; background: #0e141a; }
+    #dfk-root .inschr-row.huur:hover { border-color: #2a4a6a; }
+    #dfk-root .inschr-row.huur.open { background: #101820; }
+    #dfk-root .inschr-sectie-label.huur-label { color: #4caaf0; }
     #dfk-root .inschr-row-top { display: flex; align-items: center; gap: 10px; }
     #dfk-root .inschr-row-meta { flex: 1; min-width: 0; }
     #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1143,33 +1147,50 @@ async function exporteerInschrijvingen() {
   doc.setFontSize(8);
   doc.text(subtitel, 10, 27);
 
-  // Tabel
+  // ── Gedeelde stijlen en footer ────────────────
+  const baseStyles = {
+    font: 'helvetica',
+    fontSize: 8,
+    cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
+    textColor: [17, 17, 17],
+    lineColor: [220, 220, 220],
+    lineWidth: 0.2,
+  };
+  const drawFooter = () => {
+    const pageCount = doc.internal.getNumberOfPages();
+    const pageNr    = doc.internal.getCurrentPageInfo().pageNumber;
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica', 'normal');
+    const now = new Date();
+    doc.text(`DFK Inschrijvingen · ${ev?.naam||''}`, 10, 292);
+    doc.text(`${now.getDate()} ${MAANDEN_LANG[now.getMonth()]} ${now.getFullYear()}  ·  ${pageNr}/${pageCount}`, W - 10, 292, { align: 'right' });
+  };
+
+  // ── Sectie 1: Eigen kart ──────────────────────
+  const eigenLijst = lijst.filter(r => (r.profiles||{}).kart_type !== 'huur');
+  const huurLijst  = lijst.filter(r => (r.profiles||{}).kart_type === 'huur');
+
+  // Sectietitel eigen kart
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(204, 26, 26);
+  doc.text(`EIGEN KART  (${eigenLijst.length})`, 10, 37);
+
   doc.autoTable({
-    startY: 32,
+    startY: 40,
     head: [['#', 'Naam', 'Klasse']],
-    body: lijst.map(r => {
+    body: eigenLijst.map(r => {
       const p    = r.profiles || {};
       const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
-      return [
-        r.startnummer != null ? String(r.startnummer) : '',
-        naam,
-        r.klasse || ''
-      ];
+      return [r.startnummer != null ? String(r.startnummer) : '', naam, r.klasse || ''];
     }),
-    styles: {
-      font: 'helvetica',
-      fontSize: 8,
-      cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
-      textColor: [17, 17, 17],
-      lineColor: [220, 220, 220],
-      lineWidth: 0.2,
-    },
+    styles: baseStyles,
     headStyles: {
       fillColor: [204, 26, 26],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       fontSize: 7,
-      halign: 'left',
       cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
     },
     alternateRowStyles: { fillColor: [247, 247, 247] },
@@ -1179,20 +1200,54 @@ async function exporteerInschrijvingen() {
       2: { cellWidth: 50 },
     },
     margin: { left: 10, right: 10 },
-    didDrawPage: () => {
-      // Footer op elke pagina
-      const pageCount = doc.internal.getNumberOfPages();
-      const pageNr    = doc.internal.getCurrentPageInfo().pageNumber;
-      doc.setFontSize(7);
-      doc.setTextColor(180, 180, 180);
-      doc.setFont('helvetica', 'normal');
-      const now = new Date();
-      const footerL = `DFK Inschrijvingen · ${ev?.naam||''}`;
-      const footerR = `${now.getDate()} ${MAANDEN_LANG[now.getMonth()]} ${now.getFullYear()}  ·  ${pageNr}/${pageCount}`;
-      doc.text(footerL, 10, 292);
-      doc.text(footerR, W - 10, 292, { align: 'right' });
-    },
+    didDrawPage: drawFooter,
   });
+
+  // ── Sectie 2: Huurkart ────────────────────────
+  if (huurLijst.length > 0) {
+    const afterEigen = doc.lastAutoTable.finalY + 10;
+
+    // Sectietitel huurkart
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(21, 101, 192);
+    doc.text(`HUURKART  (${huurLijst.length})`, 10, afterEigen - 3);
+
+    doc.autoTable({
+      startY: afterEigen,
+      head: [['Naam', 'Kart type', 'Lengte', 'Gewicht', 'Uitrusting nodig']],
+      body: huurLijst.map(r => {
+        const p    = r.profiles || {};
+        const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+        const uitr = Array.isArray(p.uitrusting) ? p.uitrusting.join(', ') : '';
+        return [
+          naam,
+          p.huurkart_type || '—',
+          p.lengte ? `${p.lengte} cm` : '—',
+          p.gewicht ? `${p.gewicht} kg` : '—',
+          uitr || '—',
+        ];
+      }),
+      styles: baseStyles,
+      headStyles: {
+        fillColor: [21, 101, 192],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 7,
+        cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
+      },
+      alternateRowStyles: { fillColor: [240, 245, 255] },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 38 },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 20, halign: 'center' },
+        4: { cellWidth: 55 },
+      },
+      margin: { left: 10, right: 10 },
+      didDrawPage: drawFooter,
+    });
+  }
 
   // ── Downloaden ────────────────────────────────
   const slug     = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
@@ -1312,16 +1367,20 @@ function _inschrCardHTML(r) {
   } else {
     const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
     expandHTML = `
+      ${p.huurkart_type ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label huur-label">Kart type</div>
+        <div class="inschr-sectie-value" style="font-size:15px;font-weight:700;color:#4caaf0;">${p.huurkart_type}</div>
+      </div>` : ''}
       ${(p.lengte || p.gewicht) ? `<div class="inschr-sectie">
-        <div class="inschr-sectie-label">Afmetingen</div>
+        <div class="inschr-sectie-label huur-label">Afmetingen</div>
         <div class="inschr-sectie-value">${p.lengte ? p.lengte + ' cm' : '—'} · ${p.gewicht ? p.gewicht + ' kg' : '—'}</div>
       </div>` : ''}
       ${uitr.length ? `<div class="inschr-sectie">
-        <div class="inschr-sectie-label">Uitrusting nodig</div>
-        <div class="inschr-chips">${uitr.map(u => `<span class="inschr-chip">${u}</span>`).join('')}</div>
+        <div class="inschr-sectie-label huur-label">Uitrusting nodig</div>
+        <div class="inschr-chips">${uitr.map(u => `<span class="inschr-chip" style="border-color:#1a3a5a;color:#4caaf0;background:#0a1a2a;">${u}</span>`).join('')}</div>
       </div>` : ''}
       ${p.telefoon ? `<div class="inschr-sectie">
-        <div class="inschr-sectie-label">Telefoon</div>
+        <div class="inschr-sectie-label huur-label">Telefoon</div>
         <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
       </div>` : ''}
       <div class="inschr-sectie">
@@ -1329,9 +1388,9 @@ function _inschrCardHTML(r) {
       </div>`;
   }
 
-  return `<div class="inschr-row" onclick="_toggleInschrRow(this)">
+  return `<div class="inschr-row${isHuur ? ' huur' : ''}" onclick="_toggleInschrRow(this)">
     <div class="inschr-row-top">
-      <div class="rider-avatar">${ini}</div>
+      <div class="rider-avatar" style="${isHuur ? 'background:#1565c0;' : ''}">${ini}</div>
       <div class="inschr-row-meta">
         <div class="inschr-naam">${vollNaam} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
         <div class="inschr-reg">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
