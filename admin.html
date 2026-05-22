@@ -1094,33 +1094,13 @@ function exporteerInschrijvingen() {
 
   // ── Tabelrijen ────────────────────────────────
   const rows = lijst.map((r, i) => {
-    const p      = r.profiles || {};
-    const naam   = `${p.voornaam||''} ${p.naam||''}`.trim();
-    const isHuur = p.kart_type === 'huur';
-    const werkpl = [];
-    if (!isHuur) {
-      if (p.kart_in_werkplaats)   werkpl.push('Kart');
-      if (p.banden_in_werkplaats) werkpl.push('Banden');
-      if (p.bak_in_werkplaats)    werkpl.push('Bak');
-    }
-    const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
-    const bg = i % 2 === 0 ? '#ffffff' : '#f7f7f7';
+    const p    = r.profiles || {};
+    const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+    const bg   = i % 2 === 0 ? '#ffffff' : '#f7f7f7';
     return `<tr style="background:${bg}">
-      <td class="c nr">${isHuur ? '' : esc(r.startnummer??'')}</td>
-      <td><strong>${esc(naam)}</strong></td>
-      <td>${esc(isHuur ? '' : (r.klasse||''))}</td>
-      <td class="c">${isHuur
-        ? '<span class="badge huur">Huurkart</span>'
-        : '<span class="badge eigen">Eigen kart</span>'}</td>
-      <td class="c">${isHuur ? '' : (werkpl.length
-        ? werkpl.map(w => `<span class="wp">${w}</span>`).join(' ')
-        : '<span style="color:#bbb">—</span>')}</td>
-      <td>${esc(isHuur ? '' : (p.benzine||''))}</td>
-      <td>${esc(isHuur ? (p.huurkart_type||'') : '')}</td>
-      <td class="c">${isHuur
-        ? `${p.lengte ? p.lengte+' cm' : '—'} / ${p.gewicht ? p.gewicht+' kg' : '—'}`
-        : ''}</td>
-      <td>${esc(isHuur ? uitr.join(', ') : '')}</td>
+      <td class="c nr">${esc(r.startnummer??'')}</td>
+      <td>${esc(naam)}</td>
+      <td>${esc(r.klasse||'')}</td>
     </tr>`;
   }).join('');
 
@@ -1131,23 +1111,19 @@ function exporteerInschrijvingen() {
 <meta charset="UTF-8">
 <title>${esc(ev?.naam||'Inschrijvingen')}</title>
 <style>
-  @page { size: A4 landscape; margin: 12mm 14mm; }
+  @page { size: A4 portrait; margin: 12mm 14mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 10pt; color: #111; background: #fff; }
   .header  { background: #111; color: #fff; padding: 10px 14px 7px; }
   .header h1 { font-size: 15pt; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-  .subline { background: #222; color: #999; font-size: 7.5pt; padding: 4px 14px 5px; border-bottom: 3px solid #E02020; margin-bottom: 12px; letter-spacing: 0.5px; }
+  .subline { background: #222; color: #999; font-size: 8pt; padding: 4px 14px 5px; border-bottom: 3px solid #E02020; margin-bottom: 14px; letter-spacing: 0.5px; }
   table { width: 100%; border-collapse: collapse; }
-  th { background: #CC1A1A; color: #fff; font-size: 7.5pt; font-weight: 700; text-align: left; padding: 5px 7px; border: 1px solid #AA0000; text-transform: uppercase; letter-spacing: 0.5px; }
+  th { background: #CC1A1A; color: #fff; font-size: 8pt; font-weight: 700; text-align: left; padding: 6px 8px; border: 1px solid #AA0000; text-transform: uppercase; letter-spacing: 0.5px; }
   th.c { text-align: center; }
-  td { padding: 4px 7px; border: 1px solid #e0e0e0; vertical-align: middle; font-size: 8.5pt; }
+  td { padding: 5px 8px; border: 1px solid #e0e0e0; vertical-align: middle; font-size: 10pt; }
   td.c { text-align: center; }
-  td.nr { font-weight: 700; font-size: 10pt; color: #333; }
-  .badge { border-radius: 3px; padding: 1px 5px; font-size: 7pt; font-weight: 700; }
-  .badge.eigen { background: #e8f5e9; color: #2e7d32; }
-  .badge.huur  { background: #e3f2fd; color: #1565c0; }
-  .wp { background: #e8f5e9; color: #2e7d32; border-radius: 3px; padding: 1px 4px; font-size: 7pt; font-weight: 700; margin-right: 2px; }
-  .footer { margin-top: 10px; font-size: 7pt; color: #bbb; display: flex; justify-content: space-between; }
+  td.nr { font-weight: 700; font-size: 12pt; color: #111; }
+  .footer { margin-top: 12px; font-size: 7.5pt; color: #bbb; display: flex; justify-content: space-between; }
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head>
@@ -1156,15 +1132,9 @@ function exporteerInschrijvingen() {
 <div class="subline">${esc(subtitel)}</div>
 <table>
   <thead><tr>
-    <th class="c" style="width:30pt">#</th>
-    <th style="width:115pt">Naam</th>
-    <th style="width:85pt">Klasse</th>
-    <th class="c" style="width:58pt">Type</th>
-    <th class="c" style="width:90pt">Werkplaats</th>
-    <th style="width:125pt">Benzine</th>
-    <th style="width:100pt">Huurkart type</th>
-    <th class="c" style="width:80pt">Lengte / Gewicht</th>
-    <th>Uitrusting nodig</th>
+    <th class="c" style="width:40pt">#</th>
+    <th>Naam</th>
+    <th style="width:130pt">Klasse</th>
   </tr></thead>
   <tbody>${rows}</tbody>
 </table>
