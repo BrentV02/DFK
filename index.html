@@ -404,7 +404,7 @@ async function doResetPassword() {
     return;
   }
 
-  const redirectTo = window.location.origin + '/reset-password.html';
+  const redirectTo = 'https://brentv02.github.io/DFK/reset-password.html';
   await _supabase.auth.resetPasswordForEmail(email, { redirectTo });
   setMsg('login-msg', 'Reset-link verstuurd naar ' + email, true);
 }
