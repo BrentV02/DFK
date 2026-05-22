@@ -192,16 +192,26 @@
     #dfk-root .filter-chip.on { background: #2a1010; border-color: #E02020; color: #fff; }
     #dfk-root .filter-chip:hover:not(.on) { border-color: #555; color: #ccc; }
     #dfk-root .inschr-sort { margin-left: auto; background: #1c1c1c; border: 1px solid #333; color: #ccc; padding: 7px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; outline: none; cursor: pointer; }
-    #dfk-root .inschr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-    #dfk-root .inschr-card { background: #111; border: 1px solid #222; border-top: 3px solid #E02020; border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    #dfk-root .inschr-card-header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e1e1e; }
-    #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: #fff; letter-spacing: 1px; line-height: 1.2; }
-    #dfk-root .inschr-reg { font-size: 11px; color: #444; margin-top: 2px; }
+    #dfk-root .inschr-grid { display: flex; flex-direction: column; gap: 6px; }
+    /* Compacte rij */
+    #dfk-root .inschr-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 10px 14px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .inschr-row:hover { border-color: #444; }
+    #dfk-root .inschr-row.open { background: #161616; border-color: #333; }
+    #dfk-root .inschr-row-top { display: flex; align-items: center; gap: 10px; }
+    #dfk-root .inschr-row-meta { flex: 1; min-width: 0; }
+    #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #dfk-root .inschr-reg { font-size: 11px; color: #555; margin-top: 2px; }
+    #dfk-root .inschr-row-rechts { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    #dfk-root .inschr-klasse-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 15px; color: #fff; letter-spacing: 1px; text-align: right; }
+    #dfk-root .inschr-nr { color: #E02020; }
+    #dfk-root .inschr-row-arrow { font-size: 10px; color: #444; transition: transform 0.2s; flex-shrink: 0; }
+    #dfk-root .inschr-row.open .inschr-row-arrow { transform: rotate(180deg); color: #888; }
+    /* Uitklapbaar detail */
+    #dfk-root .inschr-expand { display: none; margin-top: 10px; padding-top: 12px; border-top: 1px solid #1e1e1e; padding-left: 40px; flex-direction: column; gap: 10px; }
+    #dfk-root .inschr-row.open .inschr-expand { display: flex; }
     #dfk-root .inschr-sectie { display: flex; flex-direction: column; gap: 4px; }
     #dfk-root .inschr-sectie-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E02020; }
     #dfk-root .inschr-sectie-value { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
-    #dfk-root .inschr-klasse-lijn { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1px; display: flex; align-items: baseline; gap: 10px; }
-    #dfk-root .inschr-nr { color: #E02020; }
     #dfk-root .inschr-chips { display: flex; flex-wrap: wrap; gap: 4px; }
     #dfk-root .inschr-chip { padding: 4px 9px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px; font-size: 11px; color: #888; font-family: 'Barlow', sans-serif; }
     #dfk-root .inschr-chip.ok { border-color: #1a4000; color: #66cc44; background: #0a1a00; }
@@ -209,8 +219,8 @@
     @media (max-width: 768px) {
       #dfk-root .inschr-topbar { padding: 0 1rem; gap: 1rem; }
       #dfk-root .inschr-body { padding: 1rem; }
-      #dfk-root .inschr-grid { grid-template-columns: 1fr; }
       #dfk-root .inschr-ev-naam { font-size: 15px; }
+      #dfk-root .inschr-expand { padding-left: 10px; }
     }
   </style>
 </head>
@@ -1238,6 +1248,10 @@ function _renderInschrGrid() {
     : lijst.map(_inschrCardHTML).join('');
 }
 
+function _toggleInschrRow(el) {
+  el.classList.toggle('open');
+}
+
 function _inschrCardHTML(r) {
   const p        = r.profiles || {};
   const voornaam = p.voornaam || '';
@@ -1248,26 +1262,32 @@ function _inschrCardHTML(r) {
   const badgeType  = isHuur ? 'huur' : 'eigen';
   const badgeLabel = isHuur ? 'Huurkart' : 'Eigen kart';
 
-  let body = '';
-
+  // ── Rechterkant: klasse + nr (eigen) of kart type (huur) ──
+  let rechtsHTML = '';
   if (!isHuur) {
-    // ── Eigen kart ──
-    const klasse = r.klasse     || '';
+    const klasse = r.klasse || '';
     const nr     = r.startnummer;
-    const werkpl = [];
-    if (p.kart_in_werkplaats)    werkpl.push('Kart');
-    if (p.banden_in_werkplaats)  werkpl.push('Banden');
-    if (p.bak_in_werkplaats)     werkpl.push('Bak');
+    rechtsHTML = klasse
+      ? `<div class="inschr-klasse-badge">${klasse}${nr ? ` <span class="inschr-nr">#${nr}</span>` : ''}</div>`
+      : '';
+  } else {
+    rechtsHTML = p.huurkart_type
+      ? `<div class="inschr-klasse-badge" style="color:#4caaf0;">${p.huurkart_type}</div>`
+      : '';
+  }
 
-    body = `
-      ${klasse ? `<div class="inschr-sectie">
-        <div class="inschr-sectie-label">Klasse</div>
-        <div class="inschr-klasse-lijn">${klasse}${nr ? `<span class="inschr-nr">#${nr}</span>` : ''}</div>
-      </div>` : ''}
+  // ── Uitklapbaar detail ────────────────────────
+  let expandHTML = '';
+  if (!isHuur) {
+    const werkpl = [];
+    if (p.kart_in_werkplaats)   werkpl.push('Kart');
+    if (p.banden_in_werkplaats) werkpl.push('Banden');
+    if (p.bak_in_werkplaats)    werkpl.push('Bak');
+    expandHTML = `
       ${werkpl.length ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Materiaal in werkplaats</div>
         <div class="inschr-chips">${werkpl.map(w => `<span class="inschr-chip ok">✓ ${w}</span>`).join('')}</div>
-      </div>` : ''}
+      </div>` : `<div class="inschr-sectie"><div class="inschr-sectie-label">Materiaal in werkplaats</div><div class="inschr-sectie-value" style="color:#444;">Niets in werkplaats</div></div>`}
       ${p.benzine ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Benzine</div>
         <div class="inschr-chips"><span class="inschr-chip benzine">⛽ ${p.benzine}</span></div>
@@ -1275,18 +1295,16 @@ function _inschrCardHTML(r) {
       ${p.telefoon ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Telefoon</div>
         <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
-      </div>` : ''}`;
-  } else {
-    // ── Huur kart ──
-    const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
-    body = `
-      ${p.huurkart_type ? `<div class="inschr-sectie">
-        <div class="inschr-sectie-label">Kart type</div>
-        <div class="inschr-klasse-lijn" style="font-size:17px;">${p.huurkart_type}</div>
       </div>` : ''}
+      <div class="inschr-sectie">
+        <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
+      </div>`;
+  } else {
+    const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
+    expandHTML = `
       ${(p.lengte || p.gewicht) ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Afmetingen</div>
-        <div class="inschr-sectie-value">${p.lengte ? p.lengte + ' cm' : '—'} &nbsp;·&nbsp; ${p.gewicht ? p.gewicht + ' kg' : '—'}</div>
+        <div class="inschr-sectie-value">${p.lengte ? p.lengte + ' cm' : '—'} · ${p.gewicht ? p.gewicht + ' kg' : '—'}</div>
       </div>` : ''}
       ${uitr.length ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Uitrusting nodig</div>
@@ -1295,18 +1313,27 @@ function _inschrCardHTML(r) {
       ${p.telefoon ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Telefoon</div>
         <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
-      </div>` : ''}`;
+      </div>` : ''}
+      <div class="inschr-sectie">
+        <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
+      </div>`;
   }
 
-  return `<div class="inschr-card">
-    <div class="inschr-card-header">
+  return `<div class="inschr-row" onclick="_toggleInschrRow(this)">
+    <div class="inschr-row-top">
       <div class="rider-avatar">${ini}</div>
-      <div style="flex:1;min-width:0;">
+      <div class="inschr-row-meta">
         <div class="inschr-naam">${vollNaam} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
         <div class="inschr-reg">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
       </div>
+      <div class="inschr-row-rechts">
+        ${rechtsHTML}
+        <div class="inschr-row-arrow">▼</div>
+      </div>
     </div>
-    ${body}
+    <div class="inschr-expand">
+      ${expandHTML}
+    </div>
   </div>`;
 }
 
