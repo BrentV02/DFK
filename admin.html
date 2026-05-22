@@ -1194,12 +1194,12 @@ xmlns="http://www.w3.org/TR/REC-html40">
 function _renderInschrFilters() {
   const klassen = [...new Set(_inschrData.filter(r => r.klasse).map(r => r.klasse))].sort();
   const bar = document.getElementById('inschr-filters');
-  if (klassen.length === 0) { bar.innerHTML = ''; return; }
 
   bar.innerHTML = `
-    <span style="font-size:11px;color:#555;font-family:'Barlow',sans-serif;align-self:center;margin-right:4px;">Filter klasse:</span>
-    <button class="filter-chip on" onclick="filterInschrijvingen(null)">Alle</button>
-    ${klassen.map(k => `<button class="filter-chip" onclick="filterInschrijvingen('${k.replace(/'/g,"\\'")}')">${k}</button>`).join('')}
+    <select class="rijder-sel" onchange="filterInschrijvingen(this.value)">
+      <option value="">Alle klassen</option>
+      ${klassen.map(k => `<option value="${k}"${_inschrFilter===k?' selected':''}>${k}</option>`).join('')}
+    </select>
     <select class="inschr-sort" onchange="sorteerInschrijvingen(this.value)">
       <option value="naam">Naam A → Z</option>
       <option value="naam_z">Naam Z → A</option>
@@ -1210,11 +1210,7 @@ function _renderInschrFilters() {
 }
 
 function filterInschrijvingen(klasse) {
-  _inschrFilter = klasse;
-  document.querySelectorAll('#inschr-filters .filter-chip').forEach(btn => {
-    const isAlle = btn.textContent === 'Alle';
-    btn.classList.toggle('on', klasse === null ? isAlle : btn.textContent === klasse);
-  });
+  _inschrFilter = klasse || null;
   _renderInschrGrid();
 }
 
