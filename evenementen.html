@@ -616,6 +616,7 @@ function renderInschrijvingen() {
           <div class="inschrijving-naam">${ev.naam}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
           <div class="inschrijving-meta">📍 ${ev.circuit}${ev.type ? ' &nbsp;·&nbsp; ' + ev.type : ''}</div>
+          ${(() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta" style="color:#fff;">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })()}
           ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
           <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
         </div>
