@@ -980,13 +980,6 @@ async function downloadWeekendPdf4(wid) {
     doc.line(ML, y, W - MR, y);
     y += 7;
 
-    // ── Sectielabel aankopen ──
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(224, 32, 32);
-    doc.text('AANKOPEN', ML, y);
-    y += 5;
-
     // Kolomhoofden
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
@@ -1035,11 +1028,6 @@ async function downloadWeekendPdf4(wid) {
     doc.setDrawColor(100, 100, 100);
     doc.setLineWidth(0.5);
     doc.line(ML, totaalY, W - MR, totaalY);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text('TOTAAL', ML, totaalY + 6);
 
     // ── Footer ──
     doc.setFont('helvetica', 'normal');
