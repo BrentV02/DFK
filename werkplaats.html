@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #0a0a0a; min-height: 100vh; font-family: 'Barlow', sans-serif; }
@@ -71,8 +73,21 @@
     .sectie-titel {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
       font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
-      color: #E02020; margin-bottom: 0.8rem;
+      color: #E02020; margin-bottom: 0;
     }
+    .sectie-rij {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+    .pdf-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; background: #1c1c1c; border: 1px solid #333;
+      color: #aaa; border-radius: 3px; cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .pdf-btn:hover { border-color: #E02020; color: #fff; }
 
     /* ── Event selectie ── */
     .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 2rem; }
@@ -246,7 +261,10 @@
     <div style="color:#555;font-size:13px;"><span class="spinner"></span>Weekenden laden...</div>
   </div>
 
-  <div class="sectie-titel">Laadlijst</div>
+  <div class="sectie-rij">
+    <div class="sectie-titel">Laadlijst</div>
+    <button class="pdf-btn" id="pdf-btn" style="display:none;" onclick="drukAfAlsPDF()">📄 PDF afdrukken</button>
+  </div>
   <div class="laad-teller" id="laad-teller"></div>
 
   <div class="laad-controls" id="laad-controls">
@@ -339,11 +357,22 @@ async function laadWeekenden() {
 function renderWeekendGrid() {
   const grid = document.getElementById('weekend-grid');
   grid.innerHTML = _allWeekenden.map(w => {
-    const evs = (w.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
-    const eersteD = evs[0] ? new Date(evs[0].datum + 'T12:00:00') : null;
-    const datumStr = eersteD
-      ? `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`
-      : '';
+    const evs    = (w.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
+    const eersteD = evs[0]               ? new Date(evs[0].datum               + 'T12:00:00') : null;
+    const laasteD = evs[evs.length - 1] ? new Date(evs[evs.length - 1].datum  + 'T12:00:00') : null;
+
+    let datumStr = '';
+    if (eersteD && laasteD) {
+      const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
+      const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
+      if (eersteD.getTime() === laasteD.getTime()) {
+        datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
+      } else if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear()) {
+        datumStr = `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+      } else {
+        datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+      }
+    }
     const circuit = evs[0]?.circuit || '';
     const gesel = _geselecteerdWid === w.id;
     return `<div class="event-kaart${gesel ? ' geselecteerd' : ''}" onclick="selecteerWeekend('${w.id}')">
@@ -367,9 +396,12 @@ async function buildLaadlijst() {
   const teller   = document.getElementById('laad-teller');
   const controls = document.getElementById('laad-controls');
 
+  const pdfBtn = document.getElementById('pdf-btn');
+
   if (!_geselecteerdWid) {
     teller.innerHTML       = '';
     controls.style.display = 'none';
+    pdfBtn.style.display   = 'none';
     lijst.innerHTML = `<div class="empty-state">
       <div class="empty-state-icon">🚛</div>
       <div class="empty-state-text">Selecteer een race weekend hierboven</div>
@@ -380,6 +412,7 @@ async function buildLaadlijst() {
   lijst.innerHTML        = `<div style="color:#555;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
   teller.innerHTML       = '';
   controls.style.display = 'none';
+  pdfBtn.style.display   = 'none';
 
   const weekend  = _allWeekenden.find(w => w.id === _geselecteerdWid);
   const eventIds = (weekend?.evenementen || []).map(e => e.id);
@@ -463,6 +496,7 @@ async function buildLaadlijst() {
   document.querySelectorAll('.filter-btn').forEach((b, i) => b.classList.toggle('on', i === 0));
 
   controls.style.display = 'flex';
+  pdfBtn.style.display   = '';
   renderLaadlijst();
 }
 
@@ -597,6 +631,172 @@ function renderLaadlijst() {
 
   html += '</div>';
   lijst.innerHTML = html;
+}
+
+// ── PDF afdrukken ─────────────────────────────
+function drukAfAlsPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const weekend = _allWeekenden.find(w => w.id === _geselecteerdWid);
+  if (!weekend) return;
+
+  // Datum bereik berekenen
+  const evs    = (weekend.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
+  const eersteD = evs[0]               ? new Date(evs[0].datum              + 'T12:00:00') : null;
+  const laasteD = evs[evs.length - 1] ? new Date(evs[evs.length-1].datum   + 'T12:00:00') : null;
+  let datumStr = '';
+  if (eersteD && laasteD) {
+    const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
+    const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
+    if (eersteD.getTime() === laasteD.getTime()) {
+      datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
+    } else if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear()) {
+      datumStr = `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+    } else {
+      datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+    }
+  }
+
+  const margin = 15;
+  let y = margin;
+
+  // ── Header ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(224, 32, 32);
+  doc.text('DFK – LADEN VRACHTWAGEN', margin, y);
+  y += 7;
+
+  doc.setFontSize(13);
+  doc.setTextColor(20, 20, 20);
+  doc.text(weekend.naam, margin, y);
+  y += 5;
+
+  if (datumStr) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(datumStr, margin, y);
+    y += 5;
+  }
+
+  const nu = new Date();
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.text(`Afgedrukt op ${nu.toLocaleDateString('nl-BE')} om ${nu.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' })}`, margin, y);
+  y += 5;
+
+  // Rode lijn
+  doc.setDrawColor(224, 32, 32);
+  doc.setLineWidth(0.6);
+  doc.line(margin, y, 210 - margin, y);
+  y += 5;
+
+  // Helper: klasse-string voor een entry
+  function klasseVanEntry(entry) {
+    const p = entry.profiel;
+    const isHuur = p.kart_type === 'huur';
+    return entry.klassen.length
+      ? entry.klassen.map(k => k + (p.startnummers?.[k] ? ` #${p.startnummers[k]}` : '')).join(' / ')
+      : (isHuur ? (p.huurkart_type || '—') : '—');
+  }
+
+  // Helper: tabel tekenen
+  function tekenTabel(tittel, kleur, kolommen, rijen) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...kleur);
+    doc.text(tittel, margin, y);
+    y += 2;
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [kolommen.map(k => k.titel)],
+      body: rijen,
+      columnStyles: kolommen.reduce((acc, k, i) => {
+        acc[i] = { cellWidth: k.breedte, halign: k.uitlijning || 'left' };
+        return acc;
+      }, {}),
+      headStyles: {
+        fillColor: [25, 25, 25],
+        textColor: [200, 200, 200],
+        fontStyle: 'bold',
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      bodyStyles: {
+        fontSize: 10,
+        textColor: [10, 10, 10],
+        cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
+        minCellHeight: 9,
+      },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      theme: 'grid',
+      didParseCell(data) {
+        // Groen voor aangevinkte vakjes
+        if (data.section === 'body' && data.cell.raw === '✓') {
+          data.cell.styles.textColor = [30, 140, 30];
+          data.cell.styles.fontStyle = 'bold';
+        }
+      },
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  // ── Eigen kart tabel ──
+  if (_eigenKart.length) {
+    const rijen = _eigenKart.map((entry, i) => {
+      const p     = entry.profiel;
+      const staat = _laadState.get(p.id) || {};
+      const naam  = `${p.voornaam || ''} ${p.naam || ''}`.trim();
+      return [
+        i + 1,
+        naam,
+        klasseVanEntry(entry),
+        p.kart_in_werkplaats    ? (staat.kart    ? '✓' : '□') : '',
+        p.banden_in_werkplaats  ? (staat.banden  ? '✓' : '□') : '',
+        p.bak_in_werkplaats     ? (staat.bak     ? '✓' : '□') : '',
+      ];
+    });
+
+    tekenTabel(`EIGEN KART — ${_eigenKart.length} RIJDERS`, [80, 80, 80], [
+      { titel: '#',          breedte: 9,  uitlijning: 'center' },
+      { titel: 'Naam',       breedte: 70 },
+      { titel: 'Klasse',     breedte: 53 },
+      { titel: 'Kart',       breedte: 16, uitlijning: 'center' },
+      { titel: 'Banden',     breedte: 16, uitlijning: 'center' },
+      { titel: 'Bak',        breedte: 16, uitlijning: 'center' },
+    ], rijen);
+  }
+
+  // ── Huurkart tabel ──
+  if (_huurKart.length) {
+    const rijen = _huurKart.map((entry, i) => {
+      const p     = entry.profiel;
+      const staat = _laadState.get(p.id) || {};
+      const naam  = `${p.voornaam || ''} ${p.naam || ''}`.trim();
+      return [
+        i + 1,
+        naam,
+        p.huurkart_type || '—',
+        klasseVanEntry(entry),
+        staat.huur ? '✓' : '□',
+      ];
+    });
+
+    tekenTabel(`HUURKART — ${_huurKart.length} RIJDERS`, [20, 100, 180], [
+      { titel: '#',         breedte: 9,  uitlijning: 'center' },
+      { titel: 'Naam',      breedte: 60 },
+      { titel: 'Type',      breedte: 45 },
+      { titel: 'Klasse',    breedte: 44 },
+      { titel: 'Geladen',   breedte: 22, uitlijning: 'center' },
+    ], rijen);
+  }
+
+  const bestandsnaam = `DFK_Laadlijst_${weekend.naam.replace(/\s+/g, '_')}.pdf`;
+  doc.save(bestandsnaam);
 }
 
 // ── Dropdown & uitloggen ──────────────────────
