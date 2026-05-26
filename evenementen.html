@@ -1096,18 +1096,16 @@ async function _toonBevestiging() {
   }
 
   // Update lokale state
-  if (!_myEventIds.has(ev.id)) {
-    _myEventIds.add(ev.id);
-    _myInschrijvingen.push({
-      id: crypto.randomUUID(),
-      event_id: ev.id,
-      rijder_id: _currentUser.id,
-      klasse:      klasse      || null,
-      startnummer: startnummer || null,
-      bevestigd_op: new Date().toISOString(),
-      evenementen: ev,
-    });
-  }
+  _myEventIds.add(ev.id);
+  _myInschrijvingen.push({
+    id: crypto.randomUUID(),
+    event_id: ev.id,
+    rijder_id: _selectedRijder?.id || _currentUser.id,
+    klasse:      klasse      || null,
+    startnummer: startnummer || null,
+    bevestigd_op: new Date().toISOString(),
+    evenementen: ev,
+  });
   renderEvents();
 
   const d = new Date(ev.datum + 'T12:00:00');
