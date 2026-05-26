@@ -1097,6 +1097,7 @@ function sluitInschrijvingenPanel() {
 async function exporteerInschrijvingen() {
   const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
     'juli','augustus','september','oktober','november','december'];
+  const DAGEN_LANG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
 
   // ── Zelfde sortering als het scherm ───────────
   const lijst = _filterInschrData().sort((a, b) => {
@@ -1113,8 +1114,8 @@ async function exporteerInschrijvingen() {
 
   const ev       = _inschrEvent;
   const d        = ev ? new Date(ev.datum+'T12:00:00') : new Date();
-  const datumStr = `${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
-  const subtitel = `${datumStr}  ·  ${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Klasse: '+_inschrFilter:''}`;
+  const datumStr = `${DAGEN_LANG[d.getDay()]} ${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
+  const subtitel = `${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Filter: '+_inschrFilter:''}`;
 
   // ── Logo laden als base64 ─────────────────────
   const logoBase64 = await new Promise(resolve => {
@@ -1137,32 +1138,38 @@ async function exporteerInschrijvingen() {
 
   // Zwarte header balk
   doc.setFillColor(17, 17, 17);
-  doc.rect(0, 0, W, 20, 'F');
+  doc.rect(0, 0, W, 28, 'F');
 
   // Logo rechts in de header
   if (logoBase64) {
-    const logoH = 12;                              // hoogte in mm
+    const logoH = 14;
     const logoW = logoH * (logoBase64.w / logoBase64.h);
-    doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+    doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 7, logoW, logoH);
   }
-
-  // Rode streep
-  doc.setFillColor(224, 32, 32);
-  doc.rect(0, 20, W, 1.5, 'F');
 
   // Evenementnaam
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text((ev?.naam || 'Inschrijvingen').toUpperCase(), 10, 13);
+  doc.text((ev?.naam || 'Inschrijvingen').toUpperCase(), 10, 11);
+
+  // Datum prominent onder de naam
+  doc.setTextColor(224, 32, 32);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(datumStr, 10, 22);
+
+  // Rode streep
+  doc.setFillColor(224, 32, 32);
+  doc.rect(0, 28, W, 1.5, 'F');
 
   // Subline
   doc.setFillColor(30, 30, 30);
-  doc.rect(0, 21.5, W, 8, 'F');
+  doc.rect(0, 29.5, W, 8, 'F');
   doc.setTextColor(150, 150, 150);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text(subtitel, 10, 27);
+  doc.text(subtitel, 10, 35);
 
   // ── Gedeelde stijlen en footer ────────────────
   const baseStyles = {
@@ -1195,7 +1202,7 @@ async function exporteerInschrijvingen() {
   doc.text(`EIGEN KART  (${eigenLijst.length})`, 10, 37);
 
   doc.autoTable({
-    startY: 40,
+    startY: 46,
     head: [['#', 'Naam', 'Klasse']],
     body: eigenLijst.map(r => {
       const p    = r.profiles || {};
@@ -1232,7 +1239,7 @@ async function exporteerInschrijvingen() {
 
     doc.autoTable({
       startY: afterEigen,
-      head: [['Naam', 'Kart type']],
+      head: [['Naam', 'Klasse']],
       body: huurLijst.map(r => {
         const p    = r.profiles || {};
         const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
