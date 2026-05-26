@@ -1225,5 +1225,18 @@ async function bevestigInschrijving() {
   await _toonBevestiging();
 }
 </script>
+<script>
+(function() {
+  var meta = document.querySelector('meta[name="viewport"]');
+  document.addEventListener('touchend', function() {
+    if (window.visualViewport && window.visualViewport.scale !== 1) {
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0';
+      setTimeout(function() {
+        meta.content = 'width=device-width, initial-scale=1.0';
+      }, 300);
+    }
+  });
+})();
+</script>
 </body>
 </html>
