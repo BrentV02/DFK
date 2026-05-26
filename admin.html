@@ -731,10 +731,11 @@ async function downloadWeekendPdf(wid, nr) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.text(evNaam, 10, 13);
+    const naamBreedte = doc.getTextWidth(evNaam); // breedte meten zolang font nog 13pt bold is
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(180, 180, 180);
-    doc.text('  ·  ' + datumStr, 10 + doc.getTextWidth(evNaam), 13);
+    doc.text('  ·  ' + datumStr, 10 + naamBreedte, 13);
 
     doc.setFillColor(224, 32, 32);
     doc.rect(0, 20, W, 1.5, 'F');
