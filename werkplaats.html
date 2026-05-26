@@ -85,50 +85,60 @@
     .laad-teller {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
       font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-      color: #555; margin-bottom: 1rem;
+      color: #aaa; margin-bottom: 1rem;
     }
-    .laad-teller span { color: #fff; }
+    .laad-teller span { color: #fff; font-size: 16px; }
 
-    .laad-tabel { width: 100%; border-collapse: collapse; }
-    .laad-tabel thead tr {
-      border-bottom: 2px solid #2a2a2a;
-    }
-    .laad-tabel thead th {
+    .groep-header {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-      color: #555; padding: 0 10px 8px; text-align: left;
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      padding: 8px 14px; margin: 10px 0 2px;
+      color: #fff; background: #2a1010; border-left: 4px solid #E02020;
+      border-radius: 3px;
     }
-    .laad-tabel tbody tr {
-      border-bottom: 1px solid #1e1e1e;
+    .groep-header.blauw { background: #0c1f30; border-left-color: #4caaf0; color: #fff; }
+
+    .laad-rij {
+      display: flex; align-items: center;
+      background: #141414; border-bottom: 1px solid #1e1e1e;
+      border-left: 4px solid #E02020;
+      padding: 10px 12px; gap: 10px;
+      min-height: 54px;
+      transition: background 0.1s;
     }
-    .laad-tabel tbody tr:hover { background: #141414; }
-    .laad-tabel td {
-      padding: 8px 10px; vertical-align: middle;
-      font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc;
-    }
-    .td-naam {
+    .laad-rij.huur { border-left-color: #4caaf0; }
+    .laad-rij:hover { background: #1c1c1c; }
+
+    .rij-hoofd { flex: 1; min-width: 0; }
+    .rij-naam {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 15px; color: #fff; white-space: nowrap;
+      font-size: 18px; color: #fff; line-height: 1.1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .td-klasse { color: #888; font-size: 12px; white-space: nowrap; }
-    .td-accent { border-left: 3px solid #E02020; }
-    .td-accent.huur { border-left-color: #4caaf0; }
-    .tag-rij { display: flex; flex-wrap: wrap; gap: 4px; }
+    .rij-klasse {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 13px; color: #f5c518; margin-top: 2px;
+    }
+    .rij-events {
+      font-size: 11px; color: #999; margin-top: 2px;
+    }
+
+    .rij-tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; flex-shrink: 0; }
     .tag {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 2px 6px; border-radius: 3px; white-space: nowrap;
+      font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 3px; white-space: nowrap;
     }
-    .tag.werkplaats-kart   { background: #1a3a1a; color: #4ccc4c; }
-    .tag.werkplaats-banden { background: #1a3a1a; color: #4ccc4c; }
-    .tag.werkplaats-bak    { background: #1a3a1a; color: #4ccc4c; }
-    .tag.huur              { background: #1a2a3a; color: #4caaf0; }
-    .groep-header td {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-      padding: 14px 10px 6px; color: #555; border-bottom: none;
+    .tag.werkplaats-kart   { background: #1a3a1a; color: #6de86d; border: 1px solid #2a5a2a; }
+    .tag.werkplaats-banden { background: #1a3a1a; color: #6de86d; border: 1px solid #2a5a2a; }
+    .tag.werkplaats-bak    { background: #1a3a1a; color: #6de86d; border: 1px solid #2a5a2a; }
+    .tag.huur              { background: #0e2035; color: #6dc8ff; border: 1px solid #1a4060; }
+
+    @media (max-width: 480px) {
+      .rij-naam { font-size: 16px; }
+      .rij-tags { max-width: 120px; }
+      .tag { font-size: 10px; padding: 2px 6px; }
     }
-    .groep-header.blauw td { color: #4caaf0; }
 
     .empty-state { text-align: center; padding: 4rem 2rem; }
     .empty-state-icon { font-size: 48px; margin-bottom: 1rem; }
@@ -372,35 +382,32 @@ async function buildLaadlijst() {
       if (p.bak_in_werkplaats)    tags.push('<span class="tag werkplaats-bak">Bak met materiaal</span>');
     }
 
-    const evStr = aantalEvents > 1 ? entry.events.join(', ') : '';
+    const evStr = aantalEvents > 1
+      ? `<div class="rij-events">${entry.events.join(' · ')}</div>`
+      : '';
 
-    return `<tr>
-      <td class="td-accent${isHuur ? ' huur' : ''}" style="width:3px;padding:0;"></td>
-      <td class="td-naam">${naam}</td>
-      <td class="td-klasse">${klasseStr}</td>
-      <td><div class="tag-rij">${tags.join('')}</div></td>
-      ${aantalEvents > 1 ? `<td style="font-size:11px;color:#444;">${evStr}</td>` : ''}
-    </tr>`;
+    return `<div class="laad-rij${isHuur ? ' huur' : ''}">
+      <div class="rij-hoofd">
+        <div class="rij-naam">${naam}</div>
+        <div class="rij-klasse">${klasseStr}</div>
+        ${evStr}
+      </div>
+      <div class="rij-tags">${tags.join('')}</div>
+    </div>`;
   }
 
-  const cols = aantalEvents > 1 ? 5 : 4;
-  const extraTh = aantalEvents > 1 ? '<th>Events</th>' : '';
-
-  let html = `<table class="laad-tabel"><thead><tr>
-    <th style="width:3px;padding:0;"></th>
-    <th>Naam</th><th>Klasse</th><th>In werkplaats</th>${extraTh}
-  </tr></thead><tbody>`;
+  let html = `<div class="laad-kaart-lijst">`;
 
   if (eigenKart.length) {
-    html += `<tr class="groep-header"><td colspan="${cols}">Eigen kart — ${eigenKart.length}</td></tr>`;
+    html += `<div class="groep-header">Eigen kart — ${eigenKart.length}</div>`;
     html += eigenKart.map(rijderRij).join('');
   }
   if (huurKart.length) {
-    html += `<tr class="groep-header blauw"><td colspan="${cols}">Huurkart — ${huurKart.length}</td></tr>`;
+    html += `<div class="groep-header blauw">Huurkart — ${huurKart.length}</div>`;
     html += huurKart.map(rijderRij).join('');
   }
 
-  html += '</tbody></table>';
+  html += `</div>`;
   lijst.innerHTML = html;
 }
 
