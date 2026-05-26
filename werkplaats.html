@@ -734,64 +734,61 @@ function drukAfAlsPDF() {
       },
       alternateRowStyles: { fillColor: [248, 248, 248] },
       theme: 'grid',
-      didParseCell(data) {
-        // Groen voor aangevinkte vakjes
-        if (data.section === 'body' && data.cell.raw === '✓') {
-          data.cell.styles.textColor = [30, 140, 30];
-          data.cell.styles.fontStyle = 'bold';
-        }
-      },
     });
     y = doc.lastAutoTable.finalY + 8;
   }
 
+  // Helper: startnummer(s) voor een entry
+  function startnrVanEntry(entry) {
+    const nrs = entry.klassen
+      .map(k => entry.profiel.startnummers?.[k])
+      .filter(Boolean);
+    return nrs.length ? nrs.join(' / ') : '—';
+  }
+
   // ── Eigen kart tabel ──
   if (_eigenKart.length) {
-    const rijen = _eigenKart.map((entry, i) => {
-      const p     = entry.profiel;
-      const staat = _laadState.get(p.id) || {};
-      const naam  = `${p.voornaam || ''} ${p.naam || ''}`.trim();
+    const rijen = _eigenKart.map(entry => {
+      const p    = entry.profiel;
+      const naam = `${p.voornaam || ''} ${p.naam || ''}`.trim();
       return [
-        i + 1,
+        startnrVanEntry(entry),
         naam,
         klasseVanEntry(entry),
-        p.kart_in_werkplaats    ? (staat.kart    ? '✓' : '□') : '',
-        p.banden_in_werkplaats  ? (staat.banden  ? '✓' : '□') : '',
-        p.bak_in_werkplaats     ? (staat.bak     ? '✓' : '□') : '',
+        p.kart_in_werkplaats   ? '' : '',  // lege cel voor papier
+        p.banden_in_werkplaats ? '' : '',
+        p.bak_in_werkplaats    ? '' : '',
       ];
     });
 
     tekenTabel(`EIGEN KART — ${_eigenKart.length} RIJDERS`, [80, 80, 80], [
-      { titel: '#',          breedte: 9,  uitlijning: 'center' },
-      { titel: 'Naam',       breedte: 70 },
-      { titel: 'Klasse',     breedte: 53 },
-      { titel: 'Kart',       breedte: 16, uitlijning: 'center' },
-      { titel: 'Banden',     breedte: 16, uitlijning: 'center' },
-      { titel: 'Bak',        breedte: 16, uitlijning: 'center' },
+      { titel: 'Nr',     breedte: 12, uitlijning: 'center' },
+      { titel: 'Naam',   breedte: 65 },
+      { titel: 'Klasse', breedte: 55 },
+      { titel: 'Kart',   breedte: 16, uitlijning: 'center' },
+      { titel: 'Banden', breedte: 16, uitlijning: 'center' },
+      { titel: 'Bak',    breedte: 16, uitlijning: 'center' },
     ], rijen);
   }
 
   // ── Huurkart tabel ──
   if (_huurKart.length) {
-    const rijen = _huurKart.map((entry, i) => {
-      const p     = entry.profiel;
-      const staat = _laadState.get(p.id) || {};
-      const naam  = `${p.voornaam || ''} ${p.naam || ''}`.trim();
+    const rijen = _huurKart.map(entry => {
+      const p    = entry.profiel;
+      const naam = `${p.voornaam || ''} ${p.naam || ''}`.trim();
       return [
-        i + 1,
+        startnrVanEntry(entry),
         naam,
-        p.huurkart_type || '—',
         klasseVanEntry(entry),
-        staat.huur ? '✓' : '□',
+        '',  // lege cel voor papier
       ];
     });
 
-    tekenTabel(`HUURKART — ${_huurKart.length} RIJDERS`, [20, 100, 180], [
-      { titel: '#',         breedte: 9,  uitlijning: 'center' },
-      { titel: 'Naam',      breedte: 60 },
-      { titel: 'Type',      breedte: 45 },
-      { titel: 'Klasse',    breedte: 44 },
-      { titel: 'Geladen',   breedte: 22, uitlijning: 'center' },
+    tekenTabel(`HUURKART — ${_huurKart.length} RIJDERS`, [80, 80, 80], [
+      { titel: 'Nr',      breedte: 12, uitlijning: 'center' },
+      { titel: 'Naam',    breedte: 75 },
+      { titel: 'Klasse',  breedte: 65 },
+      { titel: 'Geladen', breedte: 28, uitlijning: 'center' },
     ], rijen);
   }
 
