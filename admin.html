@@ -348,6 +348,13 @@
         <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
       </div>
 
+      <label class="field-label" style="margin-top:1rem;">Race weekend</label>
+      <select class="field-select" id="f-weekend" onchange="onWeekendChange()">
+        <option value="">— Geen weekend —</option>
+        <option value="__nieuw__">+ Nieuw weekend aanmaken...</option>
+      </select>
+      <input class="field-input" id="f-weekend-naam" type="text" placeholder="Naam van het weekend (bijv. Genk – mei 2026)" style="display:none;" />
+
       <label class="field-label">Inschrijvingsdeadline</label>
       <input class="field-input" id="f-deadline" type="datetime-local" />
       <div id="dl-chips" class="dl-chips"></div>
@@ -477,7 +484,7 @@ let _inschrSort     = 'naam';
     deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
     renderCircuitSelect();
     renderDeadlineChips();
-    await loadEvents();
+    await Promise.all([loadEvents(), loadWeekenden()]);
   } catch(e) {
     console.error('Admin init fout:', e);
     showToast('Laad fout: ' + e.message, 'red');
@@ -625,6 +632,9 @@ function resetForm() {
   document.getElementById('f-circuit').value = '';
   document.getElementById('f-circuit-nieuw').value = '';
   document.getElementById('f-deadline').value = '';
+  document.getElementById('f-weekend').value = '';
+  document.getElementById('f-weekend-naam').value = '';
+  document.getElementById('f-weekend-naam').style.display = 'none';
   document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
 }
 
@@ -650,6 +660,7 @@ function editEvent(id) {
   document.getElementById('f-datum').value = ev.datum;
   document.getElementById('f-type').value  = ev.type || '';
   renderCircuitSelect(ev.circuit);
+  renderWeekendSelect(ev.weekend_id || '');
 
   // deadline: convert from ISO to datetime-local format
   if (ev.deadline) {
@@ -701,7 +712,20 @@ async function submitForm() {
 
   saveDeadlineToHistory(dlRaw);
 
-  const ev = { naam, datum, type, circuit, deadline, klassen };
+  // Weekend
+  let weekend_id = document.getElementById('f-weekend').value || null;
+  if (weekend_id === '__nieuw__') {
+    const weekendNaam = document.getElementById('f-weekend-naam').value.trim();
+    if (!weekendNaam) { showToast('Vul een naam in voor het weekend', 'red'); return; }
+    const { data: wData, error: wErr } = await _supabase
+      .from('weekenden').insert({ naam: weekendNaam, datum }).select().single();
+    if (wErr) { showToast('Weekend aanmaken mislukt: ' + wErr.message, 'red'); return; }
+    weekend_id = wData.id;
+    _allWeekenden.unshift(wData);
+    renderWeekendSelect(weekend_id);
+  }
+
+  const ev = { naam, datum, type, circuit, deadline, klassen, weekend_id };
   let error;
 
   if (editEventId) {
@@ -715,6 +739,30 @@ async function submitForm() {
   if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
   await loadEvents();
   cancelEdit();
+}
+
+// ── Weekend helpers ───────────────────────────
+let _allWeekenden = [];
+
+async function loadWeekenden() {
+  const { data } = await _supabase.from('weekenden').select('*').order('datum', { ascending: false });
+  _allWeekenden = data || [];
+  renderWeekendSelect();
+}
+
+function renderWeekendSelect(selected) {
+  const sel = document.getElementById('f-weekend');
+  if (!sel) return;
+  const cur = selected !== undefined ? selected : sel.value;
+  sel.innerHTML = '<option value="">— Geen weekend —</option>' +
+    _allWeekenden.map(w => `<option value="${w.id}"${w.id === cur ? ' selected' : ''}>${w.naam}</option>`).join('') +
+    '<option value="__nieuw__">+ Nieuw weekend aanmaken...</option>';
+  if (cur !== undefined) sel.value = cur;
+}
+
+function onWeekendChange() {
+  const val = document.getElementById('f-weekend').value;
+  document.getElementById('f-weekend-naam').style.display = val === '__nieuw__' ? 'block' : 'none';
 }
 
 // ── Circuit helpers ───────────────────────────

@@ -89,35 +89,46 @@
     }
     .laad-teller span { color: #fff; }
 
-    .rijder-kaart {
-      background: #141414; border: 1px solid #2a2a2a;
-      border-left: 3px solid #E02020; border-radius: 4px;
-      padding: 14px 16px; margin-bottom: 8px;
-      display: grid; grid-template-columns: 1fr auto;
-      gap: 8px; align-items: start;
+    .laad-tabel { width: 100%; border-collapse: collapse; }
+    .laad-tabel thead tr {
+      border-bottom: 2px solid #2a2a2a;
     }
-    .rijder-kaart.huurkart { border-left-color: #4caaf0; }
-    .rijder-naam {
+    .laad-tabel thead th {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 17px; letter-spacing: 1px; color: #fff; margin-bottom: 4px;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: #555; padding: 0 10px 8px; text-align: left;
     }
-    .rijder-klasse {
-      font-size: 12px; color: #aaa; font-family: 'Barlow', sans-serif;
-      margin-bottom: 6px;
+    .laad-tabel tbody tr {
+      border-bottom: 1px solid #1e1e1e;
     }
-    .rijder-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .laad-tabel tbody tr:hover { background: #141414; }
+    .laad-tabel td {
+      padding: 8px 10px; vertical-align: middle;
+      font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc;
+    }
+    .td-naam {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 15px; color: #fff; white-space: nowrap;
+    }
+    .td-klasse { color: #888; font-size: 12px; white-space: nowrap; }
+    .td-accent { border-left: 3px solid #E02020; }
+    .td-accent.huur { border-left-color: #4caaf0; }
+    .tag-rij { display: flex; flex-wrap: wrap; gap: 4px; }
     .tag {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 3px 7px; border-radius: 3px;
+      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+      padding: 2px 6px; border-radius: 3px; white-space: nowrap;
     }
     .tag.werkplaats-kart   { background: #1a3a1a; color: #4ccc4c; }
-    .tag.werkplaats-banden { background: #1a2a1a; color: #4ccc4c; }
+    .tag.werkplaats-banden { background: #1a3a1a; color: #4ccc4c; }
     .tag.werkplaats-bak    { background: #1a3a1a; color: #4ccc4c; }
     .tag.huur              { background: #1a2a3a; color: #4caaf0; }
-    .tag.klasse            { background: #2a2a2a; color: #888; }
-
-    .rijder-events { font-size: 11px; color: #444; font-family: 'Barlow', sans-serif; text-align: right; line-height: 1.6; }
+    .groep-header td {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      padding: 14px 10px 6px; color: #555; border-bottom: none;
+    }
+    .groep-header.blauw td { color: #4caaf0; }
 
     .empty-state { text-align: center; padding: 4rem 2rem; }
     .empty-state-icon { font-size: 48px; margin-bottom: 1rem; }
@@ -162,9 +173,9 @@
 <!-- PANEEL: LADEN VRACHTWAGEN -->
 <div class="tab-panel on" id="panel-laden">
 
-  <div class="sectie-titel">Selecteer evenementen</div>
-  <div class="event-grid" id="event-grid">
-    <div style="color:#555;font-size:13px;"><span class="spinner"></span>Evenementen laden...</div>
+  <div class="sectie-titel">Selecteer race weekend</div>
+  <div class="event-grid" id="weekend-grid">
+    <div style="color:#555;font-size:13px;"><span class="spinner"></span>Weekenden laden...</div>
   </div>
 
   <div class="sectie-titel">Laadlijst</div>
@@ -172,7 +183,7 @@
   <div id="laad-lijst">
     <div class="empty-state">
       <div class="empty-state-icon">🚛</div>
-      <div class="empty-state-text">Selecteer evenementen hierboven</div>
+      <div class="empty-state-text">Selecteer een race weekend hierboven</div>
     </div>
   </div>
 
@@ -182,8 +193,8 @@
 const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 const DAGEN   = ['zo','ma','di','wo','do','vr','za'];
 
-let _allEvents       = [];
-let _geselecteerdIds = new Set();
+let _allWeekenden    = [];
+let _geselecteerdWid = null; // geselecteerd weekend id
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b =>
@@ -206,51 +217,54 @@ function switchTab(tab) {
     document.getElementById('link-admin').style.display = '';
   }
 
-  await laadEvenementen();
+  await laadWeekenden();
 })();
 
-async function laadEvenementen() {
+async function laadWeekenden() {
+  // Haal weekenden op samen met hun evenementen (voor datum weergave)
   const { data, error } = await _supabase
-    .from('evenementen')
-    .select('*')
+    .from('weekenden')
+    .select('*, evenementen(id, naam, datum, circuit)')
     .order('datum', { ascending: false });
 
+  const grid = document.getElementById('weekend-grid');
   if (error) {
-    document.getElementById('event-grid').innerHTML =
-      `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
+    grid.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
     return;
   }
 
-  _allEvents = data || [];
-  renderEventGrid();
+  _allWeekenden = (data || []).filter(w => w.evenementen && w.evenementen.length > 0);
+
+  if (!_allWeekenden.length) {
+    grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen race weekenden gevonden. Koppel evenementen aan een weekend via de admin.</div>';
+    return;
+  }
+
+  renderWeekendGrid();
 }
 
-function renderEventGrid() {
-  const grid = document.getElementById('event-grid');
-  if (!_allEvents.length) {
-    grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen evenementen gevonden.</div>';
-    return;
-  }
-
-  grid.innerHTML = _allEvents.map(ev => {
-    const d       = new Date(ev.datum + 'T12:00:00');
-    const datumStr = `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
-    const gesel   = _geselecteerdIds.has(ev.id);
-    return `<div class="event-kaart${gesel ? ' geselecteerd' : ''}" onclick="toggleEvent('${ev.id}')">
-      <div class="event-kaart-naam">${gesel ? '✓ ' : ''}${ev.naam}</div>
-      <div class="event-kaart-meta">📅 ${datumStr}</div>
-      <div class="event-kaart-meta">📍 ${ev.circuit || '—'}</div>
+function renderWeekendGrid() {
+  const grid = document.getElementById('weekend-grid');
+  grid.innerHTML = _allWeekenden.map(w => {
+    const evs = (w.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
+    const eersteD = evs[0] ? new Date(evs[0].datum + 'T12:00:00') : null;
+    const datumStr = eersteD
+      ? `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`
+      : '';
+    const circuit = evs[0]?.circuit || '';
+    const gesel = _geselecteerdWid === w.id;
+    return `<div class="event-kaart${gesel ? ' geselecteerd' : ''}" onclick="selecteerWeekend('${w.id}')">
+      <div class="event-kaart-naam">${gesel ? '✓ ' : ''}${w.naam}</div>
+      ${datumStr ? `<div class="event-kaart-meta">📅 ${datumStr}</div>` : ''}
+      ${circuit  ? `<div class="event-kaart-meta">📍 ${circuit}</div>` : ''}
+      <div class="event-kaart-meta" style="margin-top:4px;color:#555;">${evs.length} event${evs.length !== 1 ? 's' : ''}</div>
     </div>`;
   }).join('');
 }
 
-async function toggleEvent(id) {
-  if (_geselecteerdIds.has(id)) {
-    _geselecteerdIds.delete(id);
-  } else {
-    _geselecteerdIds.add(id);
-  }
-  renderEventGrid();
+async function selecteerWeekend(id) {
+  _geselecteerdWid = _geselecteerdWid === id ? null : id;
+  renderWeekendGrid();
   await buildLaadlijst();
 }
 
@@ -258,11 +272,11 @@ async function buildLaadlijst() {
   const lijst   = document.getElementById('laad-lijst');
   const teller  = document.getElementById('laad-teller');
 
-  if (_geselecteerdIds.size === 0) {
+  if (!_geselecteerdWid) {
     teller.innerHTML = '';
     lijst.innerHTML  = `<div class="empty-state">
       <div class="empty-state-icon">🚛</div>
-      <div class="empty-state-text">Selecteer evenementen hierboven</div>
+      <div class="empty-state-text">Selecteer een race weekend hierboven</div>
     </div>`;
     return;
   }
@@ -270,11 +284,19 @@ async function buildLaadlijst() {
   lijst.innerHTML  = `<div style="color:#555;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
   teller.innerHTML = '';
 
-  // Haal alle inschrijvingen op voor geselecteerde events, inclusief profielen
+  // Haal event-ids op voor dit weekend
+  const weekend = _allWeekenden.find(w => w.id === _geselecteerdWid);
+  const eventIds = (weekend?.evenementen || []).map(e => e.id);
+  if (!eventIds.length) {
+    lijst.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Geen evenementen in dit weekend</div></div>`;
+    return;
+  }
+
+  // Haal alle inschrijvingen op voor die events, inclusief profielen
   const { data, error } = await _supabase
     .from('inschrijvingen')
     .select('*, profiles(*), evenementen(naam)')
-    .in('event_id', [..._geselecteerdIds]);
+    .in('event_id', eventIds);
 
   if (error) {
     lijst.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
@@ -327,9 +349,11 @@ async function buildLaadlijst() {
 
   teller.innerHTML = `<span>${rijderMap.size}</span> rijder${rijderMap.size !== 1 ? 's' : ''} &nbsp;·&nbsp; <span>${eigenKart.length}</span> eigen kart &nbsp;·&nbsp; <span>${huurKart.length}</span> huurkart`;
 
-  function rijderKaartHtml(entry) {
-    const p    = entry.profiel;
-    const naam = `${p.voornaam || ''} ${p.naam || ''}`.trim();
+  const aantalEvents = weekend?.evenementen?.length || 0;
+
+  function rijderRij(entry) {
+    const p      = entry.profiel;
+    const naam   = `${p.voornaam || ''} ${p.naam || ''}`.trim();
     const isHuur = p.kart_type === 'huur';
 
     const klasseStr = entry.klassen.length
@@ -337,43 +361,46 @@ async function buildLaadlijst() {
           const nr = p.startnummers?.[k];
           return k + (nr ? ` #${nr}` : '');
         }).join(' · ')
-      : (isHuur ? (p.huurkart_type || 'Huurkart') : '—');
+      : (isHuur ? (p.huurkart_type || '—') : '—');
 
     const tags = [];
     if (isHuur) {
-      tags.push(`<span class="tag huur">Huurkart${p.huurkart_type ? ': ' + p.huurkart_type : ''}</span>`);
+      tags.push(`<span class="tag huur">${p.huurkart_type || 'Huurkart'}</span>`);
     } else {
       if (p.kart_in_werkplaats)   tags.push('<span class="tag werkplaats-kart">Kart</span>');
       if (p.banden_in_werkplaats) tags.push('<span class="tag werkplaats-banden">Banden</span>');
       if (p.bak_in_werkplaats)    tags.push('<span class="tag werkplaats-bak">Bak met materiaal</span>');
     }
 
-    const eventsHtml = _geselecteerdIds.size > 1
-      ? entry.events.map(e => `<div>${e}</div>`).join('')
-      : '';
+    const evStr = aantalEvents > 1 ? entry.events.join(', ') : '';
 
-    return `<div class="rijder-kaart${isHuur ? ' huurkart' : ''}">
-      <div>
-        <div class="rijder-naam">${naam}</div>
-        <div class="rijder-klasse">🏁 ${klasseStr}</div>
-        ${tags.length ? `<div class="rijder-tags">${tags.join('')}</div>` : ''}
-      </div>
-      ${eventsHtml ? `<div class="rijder-events">${eventsHtml}</div>` : ''}
-    </div>`;
+    return `<tr>
+      <td class="td-accent${isHuur ? ' huur' : ''}" style="width:3px;padding:0;"></td>
+      <td class="td-naam">${naam}</td>
+      <td class="td-klasse">${klasseStr}</td>
+      <td><div class="tag-rij">${tags.join('')}</div></td>
+      ${aantalEvents > 1 ? `<td style="font-size:11px;color:#444;">${evStr}</td>` : ''}
+    </tr>`;
   }
 
-  let html = '';
+  const cols = aantalEvents > 1 ? 5 : 4;
+  const extraTh = aantalEvents > 1 ? '<th>Events</th>' : '';
+
+  let html = `<table class="laad-tabel"><thead><tr>
+    <th style="width:3px;padding:0;"></th>
+    <th>Naam</th><th>Klasse</th><th>In werkplaats</th>${extraTh}
+  </tr></thead><tbody>`;
 
   if (eigenKart.length) {
-    html += `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:8px;">Eigen kart (${eigenKart.length})</div>`;
-    html += eigenKart.map(rijderKaartHtml).join('');
+    html += `<tr class="groep-header"><td colspan="${cols}">Eigen kart — ${eigenKart.length}</td></tr>`;
+    html += eigenKart.map(rijderRij).join('');
   }
-
   if (huurKart.length) {
-    html += `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#4caaf0;margin:${eigenKart.length ? '1.5rem' : '0'} 0 8px;">Huurkart (${huurKart.length})</div>`;
-    html += huurKart.map(rijderKaartHtml).join('');
+    html += `<tr class="groep-header blauw"><td colspan="${cols}">Huurkart — ${huurKart.length}</td></tr>`;
+    html += huurKart.map(rijderRij).join('');
   }
 
+  html += '</tbody></table>';
   lijst.innerHTML = html;
 }
 
