@@ -786,8 +786,8 @@ function renderRijders() {
 
   // ── Sortering toepassen ───────────────────────
   lijst.sort((a, b) => {
-    const nA = `${a.voornaam||''} ${a.naam||''}`.trim();
-    const nB = `${b.voornaam||''} ${b.naam||''}`.trim();
+    const nA = `${a.naam||''} ${a.voornaam||''}`.trim();
+    const nB = `${b.naam||''} ${b.voornaam||''}`.trim();
     if (sort === 'naam')   return nA.localeCompare(nB);
     if (sort === 'naam_z') return nB.localeCompare(nA);
     if (sort === 'klasse') {
@@ -1102,8 +1102,8 @@ async function exporteerInschrijvingen() {
   // ── Zelfde sortering als het scherm ───────────
   const lijst = _filterInschrData().sort((a, b) => {
     const pa = a.profiles||{}, pb = b.profiles||{};
-    const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
-    const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
+    const nA = `${pa.naam||''} ${pa.voornaam||''}`.trim();
+    const nB = `${pb.naam||''} ${pb.voornaam||''}`.trim();
     if (_inschrSort==='naam')   return nA.localeCompare(nB);
     if (_inschrSort==='naam_z') return nB.localeCompare(nA);
     if (_inschrSort==='klasse') return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
@@ -1318,8 +1318,8 @@ function sorteerInschrijvingen(sort) {
 function _renderInschrGrid() {
   let lijst = [..._filterInschrData()].sort((a, b) => {
     const pa = a.profiles || {}, pb = b.profiles || {};
-    const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
-    const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
+    const nA = `${pa.naam||''} ${pa.voornaam||''}`.trim();
+    const nB = `${pb.naam||''} ${pb.voornaam||''}`.trim();
     if (_inschrSort === 'naam')   return nA.localeCompare(nB);
     if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
     if (_inschrSort === 'klasse') return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
