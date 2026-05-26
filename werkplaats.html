@@ -155,6 +155,51 @@
 
     .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #333; border-top-color: #E02020; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Zoek + filter ── */
+    .laad-controls { display: none; flex-direction: column; gap: 8px; margin-bottom: 1.2rem; }
+    .zoek-wrap { position: relative; }
+    .zoek-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #666; font-size: 15px; pointer-events: none; }
+    .zoek-input {
+      width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff;
+      padding: 11px 12px 11px 38px; font-size: 15px; border-radius: 4px; outline: none;
+      font-family: 'Barlow', sans-serif;
+    }
+    .zoek-input:focus { border-color: #E02020; }
+    .filter-btns { display: flex; gap: 6px; }
+    .filter-btn {
+      flex: 1; padding: 9px 6px; text-align: center;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+      border: 1px solid #2a2a2a; background: #161616; color: #555;
+      border-radius: 3px; cursor: pointer; transition: all 0.15s;
+    }
+    .filter-btn.on         { border-color: #E02020; color: #fff; background: #2a1010; }
+    .filter-btn.groen.on   { border-color: #2a8a2a; color: #fff; background: #1a3a1a; }
+
+    /* ── Laad-toggle knoppen ── */
+    .laad-toggle-rij { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .laad-toggle {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+      padding: 6px 11px; border-radius: 3px; cursor: pointer;
+      border: 1px solid #2a2a2a; background: #1a1a1a; color: #555;
+      transition: all 0.12s;
+    }
+    .laad-toggle:hover { border-color: #444; color: #aaa; }
+    .tog-check {
+      width: 13px; height: 13px; border: 1px solid #444; border-radius: 2px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-size: 9px; line-height: 1;
+    }
+    .laad-toggle.on { border-color: #3aaa3a; background: #1a3a1a; color: #6de86d; }
+    .laad-toggle.on .tog-check { background: #3aaa3a; border-color: #4acc4a; color: #fff; }
+
+    /* ── Geladen staat ── */
+    .laad-rij.geladen { border-left-color: #3aaa3a; background: #0e170e; }
+    .rij-geladen-vink { font-size: 22px; color: #3aaa3a; flex-shrink: 0; align-self: center; line-height: 1; }
+    .groep-header.geladen-header { background: #0e200e; border-left-color: #3aaa3a; }
   </style>
 </head>
 <body>
@@ -203,6 +248,19 @@
 
   <div class="sectie-titel">Laadlijst</div>
   <div class="laad-teller" id="laad-teller"></div>
+
+  <div class="laad-controls" id="laad-controls">
+    <div class="zoek-wrap">
+      <span class="zoek-icon">🔍</span>
+      <input class="zoek-input" id="laad-zoek" type="text" placeholder="Zoek op naam..." oninput="onZoek(this.value)" />
+    </div>
+    <div class="filter-btns">
+      <button class="filter-btn on"    onclick="setFilter('alle')">Alles</button>
+      <button class="filter-btn"       onclick="setFilter('te-laden')">Te laden</button>
+      <button class="filter-btn groen" onclick="setFilter('geladen')">Geladen</button>
+    </div>
+  </div>
+
   <div id="laad-lijst">
     <div class="empty-state">
       <div class="empty-state-icon">🚛</div>
@@ -217,8 +275,17 @@ const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','no
 const DAGEN   = ['zo','ma','di','wo','do','vr','za'];
 
 let _allWeekenden    = [];
-let _geselecteerdWid = null; // geselecteerd weekend id
+let _geselecteerdWid = null;
 
+// Laadlijst render-state
+let _eigenKart    = [];
+let _huurKart     = [];
+let _laadState    = new Map(); // profiel.id → { kart: bool, banden: bool, bak: bool } of { huur: bool }
+let _aantalEvents = 0;
+let _zoekterm     = '';
+let _filter       = 'alle'; // 'alle' | 'te-laden' | 'geladen'
+
+// ── Tabs ──────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
@@ -228,6 +295,7 @@ function switchTab(tab) {
     p.classList.toggle('on', p.id === 'panel-' + tab));
 }
 
+// ── Init ──────────────────────────────────────
 (async () => {
   const result = await requireWerkplaats();
   if (!result) return;
@@ -245,8 +313,8 @@ function switchTab(tab) {
   await laadWeekenden();
 })();
 
+// ── Weekenden ─────────────────────────────────
 async function laadWeekenden() {
-  // Haal weekenden op samen met hun evenementen (voor datum weergave)
   const { data, error } = await _supabase
     .from('weekenden')
     .select('*, evenementen(id, naam, datum, circuit)')
@@ -293,31 +361,33 @@ async function selecteerWeekend(id) {
   await buildLaadlijst();
 }
 
+// ── Laadlijst opbouwen (data ophalen) ─────────
 async function buildLaadlijst() {
-  const lijst   = document.getElementById('laad-lijst');
-  const teller  = document.getElementById('laad-teller');
+  const lijst    = document.getElementById('laad-lijst');
+  const teller   = document.getElementById('laad-teller');
+  const controls = document.getElementById('laad-controls');
 
   if (!_geselecteerdWid) {
-    teller.innerHTML = '';
-    lijst.innerHTML  = `<div class="empty-state">
+    teller.innerHTML       = '';
+    controls.style.display = 'none';
+    lijst.innerHTML = `<div class="empty-state">
       <div class="empty-state-icon">🚛</div>
       <div class="empty-state-text">Selecteer een race weekend hierboven</div>
     </div>`;
     return;
   }
 
-  lijst.innerHTML  = `<div style="color:#555;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
-  teller.innerHTML = '';
+  lijst.innerHTML        = `<div style="color:#555;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
+  teller.innerHTML       = '';
+  controls.style.display = 'none';
 
-  // Haal event-ids op voor dit weekend
-  const weekend = _allWeekenden.find(w => w.id === _geselecteerdWid);
+  const weekend  = _allWeekenden.find(w => w.id === _geselecteerdWid);
   const eventIds = (weekend?.evenementen || []).map(e => e.id);
   if (!eventIds.length) {
     lijst.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Geen evenementen in dit weekend</div></div>`;
     return;
   }
 
-  // Haal alle inschrijvingen op voor die events, inclusief profielen
   const { data, error } = await _supabase
     .from('inschrijvingen')
     .select('*, profiles(*), evenementen(naam)')
@@ -328,33 +398,25 @@ async function buildLaadlijst() {
     return;
   }
 
-  // Dedupliceer per rijder_id — samenvoeg klassen en events
+  // Dedupliceer per rijder_id
   const rijderMap = new Map();
   for (const inschrijving of (data || [])) {
     const p  = inschrijving.profiles;
     const id = inschrijving.rijder_id;
     if (!p) continue;
-
     if (!rijderMap.has(id)) {
-      rijderMap.set(id, {
-        profiel: p,
-        klassen: [],
-        events:  [],
-      });
+      rijderMap.set(id, { profiel: p, klassen: [], events: [] });
     }
     const entry = rijderMap.get(id);
     if (inschrijving.klasse && !entry.klassen.includes(inschrijving.klasse)) {
       entry.klassen.push(inschrijving.klasse);
     }
     const evNaam = inschrijving.evenementen?.naam || '';
-    if (evNaam && !entry.events.includes(evNaam)) {
-      entry.events.push(evNaam);
-    }
+    if (evNaam && !entry.events.includes(evNaam)) entry.events.push(evNaam);
   }
 
   if (rijderMap.size === 0) {
-    teller.innerHTML = '';
-    lijst.innerHTML  = `<div class="empty-state">
+    lijst.innerHTML = `<div class="empty-state">
       <div class="empty-state-icon">📋</div>
       <div class="empty-state-text">Geen inschrijvingen gevonden</div>
     </div>`;
@@ -368,18 +430,85 @@ async function buildLaadlijst() {
     return nA.localeCompare(nB);
   });
 
-  // Splits in eigen kart en huurkart
-  const eigenKart = gesorteerd.filter(r => r.profiel.kart_type !== 'huur');
-  const huurKart  = gesorteerd.filter(r => r.profiel.kart_type === 'huur');
+  _eigenKart    = gesorteerd.filter(r => r.profiel.kart_type !== 'huur');
+  _huurKart     = gesorteerd.filter(r => r.profiel.kart_type === 'huur');
+  _aantalEvents = weekend?.evenementen?.length || 0;
 
-  teller.innerHTML = `<span>${rijderMap.size}</span> rijder${rijderMap.size !== 1 ? 's' : ''} &nbsp;·&nbsp; <span>${eigenKart.length}</span> eigen kart &nbsp;·&nbsp; <span>${huurKart.length}</span> huurkart`;
-
-  const aantalEvents = weekend?.evenementen?.length || 0;
-
-  function rijderRij(entry) {
+  // Initialiseer laadState (reset bij nieuw weekend)
+  _laadState = new Map();
+  for (const entry of gesorteerd) {
     const p      = entry.profiel;
+    const isHuur = p.kart_type === 'huur';
+    const items  = {};
+    if (isHuur) {
+      items.huur = false;
+    } else {
+      if (p.kart_in_werkplaats)   items.kart    = false;
+      if (p.banden_in_werkplaats) items.banden  = false;
+      if (p.bak_in_werkplaats)    items.bak     = false;
+    }
+    _laadState.set(p.id, items);
+  }
+
+  teller.innerHTML = `<span>${rijderMap.size}</span> rijder${rijderMap.size !== 1 ? 's' : ''} &nbsp;·&nbsp; <span>${_eigenKart.length}</span> eigen kart &nbsp;·&nbsp; <span>${_huurKart.length}</span> huurkart`;
+
+  // Reset zoek + filter
+  _zoekterm = '';
+  _filter   = 'alle';
+  document.getElementById('laad-zoek').value = '';
+  document.querySelectorAll('.filter-btn').forEach((b, i) => b.classList.toggle('on', i === 0));
+
+  controls.style.display = 'flex';
+  renderLaadlijst();
+}
+
+// ── Zoek & filter ─────────────────────────────
+function onZoek(val) {
+  _zoekterm = val.trim().toLowerCase();
+  renderLaadlijst();
+}
+
+function setFilter(f) {
+  _filter = f;
+  const filters = ['alle', 'te-laden', 'geladen'];
+  document.querySelectorAll('.filter-btn').forEach((b, i) =>
+    b.classList.toggle('on', filters[i] === f));
+  renderLaadlijst();
+}
+
+// ── Laad-items togglen ────────────────────────
+function toggleLaadItem(rijderId, item) {
+  const state = _laadState.get(rijderId);
+  if (!state) return;
+  state[item] = !state[item];
+  renderLaadlijst();
+}
+
+function rijderIsGeladen(rijderId) {
+  const state = _laadState.get(rijderId);
+  if (!state) return false;
+  const vals = Object.values(state);
+  return vals.length > 0 && vals.every(v => v);
+}
+
+// ── Render laadlijst ──────────────────────────
+function renderLaadlijst() {
+  const lijst = document.getElementById('laad-lijst');
+  const LABELS = { kart: 'Kart', banden: 'Banden', bak: 'Bak', huur: 'Kart' };
+
+  function pasZoek(entry) {
+    if (!_zoekterm) return true;
+    const naam = `${entry.profiel.voornaam||''} ${entry.profiel.naam||''}`.trim().toLowerCase();
+    return naam.includes(_zoekterm);
+  }
+
+  function rijderRijHTML(entry) {
+    const p      = entry.profiel;
+    const rid    = p.id;
     const naam   = `${p.voornaam || ''} ${p.naam || ''}`.trim();
     const isHuur = p.kart_type === 'huur';
+    const state  = _laadState.get(rid) || {};
+    const geladen = rijderIsGeladen(rid);
 
     const klasseStr = entry.klassen.length
       ? entry.klassen.map(k => {
@@ -388,44 +517,69 @@ async function buildLaadlijst() {
         }).join(' · ')
       : (isHuur ? (p.huurkart_type || '—') : '—');
 
-    const tags = [];
-    if (isHuur) {
-      tags.push(`<span class="tag huur">${p.huurkart_type || 'Huurkart'}</span>`);
-    } else {
-      if (p.kart_in_werkplaats)   tags.push('<span class="tag werkplaats-kart">Kart</span>');
-      if (p.banden_in_werkplaats) tags.push('<span class="tag werkplaats-banden">Banden</span>');
-      if (p.bak_in_werkplaats)    tags.push('<span class="tag werkplaats-bak">Bak met materiaal</span>');
-    }
-
-    const evStr = aantalEvents > 1
+    const evStr = _aantalEvents > 1
       ? `<div class="rij-events">${entry.events.join(' · ')}</div>`
       : '';
 
-    return `<div class="laad-rij${isHuur ? ' huur' : ''}">
+    const togglesHTML = Object.entries(state).map(([key, val]) =>
+      `<button class="laad-toggle${val ? ' on' : ''}" onclick="toggleLaadItem('${rid}','${key}')">
+        <span class="tog-check">${val ? '✓' : ''}</span>${LABELS[key] || key}
+      </button>`
+    ).join('');
+
+    const rijClass = geladen ? 'geladen' : (isHuur ? 'huur' : '');
+
+    return `<div class="laad-rij ${rijClass}">
       <div class="rij-hoofd">
         <div class="rij-naam">${naam}</div>
         <div class="rij-klasse">${klasseStr}</div>
         ${evStr}
+        ${togglesHTML ? `<div class="laad-toggle-rij">${togglesHTML}</div>` : ''}
       </div>
-      <div class="rij-tags">${tags.join('')}</div>
+      ${geladen ? '<div class="rij-geladen-vink">✓</div>' : ''}
     </div>`;
   }
 
-  let html = `<div class="laad-kaart-lijst">`;
+  const teladenEigen = _eigenKart.filter(e => pasZoek(e) && !rijderIsGeladen(e.profiel.id));
+  const teladenHuur  = _huurKart.filter(e =>  pasZoek(e) && !rijderIsGeladen(e.profiel.id));
+  const geladenAlles = [..._eigenKart, ..._huurKart].filter(e => pasZoek(e) && rijderIsGeladen(e.profiel.id));
 
-  if (eigenKart.length) {
-    html += `<div class="groep-header">Eigen kart — ${eigenKart.length}</div>`;
-    html += eigenKart.map(rijderRij).join('');
-  }
-  if (huurKart.length) {
-    html += `<div class="groep-header blauw">Huurkart — ${huurKart.length}</div>`;
-    html += huurKart.map(rijderRij).join('');
+  const toontTeLaden = _filter !== 'geladen'  && (teladenEigen.length + teladenHuur.length > 0);
+  const toontGeladen = _filter !== 'te-laden' && geladenAlles.length > 0;
+
+  if (!toontTeLaden && !toontGeladen) {
+    const leegIcoon = _filter === 'geladen' ? '📦' : '🔍';
+    const leegTekst = _filter === 'geladen' ? 'Nog niets geladen' : 'Geen rijders gevonden';
+    lijst.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">${leegIcoon}</div>
+      <div class="empty-state-text">${leegTekst}</div>
+    </div>`;
+    return;
   }
 
-  html += `</div>`;
+  let html = '<div class="laad-kaart-lijst">';
+
+  if (toontTeLaden) {
+    if (teladenEigen.length) {
+      html += `<div class="groep-header">Eigen kart — ${teladenEigen.length}</div>`;
+      html += teladenEigen.map(rijderRijHTML).join('');
+    }
+    if (teladenHuur.length) {
+      html += `<div class="groep-header blauw">Huurkart — ${teladenHuur.length}</div>`;
+      html += teladenHuur.map(rijderRijHTML).join('');
+    }
+  }
+
+  if (toontGeladen) {
+    html += `<div class="groep-header geladen-header">Geladen — ${geladenAlles.length}</div>`;
+    html += geladenAlles.map(rijderRijHTML).join('');
+  }
+
+  html += '</div>';
   lijst.innerHTML = html;
 }
 
+// ── Dropdown & uitloggen ──────────────────────
 function toggleDropdown() {
   document.getElementById('nav-dropdown').classList.toggle('open');
 }
