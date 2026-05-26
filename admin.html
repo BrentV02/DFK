@@ -929,7 +929,7 @@ async function downloadWeekendPdf4(wid) {
     doc.rect(0, 20, W, 1.5, 'F');
 
     // ── Rijdernaam ──
-    let y = 30;
+    let y = 38;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(26);
     doc.setTextColor(10, 10, 10);
@@ -991,8 +991,13 @@ async function downloadWeekendPdf4(wid) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(130, 130, 130);
-    doc.text('Artikel / omschrijving', ML, y);
-    doc.text('Bedrag', W - MR, y, { align: 'right' });
+    const aantalKolW = 18;                        // breedte van de aantal-kolom
+    const aantalKolX = ML;                        // aantal-kolom links
+    const artikelKolX = ML + aantalKolW + 4;      // omschrijving-kolom rechts daarvan
+    const scheidX = ML + aantalKolW + 2;          // verticale lijn
+
+    doc.text('Aantal', aantalKolX, y);
+    doc.text('Artikel / omschrijving', artikelKolX, y);
     y += 2;
 
     // Kolom-scheidingslijn
@@ -1002,9 +1007,8 @@ async function downloadWeekendPdf4(wid) {
     y += 1;
 
     // ── Schrijflijnen ──
-    const prijsKolX  = W - MR - 28;  // x waar de prijs-kolom begint
-    const regelHoogte = 10;
-    const maxY        = H - 28;       // ruimte laten voor totaal + footer
+    const regelHoogte  = 10;
+    const maxY         = H - 28;
     const aantalRegels = Math.floor((maxY - y) / regelHoogte) - 2;
 
     doc.setDrawColor(210, 210, 210);
@@ -1012,15 +1016,15 @@ async function downloadWeekendPdf4(wid) {
 
     for (let i = 0; i < aantalRegels; i++) {
       const ly = y + (i + 1) * regelHoogte;
-      // Schrijflijn artikel
-      doc.line(ML, ly, prijsKolX - 4, ly);
-      // Schrijflijn bedrag
-      doc.line(prijsKolX, ly, W - MR, ly);
+      // Schrijflijn aantal
+      doc.line(aantalKolX, ly, scheidX - 2, ly);
+      // Schrijflijn omschrijving
+      doc.line(artikelKolX, ly, W - MR, ly);
       // Verticale scheidingslijn (subtiel)
       if (i === 0) {
         doc.setDrawColor(225, 225, 225);
         doc.setLineWidth(0.2);
-        doc.line(prijsKolX - 2, y, prijsKolX - 2, y + aantalRegels * regelHoogte + regelHoogte);
+        doc.line(scheidX, y, scheidX, y + aantalRegels * regelHoogte + regelHoogte);
         doc.setDrawColor(210, 210, 210);
         doc.setLineWidth(0.25);
       }
@@ -1036,9 +1040,6 @@ async function downloadWeekendPdf4(wid) {
     doc.setFontSize(9);
     doc.setTextColor(20, 20, 20);
     doc.text('TOTAAL', ML, totaalY + 6);
-    doc.setDrawColor(80, 80, 80);
-    doc.setLineWidth(0.4);
-    doc.line(prijsKolX, totaalY + 7, W - MR, totaalY + 7);
 
     // ── Footer ──
     doc.setFont('helvetica', 'normal');
