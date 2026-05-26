@@ -727,10 +727,10 @@ function drukAfAlsPDF() {
         cellPadding: 3,
       },
       bodyStyles: {
-        fontSize: 10,
+        fontSize: 9,
         textColor: [10, 10, 10],
-        cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
-        minCellHeight: 9,
+        cellPadding: { top: 2, bottom: 2, left: 3, right: 3 },
+        minCellHeight: 6,
       },
       alternateRowStyles: { fillColor: [248, 248, 248] },
       theme: 'grid',
@@ -777,7 +777,6 @@ function drukAfAlsPDF() {
       const p    = entry.profiel;
       const naam = `${p.voornaam || ''} ${p.naam || ''}`.trim();
       return [
-        startnrVanEntry(entry),
         naam,
         klasseVanEntry(entry),
         '',  // lege cel voor papier
@@ -785,8 +784,7 @@ function drukAfAlsPDF() {
     });
 
     tekenTabel(`HUURKART — ${_huurKart.length} RIJDERS`, [80, 80, 80], [
-      { titel: 'Nr',      breedte: 12, uitlijning: 'center' },
-      { titel: 'Naam',    breedte: 75 },
+      { titel: 'Naam',    breedte: 87 },
       { titel: 'Klasse',  breedte: 65 },
       { titel: 'Geladen', breedte: 28, uitlijning: 'center' },
     ], rijen);
