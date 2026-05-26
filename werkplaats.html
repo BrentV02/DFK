@@ -38,6 +38,15 @@
     .tab-btn:hover { color: #ccc; }
     .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
 
+    .mobile-tab-bar { display: none; background: #111; border-bottom: 3px solid #1a1a1a; position: sticky; top: 60px; z-index: 99; }
+    .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
+    .mobile-tab.on { color: #fff; border-bottom-color: #E02020; }
+
+    @media (max-width: 768px) {
+      .nav-tabs { display: none !important; }
+      .mobile-tab-bar { display: flex; }
+    }
+
     /* ── Dropdown ── */
     .nav-right { position: relative; }
     .nav-user-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
@@ -180,6 +189,10 @@
   </div>
 </nav>
 
+<div class="mobile-tab-bar">
+  <button class="mobile-tab on" data-tab="laden" onclick="switchTab('laden')">Laden vrachtwagen</button>
+</div>
+
 <!-- PANEEL: LADEN VRACHTWAGEN -->
 <div class="tab-panel on" id="panel-laden">
 
@@ -208,6 +221,8 @@ let _geselecteerdWid = null; // geselecteerd weekend id
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('.mobile-tab').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p =>
     p.classList.toggle('on', p.id === 'panel-' + tab));
