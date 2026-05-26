@@ -430,15 +430,28 @@ function renderEvents() {
       : '<span class="class-tag">Alle klassen</span>';
 
     // ── Inschrijf-knop ──
-    const isGesloten    = isPast || deadlinePassed;
-    const isIngeschreven = _myEventIds.has(ev.id);
+    const isGesloten       = isPast || deadlinePassed;
+    const evInschr         = _myInschrijvingen.filter(i => i.event_id === ev.id);
+    const registeredIds    = new Set(evInschr.map(i => i.rijder_id));
+    const alleIn           = _accountRijders.length > 0 && _accountRijders.every(r => registeredIds.has(r.id));
+    const geenIn           = evInschr.length === 0;
+
     let inschrijfBtn;
     if (isGesloten) {
       inschrijfBtn = `<button class="inschrijf-btn vol">Inschrijving gesloten</button>`;
-    } else if (isIngeschreven) {
-      inschrijfBtn = `<button class="inschrijf-btn ingeschreven">✓ Ingeschreven</button>`;
-    } else {
+    } else if (geenIn) {
       inschrijfBtn = `<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')">Inschrijven →</button>`;
+    } else {
+      const namesHtml = evInschr.map(i => {
+        const r    = _accountRijders.find(r => r.id === i.rijder_id);
+        const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'Rijder';
+        return `<span style="display:block;font-size:12px;color:#4cff4c;font-family:'Barlow',sans-serif;">✓ ${naam}</span>`;
+      }).join('');
+      if (alleIn) {
+        inschrijfBtn = `<div class="inschrijf-btn ingeschreven" style="text-align:left;line-height:1.8;">${namesHtml}</div>`;
+      } else {
+        inschrijfBtn = `<div>${namesHtml}<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')" style="margin-top:6px;">Nog een rijder inschrijven →</button></div>`;
+      }
     }
 
     const topStyle = `style="${isPast ? 'background:#555;' : ''} align-items:flex-start;"`;
@@ -616,8 +629,8 @@ async function uitschrijven(inschrijvingId, eventId) {
   if (!confirm('Zeker dat je je wil uitschrijven?')) return;
   const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
   if (error) { alert('Uitschrijven mislukt: ' + error.message); return; }
-  _myEventIds.delete(eventId);
   _myInschrijvingen = _myInschrijvingen.filter(i => i.id !== inschrijvingId);
+  if (!_myInschrijvingen.some(i => i.event_id === eventId)) _myEventIds.delete(eventId);
   renderInschrijvingen();
   renderEvents();
 }
@@ -944,6 +957,15 @@ function _toonRijderKeuze() {
   const ev = _currentEvent;
   const d  = new Date(ev.datum + 'T12:00:00');
   const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  const registeredIds  = new Set(_myInschrijvingen.filter(i => i.event_id === ev.id).map(i => i.rijder_id));
+  const beschikbaar    = _accountRijders.filter(r => !registeredIds.has(r.id));
+
+  if (beschikbaar.length === 1) {
+    _selectedRijder = beschikbaar[0];
+    _openInschrijvenForm();
+    return;
+  }
+
   document.getElementById('inschrijf-body').innerHTML = `
     <div class="ev-confirm-box">
       <div class="ev-confirm-name">${ev.naam}</div>
@@ -951,7 +973,7 @@ function _toonRijderKeuze() {
     </div>
     <div class="confirm-vraag">Voor wie inschrijven?</div>
     <p class="confirm-hint">Kies de rijder voor dit event.</p>
-    ${_accountRijders.map(r => `
+    ${beschikbaar.map(r => `
       <div class="rijder-kaart" onclick="_kiesRijderEnSchrijfIn('${r.id}')">
         <div>
           <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
