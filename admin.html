@@ -113,14 +113,10 @@
     #dfk-root .circuit-add-row .field-input { margin-bottom: 0; flex: 1; }
     #dfk-root .circuit-add-btn { flex-shrink: 0; padding: 0 16px; background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
     #dfk-root .circuit-add-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .circuit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
-    #dfk-root .circuit-chip { display: inline-flex; align-items: center; gap: 4px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; color: #999; letter-spacing: 0.5px; }
-    #dfk-root .circuit-chip-del { background: none; border: none; color: #444; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 0 0 2px; }
-    #dfk-root .circuit-chip-del:hover { color: #E02020; }
-    #dfk-root .weekend-sel-row { display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem; }
-    #dfk-root .weekend-sel-row .field-select { margin-bottom: 0; flex: 1; }
-    #dfk-root .weekend-del-btn { flex-shrink: 0; padding: 0 12px; height: 38px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; border-radius: 3px; font-size: 18px; line-height: 1; cursor: pointer; }
-    #dfk-root .weekend-del-btn:hover { border-color: #E02020; color: #E02020; }
+    #dfk-root .sel-del-row { display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem; }
+    #dfk-root .sel-del-row .field-select { margin-bottom: 0; flex: 1; }
+    #dfk-root .sel-del-btn { flex-shrink: 0; padding: 0 12px; height: 38px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; border-radius: 3px; font-size: 18px; line-height: 1; cursor: pointer; }
+    #dfk-root .sel-del-btn:hover { border-color: #E02020; color: #E02020; }
 
     #dfk-root .dl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -0.5rem; margin-bottom: 1rem; }
     #dfk-root .dl-chip { padding: 5px 10px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; font-size: 11px; color: #888; cursor: pointer; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; }
@@ -398,20 +394,22 @@
       </div>
 
       <label class="field-label" style="margin-top:1rem;">Circuit / Locatie</label>
-      <select class="field-select" id="f-circuit"><option value="">Selecteer circuit...</option></select>
+      <div class="sel-del-row">
+        <select class="field-select" id="f-circuit" onchange="onCircuitChange()"><option value="">Selecteer circuit...</option></select>
+        <button class="sel-del-btn" id="circuit-del-btn" onclick="verwijderCircuit()" title="Verwijder dit circuit uit de lijst" style="display:none;">×</button>
+      </div>
       <div class="circuit-add-row">
         <input class="field-input" id="f-circuit-nieuw" type="text" placeholder="Nieuw circuit toevoegen..." />
         <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
       </div>
-      <div class="circuit-chips" id="circuit-chips"></div>
 
       <label class="field-label" style="margin-top:1rem;">Race weekend</label>
-      <div class="weekend-sel-row">
+      <div class="sel-del-row">
         <select class="field-select" id="f-weekend" onchange="onWeekendChange()">
           <option value="">— Geen weekend —</option>
           <option value="__nieuw__">+ Nieuw weekend aanmaken...</option>
         </select>
-        <button class="weekend-del-btn" id="weekend-del-btn" onclick="verbergWeekend()" title="Verberg dit weekend uit de lijst" style="display:none;">×</button>
+        <button class="sel-del-btn" id="weekend-del-btn" onclick="verbergWeekend()" title="Verberg dit weekend uit de lijst" style="display:none;">×</button>
       </div>
       <input class="field-input" id="f-weekend-naam" type="text" placeholder="Naam van het weekend (bijv. Genk – mei 2026)" style="display:none;" />
 
@@ -1053,6 +1051,105 @@ async function downloadWeekendPdf4(wid) {
   doc.save(`${slug}_shopbon.pdf`);
 }
 
+async function downloadOpmerkingPdf(wid) {
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(voornaam, naam)')
+    .in('event_id', evs.map(e => e.id))
+    .not('opmerking', 'is', null)
+    .neq('opmerking', '');
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  const rijen = (data || []).map(r => {
+    const ev  = evs.find(e => e.id === r.event_id);
+    const p   = r.profiles;
+    const naam = p ? `${p.voornaam || ''} ${p.naam || ''}`.trim() : '—';
+    const d   = ev ? new Date(ev.datum + 'T12:00:00') : null;
+    const datumStr = d
+      ? `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`
+      : '—';
+    return { datumStr, evNaam: ev?.naam || '—', naam, klasse: r.klasse || '—', opmerking: r.opmerking };
+  });
+
+  if (!rijen.length) { showToast('Geen opmerkingen gevonden voor dit weekend', 'yellow'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210; const H = 297; const ML = 14; const MR = 14;
+
+  const nu = new Date();
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+
+  // Header
+  doc.setFillColor(17, 17, 17);
+  doc.rect(0, 0, W, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text(weekend.naam.toUpperCase(), ML, 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(160, 160, 160);
+  doc.text(`Opmerkingen · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+  doc.setFillColor(224, 32, 32);
+  doc.rect(0, 20, W, 1.5, 'F');
+
+  // Tabel
+  doc.autoTable({
+    startY: 26,
+    head: [['Evenement', 'Datum', 'Rijder', 'Klasse', 'Opmerking']],
+    body: rijen.map(r => [r.evNaam, r.datumStr, r.naam, r.klasse, r.opmerking]),
+    styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }, textColor: [20, 20, 20], font: 'helvetica' },
+    headStyles: { fillColor: [224, 32, 32], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8, letterSpacing: 1 },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: {
+      0: { cellWidth: 38 },
+      1: { cellWidth: 32 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 18 },
+      4: { cellWidth: 'auto' },
+    },
+    didDrawPage: (d) => {
+      // Footer
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(180, 180, 180);
+      doc.text(`DFK · ${weekend.naam} · Opmerkingen`, ML, H - 8);
+      doc.text(`${d.pageNumber}`, W - MR, H - 8, { align: 'right' });
+      // Herhaal header op nieuwe pagina's
+      if (d.pageNumber > 1) {
+        doc.setFillColor(17, 17, 17);
+        doc.rect(0, 0, W, 20, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        doc.text(weekend.naam.toUpperCase(), ML, 12);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(160, 160, 160);
+        doc.text(`Opmerkingen · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+        doc.setFillColor(224, 32, 32);
+        doc.rect(0, 20, W, 1.5, 'F');
+      }
+    },
+  });
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_opmerkingen.pdf`);
+}
+
 function openWeekendDetail(wid) {
   const weekend  = _allWeekenden.find(w => w.id === wid);
   if (!weekend) return;
@@ -1096,9 +1193,9 @@ function openWeekendDetail(wid) {
         <div class="wd-pdf-kaart-icon">📄</div>
         <div><div class="wd-pdf-kaart-naam">Inschrijvingen per dag</div><div class="wd-pdf-kaart-sub">Alle dagen gebundeld, één pagina per dag</div></div>
       </div>
-      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 2)">
-        <div class="wd-pdf-kaart-icon">📄</div>
-        <div><div class="wd-pdf-kaart-naam">PDF 2</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
+      <div class="wd-pdf-kaart" onclick="downloadOpmerkingPdf('${wid}')">
+        <div class="wd-pdf-kaart-icon">💬</div>
+        <div><div class="wd-pdf-kaart-naam">Opmerkingen</div><div class="wd-pdf-kaart-sub">Alle opmerkingen bij inschrijvingen</div></div>
       </div>
       <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 3)">
         <div class="wd-pdf-kaart-icon">📄</div>
@@ -1346,7 +1443,7 @@ function renderWeekendSelect(selected) {
   if (cur !== undefined) sel.value = cur;
   // Toon/verberg × knop
   const delBtn = document.getElementById('weekend-del-btn');
-  if (delBtn) delBtn.style.display = (cur && cur !== '__nieuw__') ? 'inline-flex' : 'none';
+  if (delBtn) delBtn.style.display = (cur && cur !== '' && cur !== '__nieuw__') ? 'inline-flex' : 'none';
 }
 
 function onWeekendChange() {
@@ -1372,23 +1469,24 @@ function renderCircuitSelect(selected) {
   const cur = selected !== undefined ? selected : sel.value;
   sel.innerHTML = '<option value="">Selecteer circuit...</option>' +
     circuits.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
-
-  // Render chips met × knop
-  const chipsEl = document.getElementById('circuit-chips');
-  if (chipsEl) {
-    chipsEl.innerHTML = circuits.map(c => {
-      const esc = c.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-      return `<span class="circuit-chip">${c}<button class="circuit-chip-del" onclick="verwijderCircuit('${esc}')" title="Verwijder circuit">×</button></span>`;
-    }).join('');
-  }
+  if (cur !== undefined) sel.value = cur;
+  const delBtn = document.getElementById('circuit-del-btn');
+  if (delBtn) delBtn.style.display = cur ? 'inline-flex' : 'none';
 }
 
-function verwijderCircuit(naam) {
+function onCircuitChange() {
+  const val = document.getElementById('f-circuit').value;
+  const delBtn = document.getElementById('circuit-del-btn');
+  if (delBtn) delBtn.style.display = val ? 'inline-flex' : 'none';
+}
+
+function verwijderCircuit() {
+  const sel  = document.getElementById('f-circuit');
+  const naam = sel.value;
+  if (!naam) return;
   circuits = circuits.filter(c => c !== naam);
   localStorage.setItem('dfk_circuits', JSON.stringify(circuits));
-  const sel = document.getElementById('f-circuit');
-  const curVal = sel ? sel.value : '';
-  renderCircuitSelect(curVal === naam ? '' : curVal);
+  renderCircuitSelect('');
   showToast('Circuit verwijderd', 'green');
 }
 

@@ -1118,6 +1118,7 @@ async function _toonBevestiging() {
     event_id:    ev.id,
     klasse:      klasse      || null,
     startnummer: startnummer || null,
+    opmerking:   opmerking   || null,
   });
 
   if (error && error.code !== '23505') {
