@@ -1154,7 +1154,7 @@ function enableInschrijfEdit() {
         <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
         <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
           value="${acc.startnummers[k] || ''}"
-          style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+          style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;color:#fff;" />
       </div>`).join('');
     const kampHtml = KAMPIOENSCHAPPEN.map(k => `
       <div class="chk-item kamp-chk${selectedKamp.has(k)?' on':''}" onclick="toggleChk(this)">
@@ -1297,7 +1297,7 @@ function updateStartnrFields(gridId, containerId, preValues) {
       <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
       <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
         value="${(preValues && preValues[k]) ? preValues[k] : ''}"
-        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;color:#fff;" />
     </div>`).join('');
 }
 function toggleKlasseChk(item, gridId, containerId) {
