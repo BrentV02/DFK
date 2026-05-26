@@ -1449,12 +1449,10 @@ function showToast(msg, color) {
 (function() {
   var meta = document.querySelector('meta[name="viewport"]');
   document.addEventListener('touchend', function() {
-    if (window.visualViewport && window.visualViewport.scale !== 1) {
-      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0';
-      setTimeout(function() {
-        meta.content = 'width=device-width, initial-scale=1.0';
-      }, 300);
-    }
+    meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no';
+    setTimeout(function() {
+      meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes';
+    }, 300);
   });
 })();
 </script>
