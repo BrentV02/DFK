@@ -1169,7 +1169,7 @@ async function downloadRijderslijstPdf(wid) {
 
   if (error) { showToast('Fout: ' + error.message, 'red'); return; }
 
-  // Dedupliceer: één rij per rijder (klassen samenvoegen)
+  // Dedupliceer: één rij per rijder
   const rijderMap = new Map();
   for (const r of (data || [])) {
     const p = r.profiles;
@@ -1184,121 +1184,153 @@ async function downloadRijderslijstPdf(wid) {
 
   if (!rijderMap.size) { showToast('Geen inschrijvingen gevonden', 'yellow'); return; }
 
-  // Sorteer op achternaam
-  const rijders = [...rijderMap.values()].sort((a, b) => {
-    const nA = `${a.profiel.naam||''} ${a.profiel.voornaam||''}`.trim();
-    const nB = `${b.profiel.naam||''} ${b.profiel.voornaam||''}`.trim();
-    return nA.localeCompare(nB);
+  const rijders    = [...rijderMap.values()];
+  const eigenRijders = rijders.filter(e => e.profiel.kart_type !== 'huur');
+  const huurRijders  = rijders.filter(e => e.profiel.kart_type === 'huur');
+
+  // Sorteer eigen kart op klasse dan naam, huurkart op kart type dan naam
+  eigenRijders.sort((a, b) => {
+    const kA = a.klassen[0] || ''; const kB = b.klassen[0] || '';
+    if (kA !== kB) return kA.localeCompare(kB);
+    return (a.profiel.naam||'').localeCompare(b.profiel.naam||'');
+  });
+  huurRijders.sort((a, b) => {
+    const tA = a.profiel.huurkart_type || ''; const tB = b.profiel.huurkart_type || '';
+    if (tA !== tB) return tA.localeCompare(tB);
+    return (a.profiel.naam||'').localeCompare(b.profiel.naam||'');
   });
 
   const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
     'juli','augustus','september','oktober','november','december'];
-  const nu = new Date();
+  const DAGEN_LANG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+
+  // Logo laden
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = 210; const H = 297; const ML = 14; const MR = 14;
+  const W = doc.internal.pageSize.getWidth();
+  const nu = new Date();
 
-  // Tabelrijen
-  const eigenRijders = rijders.filter(e => e.profiel.kart_type !== 'huur');
-  const huurRijders  = rijders.filter(e => e.profiel.kart_type === 'huur');
+  const baseStyles = {
+    font: 'helvetica', fontSize: 8,
+    cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
+    textColor: [17, 17, 17], lineColor: [220, 220, 220], lineWidth: 0.2,
+  };
 
-  function tekenHeader(label) {
+  function tekenPaginaHeader() {
     doc.setFillColor(17, 17, 17);
     doc.rect(0, 0, W, 20, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+
+    if (logoBase64) {
+      const logoH = 12, logoW = logoH * (logoBase64.w / logoBase64.h);
+      doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+    }
+
+    const titel = weekend.naam.toUpperCase();
     doc.setTextColor(255, 255, 255);
-    doc.text(weekend.naam.toUpperCase(), ML, 12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(titel, 10, 13);
+    const titelBreedte = doc.getTextWidth(titel);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(160, 160, 160);
-    doc.text(`${label} · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text('  ·  Rijderslijst', 10 + titelBreedte, 13);
+
     doc.setFillColor(224, 32, 32);
     doc.rect(0, 20, W, 1.5, 'F');
+
+    doc.setFillColor(30, 30, 30);
+    doc.rect(0, 21.5, W, 8, 'F');
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    const totaal = rijders.length;
+    doc.text(`${eigenRijders.length} eigen kart  ·  ${huurRijders.length} huurkart  ·  ${totaal} rijder${totaal !== 1 ? 's' : ''} totaal`, 10, 27);
   }
 
-  function tekenFooter(data) {
-    doc.setFont('helvetica', 'normal');
+  function tekenFooter() {
+    const pnr  = doc.internal.getCurrentPageInfo().pageNumber;
+    const ptot = doc.internal.getNumberOfPages();
     doc.setFontSize(7);
     doc.setTextColor(180, 180, 180);
-    doc.text(`DFK · ${weekend.naam} · Rijderslijst`, ML, H - 8);
-    doc.text(`${data.pageNumber}`, W - MR, H - 8, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(`DFK · ${weekend.naam}`, 10, 292);
+    doc.text(`${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}  ·  ${pnr}/${ptot}`, W - 10, 292, { align: 'right' });
   }
 
-  const baseStyles = { fontSize: 9, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 }, textColor: [20, 20, 20], font: 'helvetica' };
+  tekenPaginaHeader();
 
-  tekenHeader('Rijderslijst');
-
-  // ── Sectie eigen kart ──
+  // ── Eigen kart ──
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(224, 32, 32);
-  doc.text('EIGEN KART', ML, 28);
+  doc.setFontSize(9);
+  doc.setTextColor(204, 26, 26);
+  doc.text(`EIGEN KART  (${eigenRijders.length})`, 10, 33);
 
   doc.autoTable({
-    startY: 31,
-    head: [['Rijder', 'Klasse', 'Nr']],
+    startY: 35,
+    head: [['#', 'Naam', 'Klasse']],
     body: eigenRijders.map(e => {
-      const p  = e.profiel;
-      const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
-      const klassen = e.klassen.join(' / ') || '—';
-      const nrs = e.klassen.map(k => e.startnummers[k] != null ? `#${e.startnummers[k]}` : '—').join(' / ') || '—';
-      return [naam, klassen, nrs];
-    }),
-    styles: baseStyles,
-    headStyles: { fillColor: [40, 40, 40], textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { cellWidth: 40 },
-      2: { cellWidth: 22, halign: 'center' },
-    },
-    margin: { left: ML, right: MR },
-    didDrawPage: (d) => {
-      tekenFooter(d);
-      if (d.pageNumber > 1) tekenHeader('Rijderslijst');
-    },
-  });
-
-  // ── Sectie huurkart ──
-  const huurY = doc.lastAutoTable.finalY + 8;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(76, 170, 240);
-  doc.text('HUURKART', ML, huurY);
-
-  doc.autoTable({
-    startY: huurY + 3,
-    head: [['Rijder', 'Klasse', 'Nr', 'Kart type', 'Lengte', 'Gewicht', 'Uitrusting']],
-    body: huurRijders.map(e => {
       const p    = e.profiel;
       const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
-      const klassen = e.klassen.join(' / ') || '—';
-      const nrs = e.klassen.map(k => e.startnummers[k] != null ? `#${e.startnummers[k]}` : '—').join(' / ') || '—';
-      const lengte  = p.lengte  ? `${p.lengte} cm`  : '—';
-      const gewicht = p.gewicht ? `${p.gewicht} kg` : '—';
-      const uitr = (p.uitrusting || []).join(', ') || '—';
-      return [naam, klassen, nrs, p.huurkart_type || '—', lengte, gewicht, uitr];
+      const klassen = e.klassen.join(' / ') || '';
+      const nrs = e.klassen.map(k => e.startnummers[k] != null ? String(e.startnummers[k]) : '').join(' / ') || '';
+      return [nrs, naam, klassen];
     }),
     styles: baseStyles,
-    headStyles: { fillColor: [21, 80, 140], textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
-    alternateRowStyles: { fillColor: [240, 246, 255] },
-    columnStyles: {
-      0: { cellWidth: 38 },
-      1: { cellWidth: 22 },
-      2: { cellWidth: 16, halign: 'center' },
-      3: { cellWidth: 32 },
-      4: { cellWidth: 16, halign: 'center' },
-      5: { cellWidth: 16, halign: 'center' },
-      6: { cellWidth: 'auto' },
-    },
-    margin: { left: ML, right: MR },
-    didDrawPage: (d) => {
-      tekenFooter(d);
-      if (d.pageNumber > 1) tekenHeader('Rijderslijst');
-    },
+    headStyles: { fillColor: [204, 26, 26], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+    alternateRowStyles: { fillColor: [247, 247, 247] },
+    columnStyles: { 0: { halign: 'center', cellWidth: 15, fontStyle: 'bold', fontSize: 9 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 50 } },
+    margin: { left: 10, right: 10 },
+    didDrawPage: () => { tekenFooter(); if (doc.internal.getCurrentPageInfo().pageNumber > 1) tekenPaginaHeader(); },
   });
+
+  // ── Huurkart ──
+  if (huurRijders.length > 0) {
+    const afterEigen = doc.lastAutoTable.finalY + 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(21, 101, 192);
+    doc.text(`HUURKART  (${huurRijders.length})`, 10, afterEigen - 3);
+
+    doc.autoTable({
+      startY: afterEigen,
+      head: [['Naam', 'Kart type', 'Lengte', 'Gewicht', 'Uitrusting']],
+      body: huurRijders.map(e => {
+        const p    = e.profiel;
+        const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+        const lengte  = p.lengte  ? `${p.lengte} cm`  : '—';
+        const gewicht = p.gewicht ? `${p.gewicht} kg` : '—';
+        const uitr = (p.uitrusting || []).join(', ') || '—';
+        return [naam, p.huurkart_type || '—', lengte, gewicht, uitr];
+      }),
+      styles: baseStyles,
+      headStyles: { fillColor: [21, 101, 192], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+      alternateRowStyles: { fillColor: [240, 245, 255] },
+      columnStyles: {
+        0: { cellWidth: 42 },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 16, halign: 'center' },
+        3: { cellWidth: 16, halign: 'center' },
+        4: { cellWidth: 'auto' },
+      },
+      margin: { left: 10, right: 10 },
+      didDrawPage: () => { tekenFooter(); if (doc.internal.getCurrentPageInfo().pageNumber > 1) tekenPaginaHeader(); },
+    });
+  }
+
+  tekenFooter();
 
   const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
   doc.save(`${slug}_rijderslijst.pdf`);
