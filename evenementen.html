@@ -441,6 +441,8 @@ function renderEvents() {
       inschrijfBtn = `<button class="inschrijf-btn vol">Inschrijving gesloten</button>`;
     } else if (geenIn) {
       inschrijfBtn = `<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')">Inschrijven →</button>`;
+    } else if (_accountRijders.length <= 1) {
+      inschrijfBtn = `<button class="inschrijf-btn ingeschreven">✓ Ingeschreven</button>`;
     } else {
       const namesHtml = evInschr.map(i => {
         const r    = _accountRijders.find(r => r.id === i.rijder_id);
@@ -616,7 +618,7 @@ function renderInschrijvingen() {
           <div class="inschrijving-naam">${ev.naam}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
           <div class="inschrijving-meta">📍 ${ev.circuit}${ev.type ? ' &nbsp;·&nbsp; ' + ev.type : ''}</div>
-          ${(() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta" style="color:#fff;">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })()}
+          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta" style="color:#fff;">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })() : ''}
           ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
           <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
         </div>
