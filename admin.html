@@ -826,6 +826,232 @@ async function downloadWeekendPdf(wid, nr) {
   doc.save(`${slug}_inschrijvingen.pdf`);
 }
 
+async function downloadWeekendPdf4(wid) {
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*)')
+    .in('event_id', evs.map(e => e.id));
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  // Dedupliceer rijders — één pagina per rijder, klassen samenvoegen
+  const rijderMap = new Map();
+  for (const r of (data || [])) {
+    const p = r.profiles;
+    if (!p) continue;
+    const id = r.rijder_id;
+    if (!rijderMap.has(id)) {
+      rijderMap.set(id, { profiel: p, klassen: [], startnummers: {} });
+    }
+    const entry = rijderMap.get(id);
+    if (r.klasse && !entry.klassen.includes(r.klasse)) {
+      entry.klassen.push(r.klasse);
+    }
+    if (r.klasse && r.startnummer != null) {
+      entry.startnummers[r.klasse] = r.startnummer;
+    }
+  }
+
+  // Sorteer op achternaam
+  const rijders = [...rijderMap.values()].sort((a, b) => {
+    const nA = `${a.profiel.naam||''} ${a.profiel.voornaam||''}`.trim();
+    const nB = `${b.profiel.naam||''} ${b.profiel.voornaam||''}`.trim();
+    return nA.localeCompare(nB);
+  });
+
+  if (!rijders.length) { showToast('Geen inschrijvingen gevonden', 'yellow'); return; }
+
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+
+  // Logo laden
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210; const H = 297;
+  const ML = 14; const MR = 14; const CW = W - ML - MR;
+
+  const BENZ_KORT = {
+    'Ik neem altijd zelf benzine mee':          'Zelf',
+    'Ik pak altijd benzine bij DFK':             'Bij DFK',
+    'Training: zelf — Wedstrijd: bij DFK':       'Training: zelf / Wedstrijd: bij DFK',
+  };
+
+  rijders.forEach((entry, idx) => {
+    const p = entry.profiel;
+    if (idx > 0) doc.addPage();
+
+    const naam     = `${p.voornaam||''} ${p.naam||''}`.trim();
+    const isHuur   = p.kart_type === 'huur';
+    const kartTxt  = isHuur ? 'Huurkart' : 'Eigen kart';
+    const benzTxt  = BENZ_KORT[p.benzine] || p.benzine || '—';
+    const nu       = new Date();
+
+    // ── Header (zwart vlak) ──
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, W, 20, 'F');
+    if (logoBase64) {
+      const lh = 12, lw = lh * (logoBase64.w / logoBase64.h);
+      doc.addImage(logoBase64.data, 'PNG', W - lw - 8, 4, lw, lh);
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text(weekend.naam.toUpperCase(), ML, 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(160, 160, 160);
+    doc.text(`Shop bon · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+
+    // Rode streep
+    doc.setFillColor(224, 32, 32);
+    doc.rect(0, 20, W, 1.5, 'F');
+
+    // ── Rijdernaam ──
+    let y = 30;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.setTextColor(10, 10, 10);
+    doc.text(naam, ML, y);
+    y += 3;
+
+    // Dunne scheidingslijn onder naam
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.4);
+    doc.line(ML, y, W - MR, y);
+    y += 6;
+
+    // ── Info blok: 2 kolommen ──
+    const col1X = ML, col2X = ML + CW / 2;
+    const infos = [];
+
+    // Klasse(n) + startnummer(s)
+    if (entry.klassen.length) {
+      entry.klassen.forEach(k => {
+        const nr = entry.startnummers[k] ?? p.startnummers?.[k];
+        infos.push({ label: 'Klasse', waarde: k + (nr != null ? `  ·  #${nr}` : '') });
+      });
+    }
+    infos.push({ label: 'Kart', waarde: kartTxt });
+    if (p.benzine) infos.push({ label: 'Benzine', waarde: benzTxt });
+
+    // Teken info in grid
+    infos.forEach((info, i) => {
+      const x  = i % 2 === 0 ? col1X : col2X;
+      const iy = y + Math.floor(i / 2) * 10;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(180, 180, 180);
+      doc.text(info.label.toUpperCase(), x, iy);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(20, 20, 20);
+      doc.text(info.waarde, x, iy + 5);
+    });
+
+    y += (Math.ceil(infos.length / 2)) * 10 + 6;
+
+    // Scheidingslijn
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(ML, y, W - MR, y);
+    y += 7;
+
+    // ── Sectielabel aankopen ──
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(224, 32, 32);
+    doc.text('AANKOPEN', ML, y);
+    y += 5;
+
+    // Kolomhoofden
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(130, 130, 130);
+    doc.text('Artikel / omschrijving', ML, y);
+    doc.text('Bedrag', W - MR, y, { align: 'right' });
+    y += 2;
+
+    // Kolom-scheidingslijn
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, W - MR, y);
+    y += 1;
+
+    // ── Schrijflijnen ──
+    const prijsKolX  = W - MR - 28;  // x waar de prijs-kolom begint
+    const regelHoogte = 10;
+    const maxY        = H - 28;       // ruimte laten voor totaal + footer
+    const aantalRegels = Math.floor((maxY - y) / regelHoogte) - 2;
+
+    doc.setDrawColor(210, 210, 210);
+    doc.setLineWidth(0.25);
+
+    for (let i = 0; i < aantalRegels; i++) {
+      const ly = y + (i + 1) * regelHoogte;
+      // Schrijflijn artikel
+      doc.line(ML, ly, prijsKolX - 4, ly);
+      // Schrijflijn bedrag
+      doc.line(prijsKolX, ly, W - MR, ly);
+      // Verticale scheidingslijn (subtiel)
+      if (i === 0) {
+        doc.setDrawColor(225, 225, 225);
+        doc.setLineWidth(0.2);
+        doc.line(prijsKolX - 2, y, prijsKolX - 2, y + aantalRegels * regelHoogte + regelHoogte);
+        doc.setDrawColor(210, 210, 210);
+        doc.setLineWidth(0.25);
+      }
+    }
+
+    // ── Totaal lijn ──
+    const totaalY = y + (aantalRegels + 1) * regelHoogte;
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.5);
+    doc.line(ML, totaalY, W - MR, totaalY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(20, 20, 20);
+    doc.text('TOTAAL', ML, totaalY + 6);
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.4);
+    doc.line(prijsKolX, totaalY + 7, W - MR, totaalY + 7);
+
+    // ── Footer ──
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`DFK · ${weekend.naam} · ${naam}`, ML, H - 8);
+    doc.text(`${idx + 1} / ${rijders.length}`, W - MR, H - 8, { align: 'right' });
+  });
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_shopbon.pdf`);
+}
+
 function openWeekendDetail(wid) {
   const weekend  = _allWeekenden.find(w => w.id === wid);
   if (!weekend) return;
@@ -877,9 +1103,9 @@ function openWeekendDetail(wid) {
         <div class="wd-pdf-kaart-icon">📄</div>
         <div><div class="wd-pdf-kaart-naam">PDF 3</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
       </div>
-      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 4)">
-        <div class="wd-pdf-kaart-icon">📄</div>
-        <div><div class="wd-pdf-kaart-naam">PDF 4</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
+      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf4('${wid}')">
+        <div class="wd-pdf-kaart-icon">🛒</div>
+        <div><div class="wd-pdf-kaart-naam">Shop bon per rijder</div><div class="wd-pdf-kaart-sub">Eén pagina per rijder met aankooplijntjes</div></div>
       </div>
     </div>
 
