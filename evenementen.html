@@ -380,9 +380,10 @@ function renderEvents() {
   }
 
   const buildCard = ev => {
-    const d       = new Date(ev.datum + 'T12:00:00');
-    const isPast  = d < today;
-    const dagenOver = Math.round((d - today) / 86400000);
+    const d         = new Date(ev.datum + 'T12:00:00');
+    const dMidnight = new Date(ev.datum + 'T00:00:00');
+    const isPast    = d < today;
+    const dagenOver = Math.round((dMidnight - today) / 86400000);
 
     // ── Deadline ──
     let deadlineHtml = '';
@@ -392,7 +393,8 @@ function renderEvents() {
       deadlinePassed = dl < now;
       const msLeft = dl - now;
       const isWithin24h = msLeft > 0 && msLeft < 24 * 3600 * 1000;
-      const dagenTotDeadline = Math.round((dl - today) / 86400000);
+      const dlMidnight = new Date(dl); dlMidnight.setHours(0,0,0,0);
+      const dagenTotDeadline = Math.round((dlMidnight - today) / 86400000);
       const urgent = dagenTotDeadline >= 0 && dagenTotDeadline <= 7;
       const dlUur = dl.getHours().toString().padStart(2,'0');
       const dlMin = dl.getMinutes().toString().padStart(2,'0');
@@ -415,13 +417,13 @@ function renderEvents() {
     if (isPast) {
       eventTopHtml = `<div class="countdown-top" style="color:rgba(255,255,255,0.5);">Afgelopen</div>`;
     } else {
-      const msToEvent = d - now;
+      const msToEvent = dMidnight - now;
       if (msToEvent > 0 && msToEvent < 24 * 3600 * 1000) {
         const totMin = Math.floor(msToEvent / 60000);
         const uren   = Math.floor(totMin / 60);
         const rMin   = totMin % 60;
         const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
-        eventTopHtml = `<div class="countdown-top event-countdown" data-eventdate="${d.toISOString()}">Over <strong>${txt}</strong></div>`;
+        eventTopHtml = `<div class="countdown-top event-countdown" data-eventdate="${dMidnight.toISOString()}">Over <strong>${txt}</strong></div>`;
       } else {
         eventTopHtml = `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
       }

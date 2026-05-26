@@ -229,6 +229,7 @@
     </div>
     <div class="nav-tabs">
       <button class="tab-btn on" data-tab="laden" onclick="switchTab('laden')">Laden vrachtwagen</button>
+      <button class="tab-btn" data-tab="werkorders" onclick="switchTab('werkorders')">Werkorders</button>
     </div>
   </div>
   <div class="nav-right">
@@ -252,13 +253,14 @@
 </nav>
 
 <div class="mobile-tab-bar">
-  <button class="mobile-tab on" data-tab="laden" onclick="switchTab('laden')">Laden vrachtwagen</button>
+  <button class="mobile-tab on" data-tab="laden" onclick="switchTab('laden')">Laden</button>
+  <button class="mobile-tab" data-tab="werkorders" onclick="switchTab('werkorders')">Werkorders</button>
 </div>
 
 <!-- PANEEL: LADEN VRACHTWAGEN -->
 <div class="tab-panel on" id="panel-laden">
 
-  <div class="sectie-titel">Selecteer race weekend</div>
+  <div class="sectie-titel">Selecteer weekend</div>
   <div class="event-grid" id="weekend-grid">
     <div style="color:#555;font-size:13px;"><span class="spinner"></span>Weekenden laden...</div>
   </div>
@@ -284,10 +286,19 @@
   <div id="laad-lijst">
     <div class="empty-state">
       <div class="empty-state-icon">🚛</div>
-      <div class="empty-state-text">Selecteer een race weekend hierboven</div>
+      <div class="empty-state-text">Selecteer een weekend hierboven</div>
     </div>
   </div>
 
+</div>
+
+<!-- PANEEL: WERKORDERS -->
+<div class="tab-panel" id="panel-werkorders">
+  <div class="sectie-titel">Werkorders</div>
+  <div class="empty-state">
+    <div class="empty-state-icon">🔧</div>
+    <div class="empty-state-text">Werkorders — komt binnenkort</div>
+  </div>
 </div>
 
 <script>
@@ -349,7 +360,7 @@ async function laadWeekenden() {
   _allWeekenden = (data || []).filter(w => w.evenementen && w.evenementen.length > 0);
 
   if (!_allWeekenden.length) {
-    grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen race weekenden gevonden. Koppel evenementen aan een weekend via de admin.</div>';
+    grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen weekenden gevonden. Koppel evenementen aan een weekend via de admin.</div>';
     return;
   }
 
@@ -406,7 +417,7 @@ async function buildLaadlijst() {
     pdfBtn.style.display   = 'none';
     lijst.innerHTML = `<div class="empty-state">
       <div class="empty-state-icon">🚛</div>
-      <div class="empty-state-text">Selecteer een race weekend hierboven</div>
+      <div class="empty-state-text">Selecteer een weekend hierboven</div>
     </div>`;
     return;
   }

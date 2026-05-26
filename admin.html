@@ -403,7 +403,7 @@
         <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
       </div>
 
-      <label class="field-label" style="margin-top:1rem;">Race weekend</label>
+      <label class="field-label" style="margin-top:1rem;">Weekend</label>
       <div class="sel-del-row">
         <select class="field-select" id="f-weekend" onchange="onWeekendChange()">
           <option value="">— Geen weekend —</option>
@@ -650,7 +650,7 @@ function renderWeekendGroep(wid, evs, isPast) {
     datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
   }
   const weekend    = _allWeekenden.find(w => w.id === wid);
-  const naam       = weekend?.naam || 'Race weekend';
+  const naam       = weekend?.naam || 'Weekend';
   const totInschr  = evs.reduce((s, ev) => s + (_inschrijvingen[ev.id] || 0), 0);
   const hasEditing = evs.some(ev => ev.id === editEventId);
   const isOpen     = _openWeekenden.has(wid) || hasEditing;
