@@ -109,10 +109,18 @@
     #dfk-root .reset-btn { display: block; width: 100%; padding: 11px; background: transparent; color: #555; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
     #dfk-root .reset-btn:hover { color: #888; border-color: #333; }
 
-    #dfk-root .circuit-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    #dfk-root .circuit-add-row { display: flex; gap: 8px; margin-bottom: 0.6rem; }
     #dfk-root .circuit-add-row .field-input { margin-bottom: 0; flex: 1; }
     #dfk-root .circuit-add-btn { flex-shrink: 0; padding: 0 16px; background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
     #dfk-root .circuit-add-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .circuit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .circuit-chip { display: inline-flex; align-items: center; gap: 4px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; color: #999; letter-spacing: 0.5px; }
+    #dfk-root .circuit-chip-del { background: none; border: none; color: #444; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 0 0 2px; }
+    #dfk-root .circuit-chip-del:hover { color: #E02020; }
+    #dfk-root .weekend-sel-row { display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem; }
+    #dfk-root .weekend-sel-row .field-select { margin-bottom: 0; flex: 1; }
+    #dfk-root .weekend-del-btn { flex-shrink: 0; padding: 0 12px; height: 38px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; border-radius: 3px; font-size: 18px; line-height: 1; cursor: pointer; }
+    #dfk-root .weekend-del-btn:hover { border-color: #E02020; color: #E02020; }
 
     #dfk-root .dl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -0.5rem; margin-bottom: 1rem; }
     #dfk-root .dl-chip { padding: 5px 10px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; font-size: 11px; color: #888; cursor: pointer; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; }
@@ -395,12 +403,16 @@
         <input class="field-input" id="f-circuit-nieuw" type="text" placeholder="Nieuw circuit toevoegen..." />
         <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
       </div>
+      <div class="circuit-chips" id="circuit-chips"></div>
 
       <label class="field-label" style="margin-top:1rem;">Race weekend</label>
-      <select class="field-select" id="f-weekend" onchange="onWeekendChange()">
-        <option value="">— Geen weekend —</option>
-        <option value="__nieuw__">+ Nieuw weekend aanmaken...</option>
-      </select>
+      <div class="weekend-sel-row">
+        <select class="field-select" id="f-weekend" onchange="onWeekendChange()">
+          <option value="">— Geen weekend —</option>
+          <option value="__nieuw__">+ Nieuw weekend aanmaken...</option>
+        </select>
+        <button class="weekend-del-btn" id="weekend-del-btn" onclick="verbergWeekend()" title="Verberg dit weekend uit de lijst" style="display:none;">×</button>
+      </div>
       <input class="field-input" id="f-weekend-naam" type="text" placeholder="Naam van het weekend (bijv. Genk – mei 2026)" style="display:none;" />
 
       <label class="field-label">Inschrijvingsdeadline</label>
@@ -1000,7 +1012,7 @@ async function downloadWeekendPdf4(wid) {
     y += 1;
 
     // ── Schrijflijnen ──
-    const regelHoogte  = 10;
+    const regelHoogte  = 7;
     const maxY         = H - 28;
     const aantalRegels = Math.floor((maxY - y) / regelHoogte) - 2;
 
@@ -1315,6 +1327,7 @@ async function submitForm() {
 
 // ── Weekend helpers ───────────────────────────
 let _allWeekenden = [];
+let _verborgenWeekenden = new Set(JSON.parse(localStorage.getItem('dfk_verborgen_weekenden') || '[]'));
 
 async function loadWeekenden() {
   const { data } = await _supabase.from('weekenden').select('*').order('datum', { ascending: false });
@@ -1326,23 +1339,57 @@ function renderWeekendSelect(selected) {
   const sel = document.getElementById('f-weekend');
   if (!sel) return;
   const cur = selected !== undefined ? selected : sel.value;
+  const zichtbaar = _allWeekenden.filter(w => !_verborgenWeekenden.has(w.id));
   sel.innerHTML = '<option value="">— Geen weekend —</option>' +
-    _allWeekenden.map(w => `<option value="${w.id}"${w.id === cur ? ' selected' : ''}>${w.naam}</option>`).join('') +
+    zichtbaar.map(w => `<option value="${w.id}"${w.id === cur ? ' selected' : ''}>${w.naam}</option>`).join('') +
     '<option value="__nieuw__">+ Nieuw weekend aanmaken...</option>';
   if (cur !== undefined) sel.value = cur;
+  // Toon/verberg × knop
+  const delBtn = document.getElementById('weekend-del-btn');
+  if (delBtn) delBtn.style.display = (cur && cur !== '__nieuw__') ? 'inline-flex' : 'none';
 }
 
 function onWeekendChange() {
   const val = document.getElementById('f-weekend').value;
   document.getElementById('f-weekend-naam').style.display = val === '__nieuw__' ? 'block' : 'none';
+  const delBtn = document.getElementById('weekend-del-btn');
+  if (delBtn) delBtn.style.display = (val && val !== '__nieuw__') ? 'inline-flex' : 'none';
+}
+
+function verbergWeekend() {
+  const val = document.getElementById('f-weekend').value;
+  if (!val || val === '__nieuw__') return;
+  _verborgenWeekenden.add(val);
+  localStorage.setItem('dfk_verborgen_weekenden', JSON.stringify([..._verborgenWeekenden]));
+  renderWeekendSelect('');
+  document.getElementById('f-weekend-naam').style.display = 'none';
+  showToast('Weekend verborgen uit lijst', 'green');
 }
 
 // ── Circuit helpers ───────────────────────────
 function renderCircuitSelect(selected) {
   const sel = document.getElementById('f-circuit');
-  const cur = selected || sel.value;
+  const cur = selected !== undefined ? selected : sel.value;
   sel.innerHTML = '<option value="">Selecteer circuit...</option>' +
     circuits.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+
+  // Render chips met × knop
+  const chipsEl = document.getElementById('circuit-chips');
+  if (chipsEl) {
+    chipsEl.innerHTML = circuits.map(c => {
+      const esc = c.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return `<span class="circuit-chip">${c}<button class="circuit-chip-del" onclick="verwijderCircuit('${esc}')" title="Verwijder circuit">×</button></span>`;
+    }).join('');
+  }
+}
+
+function verwijderCircuit(naam) {
+  circuits = circuits.filter(c => c !== naam);
+  localStorage.setItem('dfk_circuits', JSON.stringify(circuits));
+  const sel = document.getElementById('f-circuit');
+  const curVal = sel ? sel.value : '';
+  renderCircuitSelect(curVal === naam ? '' : curVal);
+  showToast('Circuit verwijderd', 'green');
 }
 
 function addCircuit() {
