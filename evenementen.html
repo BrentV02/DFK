@@ -920,11 +920,13 @@ function openInschrijven(eventId) {
 
   document.getElementById('inschrijf-overlay').classList.add('open');
   document.getElementById('inschrijf-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 function sluitInschrijven() {
   document.getElementById('inschrijf-overlay').classList.remove('open');
   document.getElementById('inschrijf-panel').classList.remove('open');
+  document.body.style.overflow = '';
   _currentEvent   = null;
   _selectedKlasse = null;
 }
