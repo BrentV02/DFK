@@ -155,6 +155,17 @@
     #dfk-root .annuleer-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #666; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
     #dfk-root .annuleer-btn:hover { color: #ccc; border-color: #444; }
     #dfk-root .save-msg { font-size: 12px; text-align: center; margin-top: 8px; min-height: 18px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .rijder-kaart { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .rijder-kaart:hover { border-color: #E02020; }
+    #dfk-root .rijder-kaart-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .rijder-kaart-sub { font-size: 12px; color: #666; margin-top: 2px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .acc-add-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #888; border: 1px dashed #333; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 4px; text-align: center; }
+    #dfk-root .acc-add-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .acc-back-btn { background: none; border: none; color: #888; font-size: 22px; cursor: pointer; padding: 0 8px 0 0; line-height: 1; }
+    #dfk-root .acc-back-btn:hover { color: #fff; }
+    #dfk-root .kart-type-keuze { display: flex; gap: 8px; margin-bottom: 1rem; }
+    #dfk-root .kart-type-keuze-btn { flex: 1; padding: 12px 8px; border: 1px solid #444; border-radius: 3px; background: #1c1c1c; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; }
+    #dfk-root .kart-type-keuze-btn.on { border-color: #E02020; background: #2a1010; color: #fff; }
     @media (max-width: 768px) {
       #dfk-root .inschrijf-panel { width: 100%; right: -100%; }
       #dfk-root .account-panel { width: 100%; right: -100%; }
@@ -240,103 +251,13 @@
   <!-- Account paneel -->
   <div class="account-panel" id="account-panel">
     <div class="panel-header">
-      <span class="panel-title">Mijn Account</span>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button class="edit-btn" onclick="enableEdit()">✎ Aanpassen</button>
-        <button class="panel-close" onclick="closeAccount()">✕</button>
+      <div style="display:flex;align-items:center;">
+        <button id="acc-back-btn" class="acc-back-btn" onclick="_accTerugNaarLijst()" style="display:none;">←</button>
+        <span class="panel-title" id="acc-panel-title">Mijn Account</span>
       </div>
+      <button class="panel-close" onclick="closeAccount()">✕</button>
     </div>
-    <div class="panel-body">
-
-      <span class="section-title">Persoonlijke gegevens</span>
-      <div class="two-col">
-        <div><label class="field-label">Voornaam</label><input id="acc-voornaam" class="field-input" type="text" /></div>
-        <div><label class="field-label">Naam</label><input id="acc-naam" class="field-input" type="text" /></div>
-      </div>
-      <label class="field-label">Geboortedatum rijder</label>
-      <input id="acc-geboorte" class="field-input" type="date" />
-      <label class="field-label">E-mailadres</label>
-      <input id="acc-email" class="field-input" type="email" />
-      <label class="field-label">Telefoonnummer contactpersoon</label>
-      <input id="acc-tel" class="field-input" type="tel" />
-      <label class="field-label">Wachtwoord wijzigen</label>
-      <input id="acc-pw" class="field-input" type="password" placeholder="Leeg laten = ongewijzigd" oninput="checkAccPwMatch()" />
-      <label class="field-label">Wachtwoord bevestigen</label>
-      <input id="acc-pw2" class="field-input" type="password" placeholder="Herhaal nieuw wachtwoord" oninput="checkAccPwMatch()" />
-      <p id="acc-pw-msg" style="font-size:12px; min-height:16px; margin-top:-0.5rem; margin-bottom:0.8rem; font-family:'Barlow',sans-serif;"></p>
-
-      <!-- Eigen kart sectie -->
-      <div id="acc-eigen-sectie">
-        <span class="section-title">Kart & Competitie</span>
-        <label class="field-label">Klasse(n)</label>
-        <p style="font-size:11px;color:#666;font-family:'Barlow',sans-serif;margin-bottom:0.5rem;margin-top:-0.3rem;">Meerdere keuzes mogelijk</p>
-        <div class="chk-grid" id="acc-klassen-grid">
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
-          <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
-        </div>
-        <div id="acc-startnrs" style="display:none; margin-bottom:1rem;">
-          <label class="field-label">Startnummer per klasse</label>
-          <div class="startnr-list"></div>
-        </div>
-        <label class="field-label">Kampioenschap(pen)</label>
-        <div class="chk-grid" id="acc-kamp-grid">
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Club Venray</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Hobby</span></div>
-        </div>
-
-        <span class="section-title">Materiaal in werkplaats</span>
-        <div class="toggle-row" id="acc-tog-kart"><span>Kart in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
-        <div class="toggle-row" id="acc-tog-banden"><span>Banden in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
-        <div class="toggle-row" id="acc-tog-bak"><span>Bak met materiaal in werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
-
-        <span class="section-title">Benzine</span>
-        <div class="benzine-opts" id="acc-benz-opts">
-          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik neem altijd zelf benzine mee</button>
-          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik pak altijd benzine bij DFK</button>
-          <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
-        </div>
-      </div>
-
-      <!-- Huur kart sectie -->
-      <div id="acc-huur-sectie" style="display:none;">
-        <span class="section-title">Rijder afmetingen</span>
-        <div class="two-col">
-          <div><label class="field-label">Lengte (cm)</label><input id="acc-lengte" class="field-input" type="number" style="margin-bottom:0" /></div>
-          <div><label class="field-label">Gewicht (kg)</label><input id="acc-gewicht" class="field-input" type="number" style="margin-bottom:0" /></div>
-        </div>
-        <span class="section-title">Kart huren</span>
-        <label class="field-label">Type kart</label>
-        <select id="acc-huurkart" class="field-select">
-          <option value="">Selecteer een kart...</option>
-          <option>Formula Honda Cadet</option>
-          <option>Formula Honda Junior</option>
-          <option>Formula Honda Senior</option>
-          <option>Rotax Max</option>
-        </select>
-        <span class="section-title">Benodigde uitrusting</span>
-        <div class="chk-grid" id="acc-uitrusting-grid">
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Helm</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Pak</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Handschoenen</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Schoenen</span></div>
-          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Ribprotector</span></div>
-        </div>
-      </div>
-
-      <p id="acc-save-msg" class="save-msg"></p>
-      <button class="save-btn" onclick="saveAccount()">Wijzigingen opslaan →</button>
-      <button class="cancel-btn" onclick="cancelEdit()">Annuleren</button>
-    </div>
+    <div class="panel-body" id="acc-body"></div>
   </div>
 
 </div>
@@ -351,19 +272,22 @@ const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shift
 
 let _currentUser      = null;
 let _currentProfile   = null;
+let _accountRijders   = [];   // alle rijders gekoppeld aan dit account
+let _selectedRijder   = null; // gekozen rijder bij inschrijven
+let _editingRijder    = null; // rijder die bewerkt wordt in account-paneel
 let _allEvents        = [];
 let _myEventIds       = new Set();
 let _myInschrijvingen = [];
 let _currentEvent     = null;
-let _selectedKlasse   = null; // gekozen klasse voor huidig event
+let _selectedKlasse   = null;
 
 // ── Init ─────────────────────────────────────
 (async () => {
   try {
     const session = await requireAuth();
     if (!session) return;
-    _currentUser    = session.user;
-    _currentProfile = await getProfile(_currentUser.id);
+    _currentUser = session.user;
+    await loadAccountRijders();
     updateNavbar();
     await Promise.all([loadEvents(), loadMyInschrijvingen()]);
     renderEvents();
@@ -394,12 +318,29 @@ async function loadEvents() {
   if (!error && data) _allEvents = data;
 }
 
+async function loadAccountRijders() {
+  const { data } = await _supabase
+    .from('profiles')
+    .select('*')
+    .eq('account_id', _currentUser.id);
+  if (data && data.length > 0) {
+    _accountRijders = data;
+  } else {
+    // Fallback voor bestaande accounts zonder account_id
+    const p = await getProfile(_currentUser.id);
+    _accountRijders = p ? [p] : [];
+  }
+  _currentProfile = _accountRijders.find(r => r.id === _currentUser.id) || _accountRijders[0] || null;
+}
+
 async function loadMyInschrijvingen() {
   if (!_currentUser) return;
+  const ids = _accountRijders.map(r => r.id);
+  if (!ids.length) return;
   const { data, error } = await _supabase
     .from('inschrijvingen')
     .select('*, evenementen(*)')
-    .eq('rijder_id', _currentUser.id);
+    .in('rijder_id', ids);
   if (!error && data) {
     _myInschrijvingen = data;
     _myEventIds = new Set(data.map(i => i.event_id));
@@ -700,59 +641,191 @@ async function uitschrijven(inschrijvingId, eventId) {
 // ── Account paneel ───────────────────────────
 function openAccount() {
   document.getElementById('user-dropdown').classList.remove('open');
-  loadAccountPanel();
+  _editingRijder = null;
+  _renderAccLijst();
   document.getElementById('overlay').classList.add('open');
   document.getElementById('account-panel').classList.add('open');
 }
 function closeAccount() {
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('account-panel').classList.remove('open');
-  disableEdit();
+  _editingRijder = null;
 }
 
-function loadAccountPanel() {
-  const p = _currentProfile || {};
+function _renderAccLijst() {
+  document.getElementById('acc-panel-title').textContent = 'Mijn Account';
+  document.getElementById('acc-back-btn').style.display = 'none';
+  const email = _currentUser?.email || '';
+  document.getElementById('acc-body').innerHTML = `
+    <span class="section-title">Account</span>
+    <label class="field-label">E-mailadres</label>
+    <input class="field-input" type="email" value="${email}" disabled style="color:#555;" />
+    <label class="field-label">Wachtwoord wijzigen</label>
+    <input id="acc-pw" class="field-input" type="password" placeholder="Nieuw wachtwoord" oninput="checkAccPwMatch()" />
+    <label class="field-label">Wachtwoord bevestigen</label>
+    <input id="acc-pw2" class="field-input" type="password" placeholder="Herhaal nieuw wachtwoord" oninput="checkAccPwMatch()" />
+    <p id="acc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:0.8rem;font-family:'Barlow',sans-serif;"></p>
+    <p id="acc-pw-save-msg" class="save-msg" style="text-align:left;margin-top:0;"></p>
+    <button class="save-btn" style="margin-top:0.5rem;margin-bottom:2rem;" onclick="saveAccountSettings()">Wachtwoord opslaan →</button>
+
+    <span class="section-title">Rijders</span>
+    ${_accountRijders.map(r => `
+      <div class="rijder-kaart" onclick="_editRijder('${r.id}')">
+        <div>
+          <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
+          <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
+        </div>
+        <span style="color:#666;font-size:20px;">›</span>
+      </div>
+    `).join('')}
+    <button class="acc-add-btn" onclick="_addRijder()">+ Extra rijder toevoegen</button>
+  `;
+}
+
+function _rijderFormHTML(r, isExtra) {
+  const isEigen = (r.kart_type || 'eigen') !== 'huur';
+  const klassenHtml = KLASSEN.map(k => `
+    <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')">
+      <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+    </div>`).join('');
+  const kampHtml = KAMPIOENSCHAPPEN.map(k => `
+    <div class="chk-item" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+    </div>`).join('');
+  const benzHtml = BENZ_LABELS.map(txt =>
+    `<button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; ${txt}</button>`).join('');
+  const uitrHtml = ['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(u => `
+    <div class="chk-item" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${u}</span>
+    </div>`).join('');
+  const deleteHtml = isExtra ? `
+    <div style="border-top:1px solid #2a2a2a;margin-top:2rem;padding-top:1.5rem;">
+      <button class="cancel-btn" onclick="deleteExtraRijder('${r.id}')" style="color:#ff5555;border-color:#3a1a1a;">✕ Rijder verwijderen</button>
+    </div>` : '';
+  return `
+    <span class="section-title" style="margin-top:0;">Kart type</span>
+    <div class="kart-type-keuze">
+      <button id="acc-kies-eigen" class="kart-type-keuze-btn${isEigen?' on':''}" onclick="accKiesKartType('eigen')">🏎️ Eigen kart</button>
+      <button id="acc-kies-huur"  class="kart-type-keuze-btn${!isEigen?' on':''}" onclick="accKiesKartType('huur')">🔑 Huur kart</button>
+    </div>
+    <span class="section-title">Persoonlijke gegevens</span>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam rijder</label><input id="acc-voornaam" class="field-input" type="text" /></div>
+      <div><label class="field-label">Naam rijder</label><input id="acc-naam" class="field-input" type="text" /></div>
+    </div>
+    <label class="field-label">Geboortedatum rijder</label>
+    <input id="acc-geboorte" class="field-input" type="date" />
+    <label class="field-label">Telefoonnummer contactpersoon</label>
+    <input id="acc-tel" class="field-input" type="tel" />
+
+    <div id="acc-eigen-sectie" style="display:${isEigen?'':'none'};">
+      <span class="section-title">Kart & Competitie</span>
+      <label class="field-label">Klasse(n)</label>
+      <p style="font-size:11px;color:#666;font-family:'Barlow',sans-serif;margin-bottom:0.5rem;margin-top:-0.3rem;">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="acc-klassen-grid">${klassenHtml}</div>
+      <div id="acc-startnrs" style="display:none;margin-bottom:1rem;">
+        <label class="field-label">Startnummer per klasse</label>
+        <div class="startnr-list"></div>
+      </div>
+      <label class="field-label">Kampioenschap(pen)</label>
+      <div class="chk-grid" id="acc-kamp-grid">${kampHtml}</div>
+      <span class="section-title">Materiaal in werkplaats</span>
+      <div class="toggle-row" id="acc-tog-kart"><span>Kart in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row" id="acc-tog-banden"><span>Banden in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row" id="acc-tog-bak"><span>Bak met materiaal in werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <span class="section-title">Benzine</span>
+      <div class="benzine-opts" id="acc-benz-opts">${benzHtml}</div>
+    </div>
+
+    <div id="acc-huur-sectie" style="display:${!isEigen?'':'none'};">
+      <span class="section-title">Rijder afmetingen</span>
+      <div class="two-col">
+        <div><label class="field-label">Lengte (cm)</label><input id="acc-lengte" class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" style="margin-bottom:0" /></div>
+        <div><label class="field-label">Gewicht (kg)</label><input id="acc-gewicht" class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" style="margin-bottom:0" /></div>
+      </div>
+      <span class="section-title">Kart huren</span>
+      <label class="field-label">Type kart</label>
+      <select id="acc-huurkart" class="field-select">
+        <option value="">Selecteer een kart...</option>
+        <option>Formula Honda Cadet</option>
+        <option>Formula Honda Junior</option>
+        <option>Formula Honda Senior</option>
+        <option>Rotax Max</option>
+      </select>
+      <span class="section-title">Benodigde uitrusting</span>
+      <div class="chk-grid" id="acc-uitrusting-grid">${uitrHtml}</div>
+    </div>
+
+    <p id="acc-save-msg" class="save-msg" style="text-align:left;"></p>
+    <button class="save-btn" onclick="saveRijder()">Opslaan →</button>
+    <button class="cancel-btn" onclick="_accTerugNaarLijst()">Annuleren</button>
+    ${deleteHtml}
+  `;
+}
+
+function _fillRijderForm(r) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-  set('acc-voornaam', p.voornaam);
-  set('acc-naam',     p.naam);
-  set('acc-geboorte', p.geboortedatum);
-  set('acc-email',    _currentUser ? _currentUser.email : '');
-  set('acc-tel',      p.telefoon);
-  document.getElementById('acc-pw').value = '';
-
-  const isEigen = p.kart_type !== 'huur';
-  document.getElementById('acc-eigen-sectie').style.display = isEigen ? '' : 'none';
-  document.getElementById('acc-huur-sectie').style.display  = isEigen ? 'none' : '';
-
+  set('acc-voornaam', r.voornaam);
+  set('acc-naam', r.naam);
+  set('acc-geboorte', r.geboortedatum);
+  set('acc-tel', r.telefoon);
+  const isEigen = r.kart_type !== 'huur';
   if (isEigen) {
-    const klass = new Set(p.klassen || []);
+    const klass = new Set(r.klassen || []);
     document.querySelectorAll('#acc-klassen-grid .chk-item').forEach(item => {
-      const lbl = item.querySelector('.chk-label')?.textContent.trim();
-      item.classList.toggle('on', klass.has(lbl));
+      item.classList.toggle('on', klass.has(item.querySelector('.chk-label')?.textContent.trim()));
     });
-    updateStartnrFields('acc-klassen-grid', 'acc-startnrs', p.startnummers || {});
-    const kamp = new Set(p.kampioenschappen || []);
+    updateStartnrFields('acc-klassen-grid', 'acc-startnrs', r.startnummers || {});
+    const kamp = new Set(r.kampioenschappen || []);
     document.querySelectorAll('#acc-kamp-grid .chk-item').forEach(item => {
-      const lbl = item.querySelector('.chk-label')?.textContent.trim();
-      item.classList.toggle('on', kamp.has(lbl));
+      item.classList.toggle('on', kamp.has(item.querySelector('.chk-label')?.textContent.trim()));
     });
-    setToggle('acc-tog-kart',   !!p.kart_in_werkplaats);
-    setToggle('acc-tog-banden', !!p.banden_in_werkplaats);
-    setToggle('acc-tog-bak',    !!p.bak_in_werkplaats);
-    const benzIdx = BENZ_LABELS.findIndex(l => l === (p.benzine || ''));
+    setToggle('acc-tog-kart',   !!r.kart_in_werkplaats);
+    setToggle('acc-tog-banden', !!r.banden_in_werkplaats);
+    setToggle('acc-tog-bak',    !!r.bak_in_werkplaats);
+    const benzIdx = BENZ_LABELS.findIndex(l => l === (r.benzine || ''));
     document.querySelectorAll('#acc-benz-opts .benz-btn').forEach((btn, i) =>
       btn.classList.toggle('on', i === benzIdx));
   } else {
-    set('acc-lengte',  p.lengte);
-    set('acc-gewicht', p.gewicht);
-    set('acc-huurkart', p.huurkart_type);
-    const uitr = new Set(p.uitrusting || []);
+    set('acc-lengte', r.lengte);
+    set('acc-gewicht', r.gewicht);
+    const sel = document.getElementById('acc-huurkart');
+    if (sel && r.huurkart_type) sel.value = r.huurkart_type;
+    const uitr = new Set(r.uitrusting || []);
     document.querySelectorAll('#acc-uitrusting-grid .chk-item').forEach(item => {
-      const lbl = item.querySelector('.chk-label')?.textContent.trim();
-      item.classList.toggle('on', uitr.has(lbl));
+      item.classList.toggle('on', uitr.has(item.querySelector('.chk-label')?.textContent.trim()));
     });
   }
-  document.getElementById('acc-save-msg').textContent = '';
+}
+
+function _editRijder(rijderId) {
+  _editingRijder = _accountRijders.find(r => r.id === rijderId) || null;
+  if (!_editingRijder) return;
+  const isExtra = rijderId !== _currentUser.id;
+  const naam = `${_editingRijder.voornaam||''} ${_editingRijder.naam||''}`.trim();
+  document.getElementById('acc-panel-title').textContent = naam || 'Rijder';
+  document.getElementById('acc-back-btn').style.display = '';
+  document.getElementById('acc-body').innerHTML = _rijderFormHTML(_editingRijder, isExtra);
+  _fillRijderForm(_editingRijder);
+}
+
+function _addRijder() {
+  _editingRijder = null;
+  document.getElementById('acc-panel-title').textContent = 'Nieuwe rijder';
+  document.getElementById('acc-back-btn').style.display = '';
+  document.getElementById('acc-body').innerHTML = _rijderFormHTML({}, false);
+}
+
+function _accTerugNaarLijst() {
+  _editingRijder = null;
+  _renderAccLijst();
+}
+
+function accKiesKartType(type) {
+  document.getElementById('acc-eigen-sectie').style.display = type === 'eigen' ? '' : 'none';
+  document.getElementById('acc-huur-sectie').style.display  = type === 'huur'  ? '' : 'none';
+  document.querySelectorAll('.kart-type-keuze-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById(type === 'eigen' ? 'acc-kies-eigen' : 'acc-kies-huur').classList.add('on');
 }
 
 function setToggle(rowId, isJa) {
@@ -763,28 +836,44 @@ function setToggle(rowId, isJa) {
   if (btn) btn.classList.add('on');
 }
 
-function enableEdit()  { document.getElementById('dfk-root').classList.remove('locked'); }
-function disableEdit() { document.getElementById('dfk-root').classList.add('locked'); }
-function cancelEdit()  { disableEdit(); loadAccountPanel(); }
+async function saveAccountSettings() {
+  const msg = document.getElementById('acc-pw-save-msg');
+  msg.textContent = '';
+  const pw  = document.getElementById('acc-pw')?.value || '';
+  const pw2 = document.getElementById('acc-pw2')?.value || '';
+  if (!pw) { msg.style.color='#E02020'; msg.textContent='Vul een nieuw wachtwoord in.'; return; }
+  if (pw.length < 8) { msg.style.color='#E02020'; msg.textContent='Minimaal 8 tekens.'; return; }
+  if (pw !== pw2)    { msg.style.color='#E02020'; msg.textContent='Wachtwoorden komen niet overeen.'; return; }
+  const { error } = await _supabase.auth.updateUser({ password: pw });
+  if (error) { msg.style.color='#E02020'; msg.textContent='Fout: '+error.message; return; }
+  document.getElementById('acc-pw').value = '';
+  document.getElementById('acc-pw2').value = '';
+  msg.style.color='#4cff4c'; msg.textContent='✓ Wachtwoord gewijzigd';
+}
 
-async function saveAccount() {
-  const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+async function saveRijder() {
+  const get = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   const msgEl = document.getElementById('acc-save-msg');
   msgEl.textContent = '';
-
-  const isEigen = (document.getElementById('acc-eigen-sectie').style.display !== 'none');
-  const togRows = ['acc-tog-kart','acc-tog-banden','acc-tog-bak'].map(id => document.getElementById(id));
-
+  const isEigen   = document.getElementById('acc-eigen-sectie').style.display !== 'none';
+  const isNewRijder = !_editingRijder;
+  const rijderId  = _editingRijder?.id || crypto.randomUUID();
+  const voornaam  = get('acc-voornaam');
+  const naam      = get('acc-naam');
+  if (!voornaam || !naam) {
+    msgEl.style.color='#E02020'; msgEl.textContent='Vul voornaam en naam in.'; return;
+  }
   const profiel = {
-    id:          _currentUser.id,
-    voornaam:    get('acc-voornaam'),
-    naam:        get('acc-naam'),
+    id:            rijderId,
+    account_id:    _currentUser.id,
+    voornaam, naam,
     geboortedatum: get('acc-geboorte') || null,
-    telefoon:    get('acc-tel'),
+    telefoon:      get('acc-tel'),
+    kart_type:     isEigen ? 'eigen' : 'huur',
   };
-
   if (isEigen) {
-    const benzEl = document.querySelector('#acc-benz-opts .benz-btn.on');
+    const togRows = ['acc-tog-kart','acc-tog-banden','acc-tog-bak'].map(id => document.getElementById(id));
+    const benzEl  = document.querySelector('#acc-benz-opts .benz-btn.on');
     Object.assign(profiel, {
       klassen:              [...document.querySelectorAll('#acc-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()),
       startnummers:         getStartnummers('acc-startnrs'),
@@ -802,30 +891,36 @@ async function saveAccount() {
       uitrusting:    [...document.querySelectorAll('#acc-uitrusting-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()),
     });
   }
-
-  // Wachtwoord wijzigen
-  const newPw  = get('acc-pw');
-  const newPw2 = get('acc-pw2');
-  if (newPw) {
-    if (newPw.length < 8)  { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoord moet minimaal 8 tekens zijn.'; return; }
-    if (newPw !== newPw2)  { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoorden komen niet overeen.'; return; }
-    const { error: pwErr } = await _supabase.auth.updateUser({ password: newPw });
-    if (pwErr) { msgEl.style.color='#E02020'; msgEl.textContent='Wachtwoord wijzigen mislukt: '+pwErr.message; return; }
-  }
-
   const { error } = await _supabase.from('profiles').upsert(profiel);
   if (error) { msgEl.style.color='#E02020'; msgEl.textContent='Opslaan mislukt: '+error.message; return; }
+  if (isNewRijder) {
+    _accountRijders.push(profiel);
+  } else {
+    const idx = _accountRijders.findIndex(r => r.id === rijderId);
+    if (idx >= 0) _accountRijders[idx] = { ..._accountRijders[idx], ...profiel };
+  }
+  if (rijderId === _currentUser.id) {
+    _currentProfile = { ..._currentProfile, ...profiel };
+    updateNavbar();
+  }
+  _editingRijder = null;
+  _renderAccLijst();
+}
 
-  _currentProfile = { ..._currentProfile, ...profiel };
-  updateNavbar();
-  disableEdit();
-  msgEl.style.color = '#4cff4c';
-  msgEl.textContent = '✓ Wijzigingen opgeslagen';
+async function deleteExtraRijder(id) {
+  const r = _accountRijders.find(x => x.id === id);
+  const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'deze rijder';
+  if (!confirm(`"${naam}" verwijderen uit dit account?`)) return;
+  const { error } = await _supabase.from('profiles').delete().eq('id', id);
+  if (error) { alert('Verwijderen mislukt: ' + error.message); return; }
+  _accountRijders = _accountRijders.filter(x => x.id !== id);
+  _editingRijder = null;
+  _renderAccLijst();
 }
 
 // ── Inschrijven paneel ───────────────────────
 function _getAccountData() {
-  const p = _currentProfile || {};
+  const p = _selectedRijder || _currentProfile || {};
   return {
     voornaam:    p.voornaam    || '',
     naam:        p.naam        || '',
@@ -850,7 +945,46 @@ function _getAccountData() {
 function openInschrijven(eventId) {
   _currentEvent = _allEvents.find(e => e.id === eventId);
   if (!_currentEvent) return;
+  document.getElementById('inschrijf-overlay').classList.add('open');
+  document.getElementById('inschrijf-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (_accountRijders.length > 1) {
+    _toonRijderKeuze();
+  } else {
+    _selectedRijder = _accountRijders[0] || _currentProfile;
+    _openInschrijvenForm();
+  }
+}
 
+function _toonRijderKeuze() {
+  const ev = _currentEvent;
+  const d  = new Date(ev.datum + 'T12:00:00');
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div class="ev-confirm-box">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+    </div>
+    <div class="confirm-vraag">Voor wie inschrijven?</div>
+    <p class="confirm-hint">Kies de rijder voor dit event.</p>
+    ${_accountRijders.map(r => `
+      <div class="rijder-kaart" onclick="_kiesRijderEnSchrijfIn('${r.id}')">
+        <div>
+          <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
+          <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
+        </div>
+        <span style="color:#666;font-size:20px;">›</span>
+      </div>`).join('')}
+    <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
+  `;
+}
+
+function _kiesRijderEnSchrijfIn(rijderId) {
+  _selectedRijder = _accountRijders.find(r => r.id === rijderId) || _currentProfile;
+  _openInschrijvenForm();
+}
+
+function _openInschrijvenForm() {
   const ev  = _currentEvent;
   const d   = new Date(ev.datum + 'T12:00:00');
   const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
@@ -917,10 +1051,6 @@ function openInschrijven(eventId) {
     <button class="bevestig-btn" onclick="_toonBevestiging()">Bevestigen →</button>
     <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
   `;
-
-  document.getElementById('inschrijf-overlay').classList.add('open');
-  document.getElementById('inschrijf-panel').classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 
 function sluitInschrijven() {
@@ -929,6 +1059,7 @@ function sluitInschrijven() {
   document.body.style.overflow = '';
   _currentEvent   = null;
   _selectedKlasse = null;
+  _selectedRijder = null;
 }
 
 async function _toonBevestiging() {
@@ -937,13 +1068,14 @@ async function _toonBevestiging() {
 
   // Lees geselecteerde klasse vóór innerHTML vervangen
   const klasse      = _selectedKlasse;
-  const startnummer = klasse ? (_currentProfile?.startnummers?.[klasse] ?? null) : null;
+  const rijder      = _selectedRijder || _currentProfile;
+  const startnummer = klasse ? (rijder?.startnummers?.[klasse] ?? null) : null;
 
   const body = document.getElementById('inschrijf-body');
   body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#888;">Bezig met inschrijven...</div>`;
 
   const { error } = await _supabase.from('inschrijvingen').insert({
-    rijder_id:   _currentUser.id,
+    rijder_id:   _selectedRijder?.id || _currentUser.id,
     event_id:    ev.id,
     klasse:      klasse      || null,
     startnummer: startnummer || null,
@@ -1191,7 +1323,7 @@ async function bevestigInschrijving() {
 
   // Update profiel in Supabase
   const profiel = {
-    id:            _currentUser.id,
+    id:            _selectedRijder?.id || _currentUser.id,
     voornaam:      get('inp-voornaam'),
     naam:          get('inp-naam'),
     geboortedatum: get('inp-geboorte') || null,

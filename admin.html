@@ -1031,18 +1031,21 @@ async function saveRijder(id) {
 async function deleteRijder(id) {
   const r = _allRijders.find(x => x.id === id);
   const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'deze rijder';
-  if (!confirm(`"${naam}" volledig verwijderen?\n\nDit verwijdert zowel het profiel als het inlogaccount. Dit kan niet ongedaan gemaakt worden.`)) return;
+  const isPrimary = !r?.account_id || r.account_id === id;
 
-  // 1. Verwijder auth-account via database-functie
-  const { error: rpcErr } = await _supabase.rpc('delete_user_account', { target_user_id: id });
-  if (rpcErr) {
-    showToast('Account verwijderen mislukt: ' + rpcErr.message, 'red');
-    return;
+  if (isPrimary) {
+    if (!confirm(`"${naam}" volledig verwijderen?\n\nDit verwijdert zowel het profiel als het inlogaccount. Dit kan niet ongedaan gemaakt worden.`)) return;
+    const { error: rpcErr } = await _supabase.rpc('delete_user_account', { target_user_id: id });
+    if (rpcErr) { showToast('Account verwijderen mislukt: ' + rpcErr.message, 'red'); return; }
+  } else {
+    if (!confirm(`"${naam}" verwijderen?\n\nDit verwijdert alleen dit rijdersprofiel, niet het inlogaccount.`)) return;
+    const { error } = await _supabase.from('profiles').delete().eq('id', id);
+    if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
   }
 
   cancelRijderEdit();
   await loadRijders();
-  showToast(`${naam} volledig verwijderd`, 'yellow');
+  showToast(`${naam} verwijderd`, 'yellow');
 }
 
 function cancelRijderEdit() {
