@@ -1072,14 +1072,15 @@ async function downloadOpmerkingPdf(wid) {
   if (error) { showToast('Fout: ' + error.message, 'red'); return; }
 
   const rijen = (data || []).map(r => {
-    const ev  = evs.find(e => e.id === r.event_id);
-    const p   = r.profiles;
+    const ev   = evs.find(e => e.id === r.event_id);
+    const p    = r.profiles;
     const naam = p ? `${p.voornaam || ''} ${p.naam || ''}`.trim() : '—';
-    const d   = ev ? new Date(ev.datum + 'T12:00:00') : null;
+    const d    = ev ? new Date(ev.datum + 'T12:00:00') : null;
     const datumStr = d
       ? `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`
       : '—';
-    return { datumStr, evNaam: ev?.naam || '—', naam, klasse: r.klasse || '—', opmerking: r.opmerking };
+    const nr = r.startnummer != null ? `#${r.startnummer}` : '—';
+    return { datumStr, naam, klasse: r.klasse || '—', nr, opmerking: r.opmerking };
   });
 
   if (!rijen.length) { showToast('Geen opmerkingen gevonden voor dit weekend', 'yellow'); return; }
@@ -1109,16 +1110,16 @@ async function downloadOpmerkingPdf(wid) {
   // Tabel
   doc.autoTable({
     startY: 26,
-    head: [['Evenement', 'Datum', 'Rijder', 'Klasse', 'Opmerking']],
-    body: rijen.map(r => [r.evNaam, r.datumStr, r.naam, r.klasse, r.opmerking]),
+    head: [['Datum', 'Rijder', 'Klasse', 'Nr', 'Opmerking']],
+    body: rijen.map(r => [r.datumStr, r.naam, r.klasse, r.nr, r.opmerking]),
     styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }, textColor: [20, 20, 20], font: 'helvetica' },
-    headStyles: { fillColor: [224, 32, 32], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8, letterSpacing: 1 },
+    headStyles: { fillColor: [224, 32, 32], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     alternateRowStyles: { fillColor: [248, 248, 248] },
     columnStyles: {
-      0: { cellWidth: 38 },
+      0: { cellWidth: 30 },
       1: { cellWidth: 32 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 18 },
+      2: { cellWidth: 18 },
+      3: { cellWidth: 12, halign: 'center' },
       4: { cellWidth: 'auto' },
     },
     didDrawPage: (d) => {
