@@ -74,12 +74,13 @@
     .sectie-titel {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
       font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
-      color: #E02020; margin-bottom: 0;
+      color: #E02020; margin-bottom: 0.8rem;
     }
     .sectie-rij {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 0.8rem;
     }
+    .sectie-rij .sectie-titel { margin-bottom: 0; }
     .pdf-btn {
       display: flex; align-items: center; gap: 6px;
       padding: 6px 14px; background: #1c1c1c; border: 1px solid #333;
@@ -735,6 +736,14 @@ function drukAfAlsPDF() {
       },
       alternateRowStyles: { fillColor: [248, 248, 248] },
       theme: 'grid',
+      didParseCell(data) {
+        if (data.section === 'body' && data.cell.raw === '—') {
+          data.cell.styles.fillColor  = [200, 200, 200];
+          data.cell.styles.textColor  = [140, 140, 140];
+          data.cell.styles.halign     = 'center';
+          data.cell.styles.fontStyle  = 'normal';
+        }
+      },
     });
     y = doc.lastAutoTable.finalY + 8;
   }
@@ -756,9 +765,9 @@ function drukAfAlsPDF() {
         startnrVanEntry(entry),
         naam,
         klasseVanEntry(entry),
-        p.kart_in_werkplaats   ? '' : '',  // lege cel voor papier
-        p.banden_in_werkplaats ? '' : '',
-        p.bak_in_werkplaats    ? '' : '',
+        p.kart_in_werkplaats   ? '' : '—',
+        p.banden_in_werkplaats ? '' : '—',
+        p.bak_in_werkplaats    ? '' : '—',
       ];
     });
 
