@@ -167,6 +167,28 @@
     #dfk-root .weekend-groep-events { display: none; padding-left: 14px; padding-top: 4px; }
     #dfk-root .weekend-groep-events.open { display: flex; flex-direction: column; gap: 6px; }
     #dfk-root .weekend-groep-events .ev-row { border-left-width: 2px; }
+    #dfk-root .wg-pdf-balk { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 4px; border-top: 1px solid #1e1e1e; margin-top: 4px; }
+    #dfk-root .wg-pdf-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: #141414; border: 1px solid #2a2a2a; border-radius: 3px; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    #dfk-root .wg-pdf-btn:hover { border-color: #E02020; color: #fff; background: #1c1010; }
+    #dfk-root .wg-pdf-icon { font-size: 13px; }
+
+    /* ── Weekend detailpagina ── */
+    #dfk-root .wd-back { display: flex; align-items: center; gap: 8px; background: none; border: none; color: #666; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 1.4rem; }
+    #dfk-root .wd-back:hover { color: #ccc; }
+    #dfk-root .wd-header { margin-bottom: 1.6rem; }
+    #dfk-root .wd-titel { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 30px; color: #fff; letter-spacing: 2px; text-transform: uppercase; line-height: 1.1; }
+    #dfk-root .wd-datum { font-size: 13px; color: #666; margin-top: 4px; }
+    #dfk-root .wd-stats { display: flex; gap: 16px; margin-top: 10px; }
+    #dfk-root .wd-stat { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; color: #555; }
+    #dfk-root .wd-stat span { color: #fff; font-size: 16px; }
+    #dfk-root .wd-section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1rem; margin-top: 1.8rem; }
+    #dfk-root .wd-pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    #dfk-root .wd-pdf-kaart { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; padding: 14px 16px; cursor: pointer; transition: all 0.15s; }
+    #dfk-root .wd-pdf-kaart:hover { border-color: #E02020; background: #1c1010; }
+    #dfk-root .wd-pdf-kaart-icon { font-size: 22px; flex-shrink: 0; }
+    #dfk-root .wd-pdf-kaart-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .wd-pdf-kaart-sub { font-size: 11px; color: #555; margin-top: 2px; font-family: 'Barlow', sans-serif; }
+    @media (max-width: 500px) { #dfk-root .wd-pdf-grid { grid-template-columns: 1fr; } }
 
     #dfk-root .empty { text-align: center; padding: 2rem 1rem; color: #444; font-size: 13px; }
     #dfk-root .empty-icon { font-size: 28px; margin-bottom: 0.4rem; }
@@ -310,17 +332,26 @@
   <div class="layout">
 
     <div class="left-col">
-      <div class="col-header">
-        <div>
-          <div class="page-title">Evenementen</div>
-          <p class="page-sub" style="margin-bottom:0;">Overzicht van alle ingevoerde evenementen</p>
+
+      <!-- Overzicht evenementen -->
+      <div id="events-overzicht">
+        <div class="col-header">
+          <div>
+            <div class="page-title">Evenementen</div>
+            <p class="page-sub" style="margin-bottom:0;">Overzicht van alle ingevoerde evenementen</p>
+          </div>
+          <button class="open-form-btn" onclick="toggleEventForm()">＋ Toevoegen</button>
         </div>
-        <button class="open-form-btn" onclick="toggleEventForm()">＋ Toevoegen</button>
+        <div class="section-label">Komende evenementen</div>
+        <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">⏳</div>Laden...</div></div>
+        <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
+        <div class="event-list" id="past-list"><div class="empty"><div class="empty-icon">🏁</div>Geen afgelopen evenementen</div></div>
       </div>
-      <div class="section-label">Komende evenementen</div>
-      <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">⏳</div>Laden...</div></div>
-      <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
-      <div class="event-list" id="past-list"><div class="empty"><div class="empty-icon">🏁</div>Geen afgelopen evenementen</div></div>
+
+      <!-- Weekend detailpagina -->
+      <div id="weekend-detail-view" style="display:none;">
+        <div id="wd-content"></div>
+      </div>
     </div>
 
     <div class="right-col">
@@ -614,7 +645,7 @@ function renderWeekendGroep(wid, evs, isPast) {
   const hasEditing = evs.some(ev => ev.id === editEventId);
   const isOpen     = _openWeekenden.has(wid) || hasEditing;
   return `<div class="weekend-groep">
-    <div class="weekend-groep-header${isOpen ? ' open' : ''}${isPast ? ' past' : ''}" onclick="toggleWeekend('${wid}')">
+    <div class="weekend-groep-header${isPast ? ' past' : ''}" onclick="openWeekendDetail('${wid}')">
       <span class="wg-chevron">▶</span>
       <div>
         <div class="wg-naam">${naam}</div>
@@ -622,25 +653,251 @@ function renderWeekendGroep(wid, evs, isPast) {
       </div>
       <div class="wg-badge">${totInschr > 0 ? `👥 ${totInschr}` : ''}</div>
     </div>
-    <div class="weekend-groep-events${isOpen ? ' open' : ''}" id="wg-${wid}">
-      ${gesorteerd.map(ev => renderEvRow(ev, isPast)).join('')}
-    </div>
   </div>`;
 }
 
-function toggleWeekend(wid) {
-  const header = document.querySelector(`[onclick="toggleWeekend('${wid}')"]`);
-  const events = document.getElementById('wg-' + wid);
-  if (!header || !events) return;
-  if (_openWeekenden.has(wid)) {
-    _openWeekenden.delete(wid);
-    header.classList.remove('open');
-    events.classList.remove('open');
-  } else {
-    _openWeekenden.add(wid);
-    header.classList.add('open');
-    events.classList.add('open');
+async function downloadWeekendPdf(wid, nr) {
+  if (nr !== 1) return; // andere PDF's komen later
+
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  // Haal inschrijvingen op voor alle events in één query
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*)')
+    .in('event_id', evs.map(e => e.id))
+    .order('bevestigd_op', { ascending: true });
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  // Groepeer per event
+  const perEvent = new Map(evs.map(e => [e.id, []]));
+  for (const r of (data || [])) {
+    if (perEvent.has(r.event_id)) perEvent.get(r.event_id).push(r);
   }
+
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+  const DAGEN_LANG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+
+  // Logo laden
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+
+  const baseStyles = {
+    font: 'helvetica', fontSize: 8,
+    cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
+    textColor: [17, 17, 17], lineColor: [220, 220, 220], lineWidth: 0.2,
+  };
+
+  // Paginaheader tekenen voor één event
+  function tekenDagHeader(ev) {
+    const d = new Date(ev.datum + 'T12:00:00');
+    const datumStr = `${DAGEN_LANG[d.getDay()]} ${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
+    const lijst = perEvent.get(ev.id) || [];
+
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, W, 20, 'F');
+
+    if (logoBase64) {
+      const logoH = 12;
+      const logoW = logoH * (logoBase64.w / logoBase64.h);
+      doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+    }
+
+    const evNaam = ev.naam.toUpperCase();
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(evNaam, 10, 13);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text('  ·  ' + datumStr, 10 + doc.getTextWidth(evNaam), 13);
+
+    doc.setFillColor(224, 32, 32);
+    doc.rect(0, 20, W, 1.5, 'F');
+
+    doc.setFillColor(30, 30, 30);
+    doc.rect(0, 21.5, W, 8, 'F');
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(`${ev.circuit || ''}  ·  ${lijst.length} rijder${lijst.length !== 1 ? 's' : ''}`, 10, 27);
+  }
+
+  // Paginavoet
+  function tekenFooter() {
+    const nu = new Date();
+    const pnr = doc.internal.getCurrentPageInfo().pageNumber;
+    const ptot = doc.internal.getNumberOfPages();
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`DFK · ${weekend.naam}`, 10, 292);
+    doc.text(`${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}  ·  ${pnr}/${ptot}`, W - 10, 292, { align: 'right' });
+  }
+
+  // Render elke dag op een aparte pagina
+  for (let i = 0; i < evs.length; i++) {
+    const ev = evs[i];
+    if (i > 0) doc.addPage();
+
+    tekenDagHeader(ev);
+
+    const lijst = (perEvent.get(ev.id) || []).sort((a, b) => {
+      const nA = `${a.profiles?.naam||''} ${a.profiles?.voornaam||''}`.trim();
+      const nB = `${b.profiles?.naam||''} ${b.profiles?.voornaam||''}`.trim();
+      return nA.localeCompare(nB);
+    });
+
+    const eigenLijst = lijst.filter(r => (r.profiles||{}).kart_type !== 'huur');
+    const huurLijst  = lijst.filter(r => (r.profiles||{}).kart_type === 'huur');
+
+    // Eigen kart tabel
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(204, 26, 26);
+    doc.text(`EIGEN KART  (${eigenLijst.length})`, 10, 33);
+
+    doc.autoTable({
+      startY: 35,
+      head: [['#', 'Naam', 'Klasse']],
+      body: eigenLijst.map(r => {
+        const p = r.profiles || {};
+        return [r.startnummer != null ? String(r.startnummer) : '', `${p.voornaam||''} ${p.naam||''}`.trim(), r.klasse || ''];
+      }),
+      styles: baseStyles,
+      headStyles: { fillColor: [204, 26, 26], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+      alternateRowStyles: { fillColor: [247, 247, 247] },
+      columnStyles: { 0: { halign: 'center', cellWidth: 15, fontStyle: 'bold', fontSize: 9 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 50 } },
+      margin: { left: 10, right: 10 },
+      didDrawPage: tekenFooter,
+    });
+
+    // Huurkart tabel
+    if (huurLijst.length > 0) {
+      const afterEigen = doc.lastAutoTable.finalY + 10;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(21, 101, 192);
+      doc.text(`HUURKART  (${huurLijst.length})`, 10, afterEigen - 3);
+
+      doc.autoTable({
+        startY: afterEigen,
+        head: [['Naam', 'Klasse']],
+        body: huurLijst.map(r => {
+          const p = r.profiles || {};
+          return [`${p.voornaam||''} ${p.naam||''}`.trim(), p.huurkart_type || '—'];
+        }),
+        styles: baseStyles,
+        headStyles: { fillColor: [21, 101, 192], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+        alternateRowStyles: { fillColor: [240, 245, 255] },
+        columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 50 } },
+        margin: { left: 10, right: 10 },
+        didDrawPage: tekenFooter,
+      });
+    }
+  }
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_inschrijvingen.pdf`);
+}
+
+function openWeekendDetail(wid) {
+  const weekend  = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents.filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  // Datumbereik berekenen
+  const eersteD = evs.length ? new Date(evs[0].datum + 'T12:00:00') : null;
+  const laasteD = evs.length ? new Date(evs[evs.length - 1].datum + 'T12:00:00') : null;
+  let datumStr = '';
+  if (eersteD && laasteD) {
+    const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
+    const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
+    if (eersteD.getTime() === laasteD.getTime()) {
+      datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
+    } else if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear()) {
+      datumStr = `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+    } else {
+      datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+    }
+  }
+
+  const totInschr = evs.reduce((s, ev) => s + (_inschrijvingen[ev.id] || 0), 0);
+  const isPast    = laasteD ? laasteD < new Date() : false;
+
+  document.getElementById('wd-content').innerHTML = `
+    <button class="wd-back" onclick="sluitWeekendDetail()">← Terug naar evenementen</button>
+    <div class="wd-header">
+      <div class="wd-titel">${weekend.naam}</div>
+      <div class="wd-datum">${datumStr}</div>
+      <div class="wd-stats">
+        <div class="wd-stat"><span>${evs.length}</span> dag${evs.length !== 1 ? 'en' : ''}</div>
+        <div class="wd-stat"><span>${totInschr}</span> ingeschreven</div>
+      </div>
+    </div>
+
+    <div class="wd-section-label">Downloads</div>
+    <div class="wd-pdf-grid">
+      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 1)">
+        <div class="wd-pdf-kaart-icon">📄</div>
+        <div><div class="wd-pdf-kaart-naam">Inschrijvingen per dag</div><div class="wd-pdf-kaart-sub">Alle dagen gebundeld, één pagina per dag</div></div>
+      </div>
+      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 2)">
+        <div class="wd-pdf-kaart-icon">📄</div>
+        <div><div class="wd-pdf-kaart-naam">PDF 2</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
+      </div>
+      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 3)">
+        <div class="wd-pdf-kaart-icon">📄</div>
+        <div><div class="wd-pdf-kaart-naam">PDF 3</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
+      </div>
+      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 4)">
+        <div class="wd-pdf-kaart-icon">📄</div>
+        <div><div class="wd-pdf-kaart-naam">PDF 4</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
+      </div>
+    </div>
+
+    <div class="wd-section-label">Evenementen</div>
+    <div class="event-list">
+      ${evs.length
+        ? evs.map(ev => renderEvRow(ev, isPast)).join('')
+        : '<div class="empty"><div class="empty-icon">📋</div>Geen evenementen gekoppeld</div>'}
+    </div>
+  `;
+
+  document.getElementById('events-overzicht').style.display    = 'none';
+  document.getElementById('weekend-detail-view').style.display = '';
+  document.querySelector('.left-col').scrollTop = 0;
+}
+
+function sluitWeekendDetail() {
+  document.getElementById('weekend-detail-view').style.display = 'none';
+  document.getElementById('events-overzicht').style.display    = '';
 }
 
 function renderList(containerId, list, icon, emptyMsg, isPast) {
