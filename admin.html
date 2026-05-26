@@ -1151,6 +1151,159 @@ async function downloadOpmerkingPdf(wid) {
   doc.save(`${slug}_opmerkingen.pdf`);
 }
 
+async function downloadRijderslijstPdf(wid) {
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*)')
+    .in('event_id', evs.map(e => e.id));
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  // Dedupliceer: één rij per rijder (klassen samenvoegen)
+  const rijderMap = new Map();
+  for (const r of (data || [])) {
+    const p = r.profiles;
+    if (!p) continue;
+    if (!rijderMap.has(r.rijder_id)) {
+      rijderMap.set(r.rijder_id, { profiel: p, klassen: [], startnummers: {} });
+    }
+    const entry = rijderMap.get(r.rijder_id);
+    if (r.klasse && !entry.klassen.includes(r.klasse)) entry.klassen.push(r.klasse);
+    if (r.klasse && r.startnummer != null) entry.startnummers[r.klasse] = r.startnummer;
+  }
+
+  if (!rijderMap.size) { showToast('Geen inschrijvingen gevonden', 'yellow'); return; }
+
+  // Sorteer op achternaam
+  const rijders = [...rijderMap.values()].sort((a, b) => {
+    const nA = `${a.profiel.naam||''} ${a.profiel.voornaam||''}`.trim();
+    const nB = `${b.profiel.naam||''} ${b.profiel.voornaam||''}`.trim();
+    return nA.localeCompare(nB);
+  });
+
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+  const nu = new Date();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210; const H = 297; const ML = 14; const MR = 14;
+
+  // Tabelrijen
+  const eigenRijders = rijders.filter(e => e.profiel.kart_type !== 'huur');
+  const huurRijders  = rijders.filter(e => e.profiel.kart_type === 'huur');
+
+  function tekenHeader(label) {
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, W, 20, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text(weekend.naam.toUpperCase(), ML, 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(160, 160, 160);
+    doc.text(`${label} · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+    doc.setFillColor(224, 32, 32);
+    doc.rect(0, 20, W, 1.5, 'F');
+  }
+
+  function tekenFooter(data) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`DFK · ${weekend.naam} · Rijderslijst`, ML, H - 8);
+    doc.text(`${data.pageNumber}`, W - MR, H - 8, { align: 'right' });
+  }
+
+  const baseStyles = { fontSize: 9, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 }, textColor: [20, 20, 20], font: 'helvetica' };
+
+  tekenHeader('Rijderslijst');
+
+  // ── Sectie eigen kart ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(224, 32, 32);
+  doc.text('EIGEN KART', ML, 28);
+
+  doc.autoTable({
+    startY: 31,
+    head: [['Rijder', 'Klasse', 'Nr']],
+    body: eigenRijders.map(e => {
+      const p  = e.profiel;
+      const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+      const klassen = e.klassen.join(' / ') || '—';
+      const nrs = e.klassen.map(k => e.startnummers[k] != null ? `#${e.startnummers[k]}` : '—').join(' / ') || '—';
+      return [naam, klassen, nrs];
+    }),
+    styles: baseStyles,
+    headStyles: { fillColor: [40, 40, 40], textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: {
+      0: { cellWidth: 'auto' },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 22, halign: 'center' },
+    },
+    margin: { left: ML, right: MR },
+    didDrawPage: (d) => {
+      tekenFooter(d);
+      if (d.pageNumber > 1) tekenHeader('Rijderslijst');
+    },
+  });
+
+  // ── Sectie huurkart ──
+  const huurY = doc.lastAutoTable.finalY + 8;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(76, 170, 240);
+  doc.text('HUURKART', ML, huurY);
+
+  doc.autoTable({
+    startY: huurY + 3,
+    head: [['Rijder', 'Klasse', 'Nr', 'Kart type', 'Lengte', 'Gewicht', 'Uitrusting']],
+    body: huurRijders.map(e => {
+      const p    = e.profiel;
+      const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+      const klassen = e.klassen.join(' / ') || '—';
+      const nrs = e.klassen.map(k => e.startnummers[k] != null ? `#${e.startnummers[k]}` : '—').join(' / ') || '—';
+      const lengte  = p.lengte  ? `${p.lengte} cm`  : '—';
+      const gewicht = p.gewicht ? `${p.gewicht} kg` : '—';
+      const uitr = (p.uitrusting || []).join(', ') || '—';
+      return [naam, klassen, nrs, p.huurkart_type || '—', lengte, gewicht, uitr];
+    }),
+    styles: baseStyles,
+    headStyles: { fillColor: [21, 80, 140], textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
+    alternateRowStyles: { fillColor: [240, 246, 255] },
+    columnStyles: {
+      0: { cellWidth: 38 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 16, halign: 'center' },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 16, halign: 'center' },
+      5: { cellWidth: 16, halign: 'center' },
+      6: { cellWidth: 'auto' },
+    },
+    margin: { left: ML, right: MR },
+    didDrawPage: (d) => {
+      tekenFooter(d);
+      if (d.pageNumber > 1) tekenHeader('Rijderslijst');
+    },
+  });
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_rijderslijst.pdf`);
+}
+
 function openWeekendDetail(wid) {
   const weekend  = _allWeekenden.find(w => w.id === wid);
   if (!weekend) return;
@@ -1198,9 +1351,9 @@ function openWeekendDetail(wid) {
         <div class="wd-pdf-kaart-icon">💬</div>
         <div><div class="wd-pdf-kaart-naam">Opmerkingen</div><div class="wd-pdf-kaart-sub">Alle opmerkingen bij inschrijvingen</div></div>
       </div>
-      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 3)">
-        <div class="wd-pdf-kaart-icon">📄</div>
-        <div><div class="wd-pdf-kaart-naam">PDF 3</div><div class="wd-pdf-kaart-sub">Beschrijving volgt</div></div>
+      <div class="wd-pdf-kaart" onclick="downloadRijderslijstPdf('${wid}')">
+        <div class="wd-pdf-kaart-icon">🏎️</div>
+        <div><div class="wd-pdf-kaart-naam">Rijderslijst weekend</div><div class="wd-pdf-kaart-sub">Alle rijders samen, huurkart met afmetingen</div></div>
       </div>
       <div class="wd-pdf-kaart" onclick="downloadWeekendPdf4('${wid}')">
         <div class="wd-pdf-kaart-icon">🛒</div>
