@@ -693,7 +693,28 @@ function drukAfAlsPDF() {
   doc.setDrawColor(224, 32, 32);
   doc.setLineWidth(0.6);
   doc.line(margin, y, 210 - margin, y);
-  y += 5;
+  y += 6;
+
+  // Legende
+  const legY = y + 3;
+  // Leeg vakje
+  doc.setDrawColor(100, 100, 100);
+  doc.setLineWidth(0.3);
+  doc.rect(margin, legY - 3, 4, 4);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(60, 60, 60);
+  doc.text('= aan te vinken op papier', margin + 6, legY);
+  // Grijs vakje
+  const gX = margin + 70;
+  doc.setFillColor(200, 200, 200);
+  doc.setDrawColor(150, 150, 150);
+  doc.rect(gX, legY - 3, 4, 4, 'FD');
+  doc.setTextColor(140, 140, 140);
+  doc.text('—', gX + 1, legY);
+  doc.setTextColor(60, 60, 60);
+  doc.text('= niet in werkplaats, niets te laden', gX + 6, legY);
+  y += 10;
 
   // Helper: klasse-string voor een entry
   function klasseVanEntry(entry) {
@@ -798,6 +819,17 @@ function drukAfAlsPDF() {
       { titel: 'Klasse',  breedte: 65 },
       { titel: 'Geladen', breedte: 28, uitlijning: 'center' },
     ], rijen);
+  }
+
+  // Voettekst op elke pagina
+  const aantalPaginas = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= aantalPaginas; i++) {
+    doc.setPage(i);
+    const pageH = doc.internal.pageSize.height;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Gelieve deze lijst ook digitaal aan te vullen.', 210 / 2, pageH - 8, { align: 'center' });
   }
 
   const bestandsnaam = `DFK_Laadlijst_${weekend.naam.replace(/\s+/g, '_')}.pdf`;
