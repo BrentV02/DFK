@@ -1232,18 +1232,11 @@ async function exporteerInschrijvingen() {
 
     doc.autoTable({
       startY: afterEigen,
-      head: [['Naam', 'Kart type', 'Lengte', 'Gewicht', 'Uitrusting nodig']],
+      head: [['#', 'Naam', 'Klasse']],
       body: huurLijst.map(r => {
         const p    = r.profiles || {};
         const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
-        const uitr = Array.isArray(p.uitrusting) ? p.uitrusting.join(', ') : '';
-        return [
-          naam,
-          p.huurkart_type || '—',
-          p.lengte ? `${p.lengte} cm` : '—',
-          p.gewicht ? `${p.gewicht} kg` : '—',
-          uitr || '—',
-        ];
+        return [r.startnummer || '—', naam, r.klasse || '—'];
       }),
       styles: baseStyles,
       headStyles: {
@@ -1255,11 +1248,9 @@ async function exporteerInschrijvingen() {
       },
       alternateRowStyles: { fillColor: [240, 245, 255] },
       columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 38 },
-        2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 20, halign: 'center' },
-        4: { cellWidth: 55 },
+        0: { cellWidth: 12, halign: 'center' },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 50 },
       },
       margin: { left: 10, right: 10 },
       didDrawPage: drawFooter,
