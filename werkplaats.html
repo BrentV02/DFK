@@ -388,15 +388,18 @@ async function buildLaadlijst() {
     return;
   }
 
-  const { data, error } = await _supabase
-    .from('inschrijvingen')
-    .select('*, profiles(*), evenementen(naam)')
-    .in('event_id', eventIds);
+  const [inschrijvRes, statusRes] = await Promise.all([
+    _supabase.from('inschrijvingen').select('*, profiles(*), evenementen(naam)').in('event_id', eventIds),
+    _supabase.from('laad_status').select('*').eq('weekend_id', _geselecteerdWid)
+  ]);
 
-  if (error) {
-    lijst.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
+  if (inschrijvRes.error) {
+    lijst.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${inschrijvRes.error.message}</div>`;
     return;
   }
+
+  const data      = inschrijvRes.data;
+  const statusMap = new Map((statusRes.data || []).map(r => [r.rijder_id, r]));
 
   // Dedupliceer per rijder_id
   const rijderMap = new Map();
@@ -434,18 +437,19 @@ async function buildLaadlijst() {
   _huurKart     = gesorteerd.filter(r => r.profiel.kart_type === 'huur');
   _aantalEvents = weekend?.evenementen?.length || 0;
 
-  // Initialiseer laadState (reset bij nieuw weekend)
+  // Initialiseer laadState — herstel opgeslagen status indien aanwezig
   _laadState = new Map();
   for (const entry of gesorteerd) {
     const p      = entry.profiel;
     const isHuur = p.kart_type === 'huur';
+    const saved  = statusMap.get(p.id);
     const items  = {};
     if (isHuur) {
-      items.huur = false;
+      items.huur = saved?.huur ?? false;
     } else {
-      if (p.kart_in_werkplaats)   items.kart    = false;
-      if (p.banden_in_werkplaats) items.banden  = false;
-      if (p.bak_in_werkplaats)    items.bak     = false;
+      if (p.kart_in_werkplaats)   items.kart    = saved?.kart    ?? false;
+      if (p.banden_in_werkplaats) items.banden  = saved?.banden  ?? false;
+      if (p.bak_in_werkplaats)    items.bak     = saved?.bak     ?? false;
     }
     _laadState.set(p.id, items);
   }
@@ -482,6 +486,22 @@ function toggleLaadItem(rijderId, item) {
   if (!state) return;
   state[item] = !state[item];
   renderLaadlijst();
+  slaLaadStatusOp(rijderId); // opslaan in achtergrond
+}
+
+async function slaLaadStatusOp(rijderId) {
+  const state = _laadState.get(rijderId) || {};
+  await _supabase
+    .from('laad_status')
+    .upsert({
+      weekend_id:    _geselecteerdWid,
+      rijder_id:     rijderId,
+      kart:          state.kart    ?? false,
+      banden:        state.banden  ?? false,
+      bak:           state.bak     ?? false,
+      huur:          state.huur    ?? false,
+      bijgewerkt_op: new Date().toISOString()
+    }, { onConflict: 'weekend_id,rijder_id' });
 }
 
 function rijderIsGeladen(rijderId) {
