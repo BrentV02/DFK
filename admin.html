@@ -746,7 +746,8 @@ function renderRijders() {
   const filterSel = document.getElementById('rijder-filter');
   if (filterSel) {
     const huidigeVal  = filterSel.value;
-    const alleKlassen = [...new Set(_allRijders.flatMap(r => r.klassen || []))].sort();
+    const alleKlassen   = [...new Set(_allRijders.flatMap(r => r.klassen || []))].sort();
+    const alleHuurTypes = [...new Set(_allRijders.filter(r => r.kart_type === 'huur' && r.huurkart_type).map(r => r.huurkart_type))].sort();
     let opties = `<option value="">Alle rijders</option>
       <option value="eigen">Eigen kart</option>
       <option value="huur">Huurkart</option>
@@ -754,6 +755,11 @@ function renderRijders() {
     if (alleKlassen.length) {
       opties += `<optgroup label="── Klasse ──">` +
         alleKlassen.map(k => `<option value="k:${k}">` + k + `</option>`).join('') +
+        `</optgroup>`;
+    }
+    if (alleHuurTypes.length) {
+      opties += `<optgroup label="── Huurkart type ──">` +
+        alleHuurTypes.map(t => `<option value="h:${t}">` + t + `</option>`).join('') +
         `</optgroup>`;
     }
     filterSel.innerHTML = opties;
@@ -768,6 +774,9 @@ function renderRijders() {
   else if (filter.startsWith('k:')) {
     const kl = filter.slice(2);
     lijst = lijst.filter(r => (r.klassen || []).includes(kl));
+  } else if (filter.startsWith('h:')) {
+    const ht = filter.slice(2);
+    lijst = lijst.filter(r => r.huurkart_type === ht);
   }
 
   // ── Zoektekst toepassen ───────────────────────
@@ -1090,10 +1099,7 @@ async function exporteerInschrijvingen() {
     'juli','augustus','september','oktober','november','december'];
 
   // ── Zelfde sortering als het scherm ───────────
-  const lijst = (_inschrFilter
-    ? _inschrData.filter(r => r.klasse === _inschrFilter)
-    : [..._inschrData]
-  ).sort((a, b) => {
+  const lijst = _filterInschrData().sort((a, b) => {
     const pa = a.profiles||{}, pb = b.profiles||{};
     const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
     const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
@@ -1268,14 +1274,30 @@ async function exporteerInschrijvingen() {
   doc.save(`${slug}_${dd}-${mm}-${yyyy}.pdf`);
 }
 
+function _filterInschrData() {
+  if (!_inschrFilter) return _inschrData;
+  if (_inschrFilter === 'eigen') return _inschrData.filter(r => (r.profiles||{}).kart_type !== 'huur');
+  if (_inschrFilter === 'huur')  return _inschrData.filter(r => (r.profiles||{}).kart_type === 'huur');
+  if (_inschrFilter.startsWith('k:')) return _inschrData.filter(r => r.klasse === _inschrFilter.slice(2));
+  return _inschrData;
+}
+
 function _renderInschrFilters() {
   const klassen = [...new Set(_inschrData.filter(r => r.klasse).map(r => r.klasse))].sort();
   const bar = document.getElementById('inschr-filters');
 
+  const klasseOpties = klassen.length
+    ? `<optgroup label="── Klasse ──">${klassen.map(k =>
+        `<option value="k:${k}"${_inschrFilter==='k:'+k?' selected':''}>${k}</option>`
+      ).join('')}</optgroup>`
+    : '';
+
   bar.innerHTML = `
     <select class="rijder-sel" onchange="filterInschrijvingen(this.value)">
-      <option value="">Alle klassen</option>
-      ${klassen.map(k => `<option value="${k}"${_inschrFilter===k?' selected':''}>${k}</option>`).join('')}
+      <option value=""${!_inschrFilter?' selected':''}>Alle</option>
+      <option value="eigen"${_inschrFilter==='eigen'?' selected':''}>Eigen kart</option>
+      <option value="huur"${_inschrFilter==='huur'?' selected':''}>Huurkart</option>
+      ${klasseOpties}
     </select>
     <select class="inschr-sort" onchange="sorteerInschrijvingen(this.value)">
       <option value="naam">Naam A → Z</option>
@@ -1286,8 +1308,8 @@ function _renderInschrFilters() {
     </select>`;
 }
 
-function filterInschrijvingen(klasse) {
-  _inschrFilter = klasse || null;
+function filterInschrijvingen(waarde) {
+  _inschrFilter = waarde || null;
   _renderInschrGrid();
 }
 
@@ -1297,11 +1319,7 @@ function sorteerInschrijvingen(sort) {
 }
 
 function _renderInschrGrid() {
-  let lijst = _inschrFilter
-    ? _inschrData.filter(r => r.klasse === _inschrFilter)
-    : _inschrData;
-
-  lijst = [...lijst].sort((a, b) => {
+  let lijst = [..._filterInschrData()].sort((a, b) => {
     const pa = a.profiles || {}, pb = b.profiles || {};
     const nA = `${pa.voornaam||''} ${pa.naam||''}`.trim();
     const nB = `${pb.voornaam||''} ${pb.naam||''}`.trim();
