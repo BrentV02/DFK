@@ -1232,11 +1232,11 @@ async function exporteerInschrijvingen() {
 
     doc.autoTable({
       startY: afterEigen,
-      head: [['#', 'Naam', 'Klasse']],
+      head: [['Naam', 'Kart type']],
       body: huurLijst.map(r => {
         const p    = r.profiles || {};
         const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
-        return [r.startnummer || '—', naam, r.klasse || '—'];
+        return [naam, p.huurkart_type || '—'];
       }),
       styles: baseStyles,
       headStyles: {
@@ -1248,9 +1248,8 @@ async function exporteerInschrijvingen() {
       },
       alternateRowStyles: { fillColor: [240, 245, 255] },
       columnStyles: {
-        0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 50 },
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 50 },
       },
       margin: { left: 10, right: 10 },
       didDrawPage: drawFooter,
