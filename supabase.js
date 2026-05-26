@@ -54,3 +54,22 @@ async function requireAdmin() {
   }
   return { session, profile };
 }
+
+// Redirect naar login als geen werkplaats- of admin-rol
+async function requireWerkplaats() {
+  const session = await requireAuth();
+  if (!session) return null;
+  const profile = await getProfile(session.user.id);
+  if (!profile || !['werkplaats', 'admin'].includes(profile.rol)) {
+    window.location.href = 'evenementen.html';
+    return null;
+  }
+  return { session, profile };
+}
+
+// Geeft de juiste startpagina terug op basis van rol
+function startpaginaVoorRol(rol) {
+  if (rol === 'admin')      return 'admin.html';
+  if (rol === 'werkplaats') return 'werkplaats.html';
+  return 'evenementen.html';
+}

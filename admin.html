@@ -22,6 +22,21 @@
     #dfk-root .nav-back { font-size: 12px; color: #666; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; background: none; border: none; }
     #dfk-root .nav-back:hover { color: #ccc; }
 
+    #dfk-root .nav-right { position: relative; }
+    #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
+    #dfk-root .nav-user-btn:hover { background: #1a1a1a; }
+    #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+    #dfk-root .nav-naam { font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; }
+    #dfk-root .nav-chevron { font-size: 10px; color: #666; }
+    #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
+    #dfk-root .dropdown.open { display: block; }
+    #dfk-root .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; font-family: 'Barlow', sans-serif; }
+    #dfk-root .dropdown-item:last-child { border-bottom: none; }
+    #dfk-root .dropdown-item:hover { background: #1c1c1c; color: #fff; }
+    #dfk-root .dropdown-item.danger { color: #ff5555; }
+    #dfk-root .dropdown-item.danger:hover { background: #1c1c1c; }
+    #dfk-root .di-icon { font-size: 15px; width: 18px; text-align: center; }
+
     #dfk-root .layout { display: grid; grid-template-columns: 1fr; gap: 0; flex: 1; }
     #dfk-root .layout.show-right { grid-template-columns: 1fr 420px; }
     #dfk-root .left-col { padding: 2rem; overflow-y: auto; }
@@ -165,6 +180,7 @@
     #dfk-root .rider-badge.eigen { background: #1a3a1a; color: #4ccc4c; }
     #dfk-root .rider-badge.huur { background: #1a2a3a; color: #4caaf0; }
     #dfk-root .rider-badge.admin { background: #3a1a00; color: #ffaa44; }
+    #dfk-root .rider-badge.werkplaats { background: #1a1a3a; color: #aa88ff; }
     #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
     /* Compacte rijderlijst */
     #dfk-root .rider-row { padding: 7px 12px; gap: 10px; }
@@ -243,17 +259,33 @@
       <div class="nav-tabs">
         <button class="nav-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
         <button class="nav-tab" onclick="switchAdminTab('rijders')">Rijders</button>
+        <button class="nav-tab" onclick="switchAdminTab('crew')">Crew</button>
       </div>
     </div>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <a href="evenementen.html" class="nav-back">← Terug naar site</a>
-      <button class="nav-back" onclick="uitloggen()" style="padding:6px 12px; border:1px solid #2a2a2a; border-radius:3px;">Uitloggen</button>
+    <div class="nav-right">
+      <button class="nav-user-btn" onclick="toggleAdminDropdown()">
+        <div class="nav-avatar" id="admin-avatar">?</div>
+        <span class="nav-naam" id="admin-naam">Laden...</span>
+        <span class="nav-chevron">▼</span>
+      </button>
+      <div class="dropdown" id="admin-dropdown">
+        <div class="dropdown-item" onclick="window.location.href='evenementen.html'">
+          <span class="di-icon">🏁</span> Terug naar site
+        </div>
+        <div class="dropdown-item" onclick="window.location.href='werkplaats.html'">
+          <span class="di-icon">🔧</span> Werkplaats
+        </div>
+        <div class="dropdown-item danger" onclick="uitloggen()">
+          <span class="di-icon">↩</span> Uitloggen
+        </div>
+      </div>
     </div>
   </nav>
 
   <div class="mobile-tab-bar">
     <button class="mobile-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
     <button class="mobile-tab" onclick="switchAdminTab('rijders')">Rijders</button>
+    <button class="mobile-tab" onclick="switchAdminTab('crew')">Crew</button>
   </div>
 
   <!-- PANEL: EVENEMENTEN -->
@@ -365,7 +397,6 @@
             <option value="">Alle rijders</option>
             <option value="eigen">Eigen kart</option>
             <option value="huur">Huurkart</option>
-            <option value="admin">Admin</option>
           </select>
         </div>
         <div id="rijder-count" class="rijder-count"></div>
@@ -374,6 +405,25 @@
         </div>
       </div>
       <div class="right-col" id="rider-detail"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: CREW -->
+  <div id="panel-crew" class="admin-panel">
+    <div class="layout">
+      <div class="left-col">
+        <div class="col-header">
+          <div>
+            <div class="page-title">Crew</div>
+            <p class="page-sub" style="margin-bottom:0;">Admins en werkplaatsmedewerkers</p>
+          </div>
+        </div>
+        <div class="section-label">Crewleden</div>
+        <div class="rider-list" id="crew-list">
+          <div class="empty"><div class="empty-icon">⏳</div>Laden...</div>
+        </div>
+      </div>
+      <div class="right-col" id="crew-detail"></div>
     </div>
   </div>
 
@@ -422,6 +472,7 @@ let _inschrSort     = 'naam';
     const result = await requireAdmin();
     if (!result) return;
     _adminProfile = result.profile;
+    _updateAdminNav(_adminProfile);
     circuits        = JSON.parse(localStorage.getItem('dfk_circuits') || '[]');
     deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
     renderCircuitSelect();
@@ -432,6 +483,23 @@ let _inschrSort     = 'naam';
     showToast('Laad fout: ' + e.message, 'red');
   }
 })();
+
+
+function toggleAdminDropdown() {
+  document.getElementById('admin-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-right')) {
+    document.getElementById('admin-dropdown').classList.remove('open');
+  }
+});
+
+function _updateAdminNav(profile) {
+  if (!profile) return;
+  const ini = ((profile.voornaam?.[0] || '') + (profile.naam?.[0] || '')).toUpperCase() || '?';
+  document.getElementById('admin-avatar').textContent = ini;
+  document.getElementById('admin-naam').textContent = `${profile.voornaam || ''} ${profile.naam || ''}`.trim() || 'Admin';
+}
 
 async function uitloggen() {
   await _supabase.auth.signOut();
@@ -711,14 +779,66 @@ function toggleEventForm(forceOpen) {
 
 // ── Tab wisseling ─────────────────────────────
 function switchAdminTab(tab) {
-  const isEv = tab === 'evenementen';
+  const tabs = ['evenementen', 'rijders', 'crew'];
   document.querySelectorAll('#dfk-root .nav-tab').forEach((b, i) =>
-    b.classList.toggle('on', isEv ? i === 0 : i === 1));
+    b.classList.toggle('on', tabs[i] === tab));
   document.querySelectorAll('#dfk-root .mobile-tab').forEach((b, i) =>
-    b.classList.toggle('on', isEv ? i === 0 : i === 1));
-  document.getElementById('panel-evenementen').classList.toggle('on', isEv);
-  document.getElementById('panel-rijders').classList.toggle('on', !isEv);
-  if (!isEv) loadRijders();
+    b.classList.toggle('on', tabs[i] === tab));
+  tabs.forEach(t =>
+    document.getElementById('panel-' + t).classList.toggle('on', t === tab));
+  if (tab === 'rijders') loadRijders();
+  if (tab === 'crew')    loadCrew();
+}
+
+// ── Crew ──────────────────────────────────────
+async function loadCrew() {
+  document.getElementById('crew-list').innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>';
+  if (!_allRijders.length) await loadRijders();
+  renderCrew(_allRijders.filter(r => ['admin','werkplaats'].includes(r.rol)));
+}
+
+function renderCrew(lijst) {
+  const container = document.getElementById('crew-list');
+  lijst.sort((a, b) => `${a.naam||''} ${a.voornaam||''}`.localeCompare(`${b.naam||''} ${b.voornaam||''}`));
+  if (!lijst.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Geen crewleden gevonden</div>';
+    return;
+  }
+  container.innerHTML = lijst.map(r => {
+    const voornaam = r.voornaam || '';
+    const naam     = r.naam     || '';
+    const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+    const isEditing  = r.id === editRijderId;
+    const badgeType  = r.rol === 'admin' ? 'admin' : 'werkplaats';
+    const badgeLabel = r.rol === 'admin' ? 'Admin' : 'Werkplaats';
+    return `<div class="rider-row${isEditing?' editing':''}" onclick="editCrewlid('${r.id}')">
+      <div class="rider-avatar">${ini}</div>
+      <div class="rider-info">
+        <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="rider-meta">${r.email || '<span style="color:#444;font-style:italic;">e-mail niet beschikbaar</span>'}</div>
+      </div>
+      <div class="rider-actions">
+        <button class="ev-btn edit" onclick="event.stopPropagation(); editCrewlid('${r.id}')">✎</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editCrewlid(id) {
+  editRijderId = id;
+  const r = _allRijders.find(x => x.id === id) || {};
+  renderCrew(_allRijders.filter(x => ['admin','werkplaats'].includes(x.rol)));
+  document.querySelector('#panel-crew .layout').classList.add('show-right');
+  const detail = document.getElementById('crew-detail');
+  detail.style.display = 'block';
+  detail.innerHTML = rijderFormHTML(r, 'cancelCrewEdit');
+}
+
+function cancelCrewEdit() {
+  editRijderId = null;
+  document.querySelector('#panel-crew .layout').classList.remove('show-right');
+  document.getElementById('crew-detail').style.display = '';
+  renderCrew(_allRijders.filter(x => ['admin','werkplaats'].includes(x.rol)));
 }
 
 // ── Rijders ───────────────────────────────────
@@ -750,8 +870,7 @@ function renderRijders() {
     const alleHuurTypes = [...new Set(_allRijders.filter(r => r.kart_type === 'huur' && r.huurkart_type).map(r => r.huurkart_type))].sort();
     let opties = `<option value="">Alle rijders</option>
       <option value="eigen">Eigen kart</option>
-      <option value="huur">Huurkart</option>
-      <option value="admin">Admin</option>`;
+      <option value="huur">Huurkart</option>`;
     if (alleKlassen.length) {
       opties += `<optgroup label="── Klasse ──">` +
         alleKlassen.map(k => `<option value="k:${k}">` + k + `</option>`).join('') +
@@ -766,11 +885,14 @@ function renderRijders() {
     filterSel.value = huidigeVal; // herstel selectie
   }
 
-  // ── Filter toepassen ──────────────────────────
-  let lijst = [..._allRijders];
-  if      (filter === 'eigen') lijst = lijst.filter(r => r.kart_type !== 'huur' && r.rol !== 'admin');
+  // ── Crew buiten rijderslijst houden ──────────
+  const crewRollen = ['admin', 'werkplaats'];
+  const rijders = _allRijders.filter(r => !crewRollen.includes(r.rol));
+
+  // ── Filter toepassen (enkel op rijders) ───────
+  let lijst = [...rijders];
+  if      (filter === 'eigen') lijst = lijst.filter(r => r.kart_type !== 'huur');
   else if (filter === 'huur')  lijst = lijst.filter(r => r.kart_type === 'huur');
-  else if (filter === 'admin') lijst = lijst.filter(r => r.rol === 'admin');
   else if (filter.startsWith('k:')) {
     const kl = filter.slice(2);
     lijst = lijst.filter(r => (r.klassen || []).includes(kl));
@@ -806,29 +928,25 @@ function renderRijders() {
   // ── Teller bijwerken ──────────────────────────
   const countEl = document.getElementById('rijder-count');
   if (countEl) {
-    const totaal = _allRijders.length;
+    const totaal = rijders.length;
     countEl.textContent = totaal === 0 ? '' :
       lijst.length === totaal
         ? `${totaal} rijder${totaal !== 1 ? 's' : ''}`
         : `${lijst.length} van ${totaal} rijder${totaal !== 1 ? 's' : ''}`;
   }
 
-  if (_allRijders.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen accounts geregistreerd</div>';
-    return;
-  }
-  if (lijst.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Geen rijders gevonden</div>';
+  if (rijders.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen rijders geregistreerd</div>';
     return;
   }
 
-  container.innerHTML = lijst.map(r => {
+  function rijderKaart(r) {
     const voornaam = r.voornaam || '';
     const naam     = r.naam     || '';
     const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
     const isEditing  = r.id === editRijderId;
-    const badgeType  = r.rol === 'admin' ? 'admin' : (r.kart_type === 'huur' ? 'huur' : 'eigen');
-    const badgeLabel = r.rol === 'admin' ? 'Admin' : (r.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart');
+    const badgeType  = r.rol === 'admin' ? 'admin' : r.rol === 'werkplaats' ? 'werkplaats' : (r.kart_type === 'huur' ? 'huur' : 'eigen');
+    const badgeLabel = r.rol === 'admin' ? 'Admin' : r.rol === 'werkplaats' ? 'Werkplaats' : (r.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart');
     return `<div class="rider-row${isEditing?' editing':''}" onclick="editRijder('${r.id}')">
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
@@ -841,7 +959,14 @@ function renderRijders() {
         <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder('${r.id}')">✎</button>
       </div>
     </div>`;
-  }).join('');
+  }
+
+  if (lijst.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Geen rijders gevonden</div>';
+    return;
+  }
+
+  container.innerHTML = lijst.map(rijderKaart).join('');
 }
 
 function editRijder(id) {
@@ -854,7 +979,7 @@ function editRijder(id) {
   detail.innerHTML = rijderFormHTML(r);
 }
 
-function rijderFormHTML(r) {
+function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
   const kt = r?.kart_type || 'eigen';
   const eigenVis = kt !== 'huur' ? 'block' : 'none';
   const huurVis  = kt === 'huur' ? 'block' : 'none';
@@ -882,7 +1007,7 @@ function rijderFormHTML(r) {
   const benzIdx = BENZ_LABELS.findIndex(l => l === benzine);
 
   return `
-    <button class="close-panel-btn" onclick="cancelRijderEdit()">✕ Sluiten</button>
+    <button class="close-panel-btn" onclick="${cancelFn}()">✕ Sluiten</button>
     <div class="page-title" style="margin-bottom:4px;">${(r?.voornaam||'')} ${(r?.naam||'')}</div>
     <p class="page-sub" style="margin-bottom:1.5rem;">Rijder aanpassen</p>
 
@@ -890,6 +1015,7 @@ function rijderFormHTML(r) {
     <select class="rol-select field-select" id="r-rol" style="margin-bottom:1.5rem;">
       <option value="rijder"${r?.rol==='rijder'?' selected':''}>Rijder</option>
       <option value="admin"${r?.rol==='admin'?' selected':''}>Admin</option>
+      <option value="werkplaats"${r?.rol==='werkplaats'?' selected':''}>Werkplaats</option>
     </select>
 
     <div class="section-label">Persoonlijke gegevens</div>
@@ -964,7 +1090,7 @@ function rijderFormHTML(r) {
     </div>
 
     <button class="add-btn" onclick="saveRijder('${r?.id}')" style="margin-top:1rem;">✓ Wijzigingen opslaan</button>
-    <button class="reset-btn" onclick="cancelRijderEdit()">Annuleren</button>
+    <button class="reset-btn" onclick="${cancelFn}()">Annuleren</button>
     <div style="border-top:1px solid #2a2a2a; margin-top:2rem; padding-top:1.5rem;">
       <div style="font-size:11px;color:#555;font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.8rem;">Gevaarlijke zone</div>
       <button class="reset-btn" onclick="deleteRijder('${r?.id}')" style="color:#ff5555;border-color:#3a1a1a;background:#1c1010;">✕ Rijder volledig verwijderen</button>
@@ -1023,9 +1149,10 @@ async function saveRijder(id) {
   const { error } = await _supabase.from('profiles').update(profiel).eq('id', id);
   if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
 
-  showToast('Rijder opgeslagen!', 'green');
+  showToast('Opgeslagen!', 'green');
   await loadRijders();
-  cancelRijderEdit();
+  const inCrew = document.getElementById('panel-crew').classList.contains('on');
+  if (inCrew) cancelCrewEdit(); else cancelRijderEdit();
 }
 
 async function deleteRijder(id) {
@@ -1043,8 +1170,9 @@ async function deleteRijder(id) {
     if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
   }
 
-  cancelRijderEdit();
   await loadRijders();
+  const inCrew = document.getElementById('panel-crew').classList.contains('on');
+  if (inCrew) cancelCrewEdit(); else cancelRijderEdit();
   showToast(`${naam} verwijderd`, 'yellow');
 }
 

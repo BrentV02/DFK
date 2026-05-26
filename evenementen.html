@@ -185,6 +185,9 @@
         <div class="dropdown-item" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">
           <span class="di-icon">⚙</span> Admin
         </div>
+        <div class="dropdown-item" id="werkplaats-link" style="display:none;" onclick="window.location.href='werkplaats.html'">
+          <span class="di-icon">🔧</span> Werkplaats
+        </div>
         <div class="dropdown-item danger" onclick="uitloggen()">
           <span class="di-icon">↩</span> Uitloggen
         </div>
@@ -290,7 +293,8 @@ function updateNavbar() {
   document.getElementById('nav-avatar').textContent = ini;
   document.getElementById('nav-naam').textContent   = naam;
   // Toon admin-link alleen voor admins
-  document.getElementById('admin-link').style.display = (p?.rol === 'admin') ? '' : 'none';
+  document.getElementById('admin-link').style.display    = (p?.rol === 'admin') ? '' : 'none';
+  document.getElementById('werkplaats-link').style.display = (p?.rol === 'admin') ? '' : 'none';
 }
 
 // ── Data laden ───────────────────────────────
@@ -560,18 +564,22 @@ function switchTab(tab) {
 // ── Mijn Inschrijvingen ──────────────────────
 function renderInschrijvingen() {
   const container = document.getElementById('inschrijvingen-list');
-  const lijst = _myInschrijvingen
-    .filter(i => i.evenementen)
-    .sort((a, b) => new Date(a.evenementen.datum) - new Date(b.evenementen.datum));
+  const now = new Date();
+  const lijst = _myInschrijvingen.filter(i => i.evenementen);
 
   if (lijst.length === 0) {
     container.innerHTML = `<div class="inschrijvingen-empty"><div class="inschrijvingen-empty-icon">📋</div>Je hebt je nog niet ingeschreven voor een evenement.</div>`;
     return;
   }
-  container.innerHTML = lijst.map(r => {
+
+  const komend   = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') >= now)
+                        .sort((a, b) => new Date(a.evenementen.datum) - new Date(b.evenementen.datum));
+  const afgelopen = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') < now)
+                         .sort((a, b) => new Date(b.evenementen.datum) - new Date(a.evenementen.datum));
+
+  function renderKaart(r) {
     const ev  = r.evenementen;
     const d   = new Date(ev.datum + 'T12:00:00');
-    const now = new Date();
     const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
     const reg    = new Date(r.bevestigd_op);
     const regStr = `${reg.getDate()} ${MAANDEN[reg.getMonth()]} ${reg.getFullYear()} om ${reg.getHours().toString().padStart(2,'0')}:${reg.getMinutes().toString().padStart(2,'0')}`;
@@ -624,7 +632,25 @@ function renderInschrijvingen() {
         </div>
         ${rechts}
       </div>`;
-  }).join('');
+  }
+
+  let html = '';
+
+  if (komend.length > 0) {
+    html += komend.map(renderKaart).join('');
+  } else {
+    html += `<div class="inschrijvingen-empty" style="margin-bottom:1rem;"><div class="inschrijvingen-empty-icon">📋</div>Geen aankomende inschrijvingen.</div>`;
+  }
+
+  if (afgelopen.length > 0) {
+    html += `<div style="margin:1.6rem 0 0.8rem;display:flex;align-items:center;gap:10px;">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#444;">Afgelopen events</span>
+      <div style="flex:1;height:1px;background:#2a2a2a;"></div>
+    </div>`;
+    html += afgelopen.map(renderKaart).join('');
+  }
+
+  container.innerHTML = html;
   startCountdowns();
 }
 
@@ -1051,6 +1077,9 @@ function _openInschrijvenForm() {
     <span class="section-title">Klasse voor dit event</span>
     ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}
 
+    <span class="section-title">Vraag of opmerking</span>
+    <textarea id="inschrijf-opmerking" placeholder="Optioneel — stel hier een vraag of voeg een opmerking toe aan je inschrijving." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;margin-bottom:1.2rem;outline:none;font-family:'Barlow',sans-serif;resize:vertical;min-height:90px;line-height:1.5;" onfocus="this.style.borderColor='#E02020'" onblur="this.style.borderColor='#333'"></textarea>
+
     <div style="display:flex; align-items:center; justify-content:space-between; margin:1.2rem 0 0.5rem;">
       <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Is alles correct?</div>
       <button class="edit-btn" onclick="enableInschrijfEdit()">✎ Aanpassen</button>
@@ -1075,10 +1104,11 @@ async function _toonBevestiging() {
   const ev = _currentEvent;
   if (!ev) return;
 
-  // Lees geselecteerde klasse vóór innerHTML vervangen
+  // Lees geselecteerde klasse en opmerking vóór innerHTML vervangen
   const klasse      = _selectedKlasse;
   const rijder      = _selectedRijder || _currentProfile;
   const startnummer = klasse ? (rijder?.startnummers?.[klasse] ?? null) : null;
+  const opmerking   = (document.getElementById('inschrijf-opmerking')?.value || '').trim();
 
   const body = document.getElementById('inschrijf-body');
   body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#888;">Bezig met inschrijven...</div>`;

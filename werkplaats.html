@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFK – Werkplaats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #0a0a0a; min-height: 100vh; font-family: 'Barlow', sans-serif; }
+
+    /* ── Navigatie ── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      height: 60px; background: #111; border-bottom: 3px solid #E02020;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem;
+    }
+    .nav-left { display: flex; align-items: center; gap: 12px; padding-right: 1rem; border-right: 1px solid #222; }
+    .nav-badge {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: #aa88ff; background: #1a1a3a; border: 1px solid #aa88ff44;
+      border-radius: 3px; padding: 3px 8px;
+    }
+    .nav-tabs { display: flex; height: 100%; margin-left: 1rem; }
+    .tab-btn {
+      display: flex; align-items: center; padding: 0 20px; height: 100%;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      color: #555; background: transparent; border: none;
+      border-bottom: 3px solid transparent; margin-bottom: -3px;
+      cursor: pointer; transition: color 0.15s;
+    }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
+
+    /* ── Dropdown ── */
+    .nav-right { position: relative; }
+    .nav-user-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
+    .nav-user-btn:hover { background: #1a1a1a; }
+    .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+    .nav-naam { font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; }
+    .nav-chevron { font-size: 10px; color: #666; }
+    .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
+    .dropdown.open { display: block; }
+    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; font-family: 'Barlow', sans-serif; }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: #1c1c1c; color: #fff; }
+    .dropdown-item.danger { color: #ff5555; }
+    .dropdown-item.danger:hover { background: #1c1c1c; }
+    .di-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    /* ── Panelen ── */
+    .tab-panel { display: none; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .tab-panel.on { display: block; }
+
+    /* ── Sectie titels ── */
+    .sectie-titel {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+      font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+      color: #E02020; margin-bottom: 0.8rem;
+    }
+
+    /* ── Event selectie ── */
+    .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 2rem; }
+    .event-kaart {
+      background: #141414; border: 1px solid #2a2a2a; border-radius: 4px;
+      padding: 12px 14px; cursor: pointer; transition: border-color 0.15s;
+      user-select: none;
+    }
+    .event-kaart:hover { border-color: #444; }
+    .event-kaart.geselecteerd { border-color: #E02020; background: #1c1010; }
+    .event-kaart-naam {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 15px; letter-spacing: 1px; color: #fff; margin-bottom: 4px;
+    }
+    .event-kaart.geselecteerd .event-kaart-naam { color: #E02020; }
+    .event-kaart-meta { font-size: 12px; color: #666; font-family: 'Barlow', sans-serif; }
+
+    /* ── Laadlijst ── */
+    .laad-teller {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      color: #555; margin-bottom: 1rem;
+    }
+    .laad-teller span { color: #fff; }
+
+    .rijder-kaart {
+      background: #141414; border: 1px solid #2a2a2a;
+      border-left: 3px solid #E02020; border-radius: 4px;
+      padding: 14px 16px; margin-bottom: 8px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 8px; align-items: start;
+    }
+    .rijder-kaart.huurkart { border-left-color: #4caaf0; }
+    .rijder-naam {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 17px; letter-spacing: 1px; color: #fff; margin-bottom: 4px;
+    }
+    .rijder-klasse {
+      font-size: 12px; color: #aaa; font-family: 'Barlow', sans-serif;
+      margin-bottom: 6px;
+    }
+    .rijder-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+      padding: 3px 7px; border-radius: 3px;
+    }
+    .tag.werkplaats-kart   { background: #1a3a1a; color: #4ccc4c; }
+    .tag.werkplaats-banden { background: #1a2a1a; color: #4ccc4c; }
+    .tag.werkplaats-bak    { background: #1a3a1a; color: #4ccc4c; }
+    .tag.huur              { background: #1a2a3a; color: #4caaf0; }
+    .tag.klasse            { background: #2a2a2a; color: #888; }
+
+    .rijder-events { font-size: 11px; color: #444; font-family: 'Barlow', sans-serif; text-align: right; line-height: 1.6; }
+
+    .empty-state { text-align: center; padding: 4rem 2rem; }
+    .empty-state-icon { font-size: 48px; margin-bottom: 1rem; }
+    .empty-state-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; color: #333; }
+
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #333; border-top-color: #E02020; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex; align-items:center; height:100%;">
+    <div class="nav-left">
+      <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px;width:auto;" />
+      <span class="nav-badge">Werkplaats</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn on" data-tab="laden" onclick="switchTab('laden')">Laden vrachtwagen</button>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="nav-user-btn" onclick="toggleDropdown()">
+      <div class="nav-avatar" id="nav-avatar">?</div>
+      <span class="nav-naam" id="nav-naam">Laden...</span>
+      <span class="nav-chevron">▼</span>
+    </button>
+    <div class="dropdown" id="nav-dropdown">
+      <div class="dropdown-item" id="link-site" style="display:none;" onclick="window.location.href='evenementen.html'">
+        <span class="di-icon">🏁</span> Terug naar site
+      </div>
+      <div class="dropdown-item" id="link-admin" style="display:none;" onclick="window.location.href='admin.html'">
+        <span class="di-icon">⚙</span> Admin
+      </div>
+      <div class="dropdown-item danger" onclick="uitloggen()">
+        <span class="di-icon">↩</span> Uitloggen
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- PANEEL: LADEN VRACHTWAGEN -->
+<div class="tab-panel on" id="panel-laden">
+
+  <div class="sectie-titel">Selecteer evenementen</div>
+  <div class="event-grid" id="event-grid">
+    <div style="color:#555;font-size:13px;"><span class="spinner"></span>Evenementen laden...</div>
+  </div>
+
+  <div class="sectie-titel">Laadlijst</div>
+  <div class="laad-teller" id="laad-teller"></div>
+  <div id="laad-lijst">
+    <div class="empty-state">
+      <div class="empty-state-icon">🚛</div>
+      <div class="empty-state-text">Selecteer evenementen hierboven</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const DAGEN   = ['zo','ma','di','wo','do','vr','za'];
+
+let _allEvents       = [];
+let _geselecteerdIds = new Set();
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p =>
+    p.classList.toggle('on', p.id === 'panel-' + tab));
+}
+
+(async () => {
+  const result = await requireWerkplaats();
+  if (!result) return;
+
+  const profile = result.profile;
+  const naam = `${profile.voornaam || ''} ${profile.naam || ''}`.trim() || 'Gebruiker';
+  const ini  = naam.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || '?';
+  document.getElementById('nav-avatar').textContent = ini;
+  document.getElementById('nav-naam').textContent   = naam;
+  if (profile.rol === 'admin') {
+    document.getElementById('link-site').style.display  = '';
+    document.getElementById('link-admin').style.display = '';
+  }
+
+  await laadEvenementen();
+})();
+
+async function laadEvenementen() {
+  const { data, error } = await _supabase
+    .from('evenementen')
+    .select('*')
+    .order('datum', { ascending: false });
+
+  if (error) {
+    document.getElementById('event-grid').innerHTML =
+      `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
+    return;
+  }
+
+  _allEvents = data || [];
+  renderEventGrid();
+}
+
+function renderEventGrid() {
+  const grid = document.getElementById('event-grid');
+  if (!_allEvents.length) {
+    grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen evenementen gevonden.</div>';
+    return;
+  }
+
+  grid.innerHTML = _allEvents.map(ev => {
+    const d       = new Date(ev.datum + 'T12:00:00');
+    const datumStr = `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+    const gesel   = _geselecteerdIds.has(ev.id);
+    return `<div class="event-kaart${gesel ? ' geselecteerd' : ''}" onclick="toggleEvent('${ev.id}')">
+      <div class="event-kaart-naam">${gesel ? '✓ ' : ''}${ev.naam}</div>
+      <div class="event-kaart-meta">📅 ${datumStr}</div>
+      <div class="event-kaart-meta">📍 ${ev.circuit || '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleEvent(id) {
+  if (_geselecteerdIds.has(id)) {
+    _geselecteerdIds.delete(id);
+  } else {
+    _geselecteerdIds.add(id);
+  }
+  renderEventGrid();
+  await buildLaadlijst();
+}
+
+async function buildLaadlijst() {
+  const lijst   = document.getElementById('laad-lijst');
+  const teller  = document.getElementById('laad-teller');
+
+  if (_geselecteerdIds.size === 0) {
+    teller.innerHTML = '';
+    lijst.innerHTML  = `<div class="empty-state">
+      <div class="empty-state-icon">🚛</div>
+      <div class="empty-state-text">Selecteer evenementen hierboven</div>
+    </div>`;
+    return;
+  }
+
+  lijst.innerHTML  = `<div style="color:#555;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
+  teller.innerHTML = '';
+
+  // Haal alle inschrijvingen op voor geselecteerde events, inclusief profielen
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*), evenementen(naam)')
+    .in('event_id', [..._geselecteerdIds]);
+
+  if (error) {
+    lijst.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
+    return;
+  }
+
+  // Dedupliceer per rijder_id — samenvoeg klassen en events
+  const rijderMap = new Map();
+  for (const inschrijving of (data || [])) {
+    const p  = inschrijving.profiles;
+    const id = inschrijving.rijder_id;
+    if (!p) continue;
+
+    if (!rijderMap.has(id)) {
+      rijderMap.set(id, {
+        profiel: p,
+        klassen: [],
+        events:  [],
+      });
+    }
+    const entry = rijderMap.get(id);
+    if (inschrijving.klasse && !entry.klassen.includes(inschrijving.klasse)) {
+      entry.klassen.push(inschrijving.klasse);
+    }
+    const evNaam = inschrijving.evenementen?.naam || '';
+    if (evNaam && !entry.events.includes(evNaam)) {
+      entry.events.push(evNaam);
+    }
+  }
+
+  if (rijderMap.size === 0) {
+    teller.innerHTML = '';
+    lijst.innerHTML  = `<div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <div class="empty-state-text">Geen inschrijvingen gevonden</div>
+    </div>`;
+    return;
+  }
+
+  // Sorteer op achternaam
+  const gesorteerd = [...rijderMap.values()].sort((a, b) => {
+    const nA = `${a.profiel.naam||''} ${a.profiel.voornaam||''}`.trim();
+    const nB = `${b.profiel.naam||''} ${b.profiel.voornaam||''}`.trim();
+    return nA.localeCompare(nB);
+  });
+
+  // Splits in eigen kart en huurkart
+  const eigenKart = gesorteerd.filter(r => r.profiel.kart_type !== 'huur');
+  const huurKart  = gesorteerd.filter(r => r.profiel.kart_type === 'huur');
+
+  teller.innerHTML = `<span>${rijderMap.size}</span> rijder${rijderMap.size !== 1 ? 's' : ''} &nbsp;·&nbsp; <span>${eigenKart.length}</span> eigen kart &nbsp;·&nbsp; <span>${huurKart.length}</span> huurkart`;
+
+  function rijderKaartHtml(entry) {
+    const p    = entry.profiel;
+    const naam = `${p.voornaam || ''} ${p.naam || ''}`.trim();
+    const isHuur = p.kart_type === 'huur';
+
+    const klasseStr = entry.klassen.length
+      ? entry.klassen.map(k => {
+          const nr = p.startnummers?.[k];
+          return k + (nr ? ` #${nr}` : '');
+        }).join(' · ')
+      : (isHuur ? (p.huurkart_type || 'Huurkart') : '—');
+
+    const tags = [];
+    if (isHuur) {
+      tags.push(`<span class="tag huur">Huurkart${p.huurkart_type ? ': ' + p.huurkart_type : ''}</span>`);
+    } else {
+      if (p.kart_in_werkplaats)   tags.push('<span class="tag werkplaats-kart">Kart</span>');
+      if (p.banden_in_werkplaats) tags.push('<span class="tag werkplaats-banden">Banden</span>');
+      if (p.bak_in_werkplaats)    tags.push('<span class="tag werkplaats-bak">Bak met materiaal</span>');
+    }
+
+    const eventsHtml = _geselecteerdIds.size > 1
+      ? entry.events.map(e => `<div>${e}</div>`).join('')
+      : '';
+
+    return `<div class="rijder-kaart${isHuur ? ' huurkart' : ''}">
+      <div>
+        <div class="rijder-naam">${naam}</div>
+        <div class="rijder-klasse">🏁 ${klasseStr}</div>
+        ${tags.length ? `<div class="rijder-tags">${tags.join('')}</div>` : ''}
+      </div>
+      ${eventsHtml ? `<div class="rijder-events">${eventsHtml}</div>` : ''}
+    </div>`;
+  }
+
+  let html = '';
+
+  if (eigenKart.length) {
+    html += `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:8px;">Eigen kart (${eigenKart.length})</div>`;
+    html += eigenKart.map(rijderKaartHtml).join('');
+  }
+
+  if (huurKart.length) {
+    html += `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#4caaf0;margin:${eigenKart.length ? '1.5rem' : '0'} 0 8px;">Huurkart (${huurKart.length})</div>`;
+    html += huurKart.map(rijderKaartHtml).join('');
+  }
+
+  lijst.innerHTML = html;
+}
+
+function toggleDropdown() {
+  document.getElementById('nav-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-right')) {
+    document.getElementById('nav-dropdown').classList.remove('open');
+  }
+});
+
+async function uitloggen() {
+  await _supabase.auth.signOut();
+  window.location.href = 'index.html';
+}
+</script>
+
+<script>
+(function() {
+  var meta = document.querySelector('meta[name="viewport"]');
+  document.addEventListener('touchend', function() {
+    meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no';
+    setTimeout(function() {
+      meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes';
+    }, 300);
+  });
+})();
+</script>
+
+</body>
+</html>
