@@ -43,6 +43,9 @@
     #dfk-root .event-card.past { opacity: 0.65; }
     #dfk-root .event-card-top { background: #E02020; padding: 12px 14px; display: flex; align-items: center; gap: 14px; }
     #dfk-root .event-card-top.past { background: #2a2a2a; }
+    #dfk-root .event-card-top.bezig { background: #1a3a1a; }
+    #dfk-root .event-badge.bezig { background: rgba(76,255,76,0.15); color: #4cff4c; animation: bezig-pulse 2s ease-in-out infinite; }
+    @keyframes bezig-pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
     #dfk-root .evc-date { text-align: center; flex-shrink: 0; }
     #dfk-root .evc-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 44px; line-height: 1; color: #fff; }
     #dfk-root .evc-maand { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-top: 1px; }
@@ -387,6 +390,23 @@ function checkAccPwMatch() {
   }
 }
 
+// ── Centrale terugknop-handler ────────────────
+window.addEventListener('popstate', () => {
+  if (document.getElementById('inschrijf-panel').classList.contains('open')) {
+    document.getElementById('inschrijf-overlay').classList.remove('open');
+    document.getElementById('inschrijf-panel').classList.remove('open');
+    document.body.style.overflow = '';
+    _currentEvent   = null;
+    _selectedKlasse = null;
+    return;
+  }
+  if (document.getElementById('account-panel').classList.contains('open')) {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('account-panel').classList.remove('open');
+    _editingRijder = null;
+  }
+});
+
 // ── Uitloggen ────────────────────────────────
 async function uitloggen() {
   await _supabase.auth.signOut();
@@ -426,11 +446,12 @@ function renderEvents() {
     const dMidnight = new Date(ev.datum + 'T00:00:00');
     const isPast    = d < today;
     const dagenOver = Math.round((dMidnight - today) / 86400000);
+    const isVandaag = !isPast && dagenOver === 0;
 
     // ── Deadline ──
     let deadlineHtml = '';
     let deadlinePassed = false;
-    if (ev.deadline) {
+    if (ev.deadline && !isVandaag) {
       const dl = new Date(ev.deadline);
       deadlinePassed = dl < now;
       const msLeft = dl - now;
@@ -456,20 +477,14 @@ function renderEvents() {
 
     // ── Eventdatum aftelklok (bovenaan kaart) ──
     let eventTopHtml = '';
-    if (isPast) {
+    if (isPast || isVandaag) {
       eventTopHtml = '';
     } else {
       const msToEvent = dMidnight - now;
       if (msToEvent > 0 && msToEvent < 24 * 3600 * 1000) {
-        const totMin = Math.floor(msToEvent / 60000);
-        const uren   = Math.floor(totMin / 60);
-        const rMin   = totMin % 60;
-        const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
-        eventTopHtml = `<div class="countdown-top event-countdown" data-eventdate="${dMidnight.toISOString()}">Over <strong>${txt}</strong></div>`;
+        eventTopHtml = `<div class="countdown-top vandaag">Morgen</div>`;
       } else {
-        eventTopHtml = dagenOver === 0
-          ? `<div class="countdown-top vandaag">🏁 <strong>Vandaag</strong></div>`
-          : `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
+        eventTopHtml = `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
       }
     }
 
@@ -480,7 +495,7 @@ function renderEvents() {
       : '<span class="class-tag">Alle klassen</span>';
 
     // ── Inschrijf-knop ──
-    const isGesloten       = isPast || deadlinePassed;
+    const isGesloten       = isPast || isVandaag || deadlinePassed;
     const evInschr         = _myInschrijvingen.filter(i => i.event_id === ev.id);
     const registeredIds    = new Set(evInschr.map(i => i.rijder_id));
     const alleIn           = _accountRijders.length > 0 && _accountRijders.every(r => registeredIds.has(r.id));
@@ -488,7 +503,7 @@ function renderEvents() {
 
     let inschrijfBtn;
     if (isGesloten) {
-      inschrijfBtn = `<button class="inschrijf-btn vol">Inschrijving gesloten</button>`;
+      inschrijfBtn = `<button class="inschrijf-btn vol">${isVandaag ? 'Event bezig' : 'Inschrijving gesloten'}</button>`;
     } else if (geenIn) {
       inschrijfBtn = `<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')">Inschrijven →</button>`;
     } else if (_accountRijders.length <= 1) {
@@ -506,9 +521,13 @@ function renderEvents() {
       }
     }
 
+    const topKlasse = isPast ? ' past' : isVandaag ? ' bezig' : '';
+    const badgeTxt  = isPast ? 'Afgelopen' : (ev.type || '');
+    const badgeKlas = isVandaag ? ' bezig' : '';
+
     return `
       <div class="event-card${isPast ? ' past' : ''}">
-        <div class="event-card-top${isPast ? ' past' : ''}">
+        <div class="event-card-top${topKlasse}">
           <div class="evc-date">
             <div class="evc-day">${d.getDate()}</div>
             <div class="evc-maand">${MAANDEN[d.getMonth()].toUpperCase()}</div>
@@ -519,7 +538,10 @@ function renderEvents() {
             <div class="evc-dag">${DAGEN[d.getDay()]}</div>
             ${eventTopHtml}
           </div>
-          <span class="event-badge">${isPast ? 'Afgelopen' : (ev.type || '')}</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+            ${badgeTxt ? `<span class="event-badge${badgeKlas}">${badgeTxt}</span>` : ''}
+            ${isVandaag ? `<span class="event-badge bezig">Bezig</span>` : ''}
+          </div>
         </div>
         <div class="event-body">
           <div class="event-name">${ev.naam}</div>
@@ -615,7 +637,8 @@ function switchTab(tab) {
 // ── Mijn Inschrijvingen ──────────────────────
 function renderInschrijvingen() {
   const container = document.getElementById('inschrijvingen-list');
-  const now = new Date();
+  const now   = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
   const lijst = _myInschrijvingen.filter(i => i.evenementen);
 
   if (lijst.length === 0) {
@@ -623,9 +646,9 @@ function renderInschrijvingen() {
     return;
   }
 
-  const komend   = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') >= now)
-                        .sort((a, b) => new Date(a.evenementen.datum) - new Date(b.evenementen.datum));
-  const afgelopen = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') < now)
+  const komend    = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') >= today)
+                         .sort((a, b) => new Date(a.evenementen.datum) - new Date(b.evenementen.datum));
+  const afgelopen = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') < today)
                          .sort((a, b) => new Date(b.evenementen.datum) - new Date(a.evenementen.datum));
 
   function renderKaart(r) {
@@ -634,14 +657,17 @@ function renderInschrijvingen() {
     const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
     const reg    = new Date(r.bevestigd_op);
     const regStr = `${reg.getDate()} ${MAANDEN[reg.getMonth()]} ${reg.getFullYear()} om ${reg.getHours().toString().padStart(2,'0')}:${reg.getMinutes().toString().padStart(2,'0')}`;
-    const isPast = d < now;
+    const isPast    = d < today;
+    const isVandaag = !isPast && d.toDateString() === now.toDateString();
 
     // ── Deadline-logica voor uitschrijven ──
     const dl         = ev.deadline ? new Date(ev.deadline) : null;
     const dlPassed   = dl && dl < now;
 
     let rechts;
-    if (isPast) {
+    if (isVandaag) {
+      rechts = `<span style="font-size:11px;color:#4cff4c;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;animation:bezig-pulse 2s ease-in-out infinite;">Bezig</span>`;
+    } else if (isPast) {
       rechts = `<span style="font-size:11px;color:#444;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>`;
     } else if (dlPassed) {
       rechts = `<span style="font-size:11px;color:#555;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
@@ -672,7 +698,7 @@ function renderInschrijvingen() {
     }
 
     return `
-      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444;opacity:0.6;' : ''}">
+      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444;opacity:0.6;' : isVandaag ? 'border-left-color:#4cff4c;background:#0d1a0d;' : ''}">
         <div class="inschrijving-info">
           <div class="inschrijving-naam">${ev.naam}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
@@ -722,11 +748,13 @@ function openAccount() {
   _renderAccLijst();
   document.getElementById('overlay').classList.add('open');
   document.getElementById('account-panel').classList.add('open');
+  history.pushState({ view: 'account' }, '', '#account');
 }
 function closeAccount() {
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('account-panel').classList.remove('open');
   _editingRijder = null;
+  if (location.hash === '#account') history.back();
 }
 
 function _renderAccLijst() {
@@ -1025,6 +1053,7 @@ function openInschrijven(eventId) {
   document.getElementById('inschrijf-overlay').classList.add('open');
   document.getElementById('inschrijf-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'inschrijven' }, '', '#inschrijven');
   if (_accountRijders.length > 1) {
     _toonRijderKeuze();
   } else {
@@ -1148,6 +1177,7 @@ function sluitInschrijven() {
   document.body.style.overflow = '';
   _currentEvent   = null;
   _selectedKlasse = null;
+  if (location.hash === '#inschrijven') history.back();
   _selectedRijder = null;
 }
 
