@@ -227,11 +227,11 @@
     #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #888; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
     #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
 
-    #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease; pointer-events: none; }
+    #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(200px); opacity: 0; border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease, opacity 0.3s ease; pointer-events: none; max-width: 90vw; text-align: center; word-break: break-word; }
     #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
     #dfk-root .toast.yellow { background: #3a3a00; color: #ffff44; border: 1px solid #888800; }
     #dfk-root .toast.red { background: #3a0000; color: #ff6666; border: 1px solid #880000; }
-    #dfk-root .toast.show { transform: translateX(-50%) translateY(0); }
+    #dfk-root .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
     #dfk-root .nav-tabs { display: flex; height: 100%; margin-left: 1.5rem; }
     #dfk-root .nav-tab { display: flex; align-items: center; padding: 0 20px; height: 100%; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; cursor: pointer; border: none; border-bottom: 3px solid transparent; background: transparent; transition: color 0.15s; margin-bottom: -3px; }
@@ -344,9 +344,32 @@
     #dfk-root .ai-btn.primary:hover { background: #c01818; }
     #dfk-root .ai-btn:hover:not(.primary) { border-color: #555; color: #ccc; }
 
-    /* ── Office-rol beperkingen ── */
+    /* ── Rechtensysteem ── */
     #dfk-root .rider-badge.office { background: #1a3a1a; color: #4ccc4c; }
-    body.rol-office .admin-only { display: none !important; }
+    body:not(.kan-evenementen) .vereist-evenementen { display: none !important; }
+    body:not(.kan-zichtbaarheid) .vereist-zichtbaarheid { display: none !important; }
+    body:not(.kan-inschrijvingen) .vereist-inschrijvingen { display: none !important; }
+    body:not(.kan-rijders) .vereist-rijders { display: none !important; }
+    body:not(.kan-werkplaats) .vereist-werkplaats { display: none !important; }
+    body:not(.kan-crew) .vereist-crew { display: none !important; }
+    body.niet-admin #nav-rol-badge { background: #1a3a1a; color: #4cff4c; border: 1px solid #2a6a2a; }
+    /* Rechten checkboxes in crew-edit */
+    #dfk-root .rechten-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+    #dfk-root .recht-item { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 3px; padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .recht-item.on { background: #0d1a0d; border-color: #2a6a2a; }
+    #dfk-root .recht-item.disabled { opacity: 0.4; cursor: default; }
+    #dfk-root .recht-box { width: 18px; height: 18px; border: 1px solid #444; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
+    #dfk-root .recht-item.on .recht-box { background: #2a6a2a; border-color: #4cff4c; }
+    #dfk-root .recht-vinkje { color: #4cff4c; font-size: 11px; font-weight: 700; display: none; }
+    #dfk-root .recht-item.on .recht-vinkje { display: block; }
+    #dfk-root .recht-label { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; flex: 1; }
+    #dfk-root .recht-item.on .recht-label { color: #fff; }
+
+    /* ── Mijn account overlay ── */
+    #dfk-root .account-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
+    #dfk-root .account-overlay.open { display: flex; }
+    #dfk-root .account-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
+    #dfk-root .account-body { flex: 1; overflow-y: auto; padding: 2rem; max-width: 600px; width: 100%; margin: 0 auto; }
   </style>
 </head>
 <body>
@@ -357,12 +380,12 @@
     <div style="display:flex; align-items:center; height:100%;">
       <div style="display:flex; align-items:center; gap:12px; padding-right:1rem; border-right:1px solid #222;">
         <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
-        <span class="nav-badge">Admin</span>
+        <span class="nav-badge" id="nav-rol-badge">Admin</span>
       </div>
       <div class="nav-tabs">
         <button class="nav-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
-        <button class="nav-tab" onclick="switchAdminTab('rijders')">Rijders</button>
-        <button class="nav-tab" onclick="switchAdminTab('crew')">Crew</button>
+        <button class="nav-tab vereist-rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+        <button class="nav-tab vereist-crew" onclick="switchAdminTab('crew')">Crew</button>
       </div>
     </div>
     <div class="nav-right">
@@ -372,10 +395,10 @@
         <span class="nav-chevron">▼</span>
       </button>
       <div class="dropdown" id="admin-dropdown">
-        <div class="dropdown-item" onclick="window.location.href='evenementen.html'">
-          <span class="di-icon">🏁</span> Terug naar site
+        <div class="dropdown-item" onclick="openAccountOverlay()">
+          <span class="di-icon">👤</span> Mijn account
         </div>
-        <div class="dropdown-item admin-only" onclick="window.location.href='werkplaats.html'">
+        <div class="dropdown-item vereist-werkplaats" onclick="window.location.href='werkplaats.html'">
           <span class="di-icon">🔧</span> Werkplaats
         </div>
         <div class="dropdown-item danger" onclick="uitloggen()">
@@ -387,8 +410,8 @@
 
   <div class="mobile-tab-bar">
     <button class="mobile-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
-    <button class="mobile-tab" onclick="switchAdminTab('rijders')">Rijders</button>
-    <button class="mobile-tab" onclick="switchAdminTab('crew')">Crew</button>
+    <button class="mobile-tab vereist-rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+    <button class="mobile-tab vereist-crew" onclick="switchAdminTab('crew')">Crew</button>
   </div>
 
   <!-- PANEL: EVENEMENTEN -->
@@ -404,7 +427,7 @@
             <div class="page-title">Evenementen</div>
             <p class="page-sub" style="margin-bottom:0;">Overzicht van alle ingevoerde evenementen</p>
           </div>
-          <button class="open-form-btn admin-only" onclick="toggleEventForm()">＋ Toevoegen</button>
+          <button class="open-form-btn vereist-evenementen" onclick="toggleEventForm()">＋ Toevoegen</button>
         </div>
         <div class="section-label">Komende evenementen</div>
         <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">⏳</div>Laden...</div></div>
@@ -418,7 +441,7 @@
       </div>
     </div>
 
-    <div class="right-col admin-only">
+    <div class="right-col vereist-evenementen">
 
       <!-- Inschrijvingen lijst (verborgen tenzij actief) -->
       <div id="inschrijvingen-content" style="display:none;"></div>
@@ -533,6 +556,7 @@
             <div class="page-title">Crew</div>
             <p class="page-sub" style="margin-bottom:0;">Admins en werkplaatsmedewerkers</p>
           </div>
+          <button class="open-form-btn vereist-crew" onclick="nieuwCrewlid()" style="flex-shrink:0;">+ Nieuw crewlid</button>
         </div>
         <div class="section-label">Crewleden</div>
         <div class="rider-list" id="crew-list">
@@ -589,6 +613,15 @@
     </div>
   </div>
 
+  <!-- ── Mijn account overlay ── -->
+  <div id="account-overlay" class="account-overlay">
+    <div class="account-topbar">
+      <button class="nav-back" onclick="sluitAccountOverlay()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;">Mijn account</div>
+    </div>
+    <div class="account-body" id="account-body"></div>
+  </div>
+
   <div class="toast green" id="toast"></div>
 </div>
 
@@ -618,7 +651,7 @@ let _inschrSort     = 'naam';
     const result = await requireAdmin();
     if (!result) return;
     _adminProfile = result.profile;
-    if (_adminProfile.rol === 'office') document.body.classList.add('rol-office');
+    _pasRechtenToe(_adminProfile);
     _updateAdminNav(_adminProfile);
     circuits        = JSON.parse(localStorage.getItem('dfk_circuits') || '[]');
     deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
@@ -647,6 +680,27 @@ let _inschrSort     = 'naam';
   }
 })();
 
+
+// ── Rechtensysteem ───────────────────────────
+const RECHTEN_OPTIES = [
+  { id: 'evenementen',    label: 'Evenementen aanmaken & bewerken' },
+  { id: 'zichtbaarheid',  label: 'Weekend zichtbaarheid instellen' },
+  { id: 'inschrijvingen', label: 'Inschrijvingen & PDFs beheren' },
+  { id: 'rijders',        label: 'Rijders bekijken & aanpassen' },
+  { id: 'werkplaats',     label: 'Werkplaats toegang' },
+  { id: 'crew',           label: 'Crew & rollen beheren' },
+];
+
+function _pasRechtenToe(profile) {
+  const isAdmin = profile.rol === 'admin';
+  const actief  = isAdmin ? RECHTEN_OPTIES.map(r => r.id) : (profile.rechten || []);
+  actief.forEach(r => document.body.classList.add('kan-' + r));
+  if (!isAdmin) {
+    document.body.classList.add('niet-admin');
+    document.getElementById('nav-rol-badge').textContent = 'Office';
+    document.title = 'DFK – Office';
+  }
+}
 
 function toggleAdminDropdown() {
   document.getElementById('admin-dropdown').classList.toggle('open');
@@ -728,9 +782,9 @@ function renderEvRow(ev, isPast) {
       ${inCount > 0 ? `<div class="ev-inschrijvingen">▶ ${inCount} ingeschreven</div>` : ''}
     </div>
     <div class="ev-actions">
-      <button class="ev-btn riders" onclick="toonInschrijvingen('${ev.id}')">👥 ${inCount}</button>
-      <button class="ev-btn edit admin-only" onclick="editEvent('${ev.id}')">✎</button>
-      <button class="ev-btn del admin-only"  onclick="deleteEvent('${ev.id}')">✕</button>
+      <button class="ev-btn riders vereist-inschrijvingen" onclick="toonInschrijvingen('${ev.id}')">👥 ${inCount}</button>
+      <button class="ev-btn edit vereist-evenementen" onclick="editEvent('${ev.id}')">✎</button>
+      <button class="ev-btn del vereist-evenementen"  onclick="deleteEvent('${ev.id}')">✕</button>
     </div>
   </div>`;
 }
@@ -1484,7 +1538,7 @@ function openWeekendDetail(wid) {
     <div class="wd-header">
       <div class="wd-titel-rij">
         <div class="wd-titel" id="wd-naam-display">${weekend.naam}</div>
-        <button class="wd-edit-btn admin-only" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>
+        <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>
       </div>
       <div class="wd-datum">${datumStr}</div>
       <div class="wd-stats">
@@ -1584,6 +1638,10 @@ function annuleerWeekendNaam(wid) {
 
 // ── Centrale terugknop-handler ─────────────────
 window.addEventListener('popstate', () => {
+  if (document.getElementById('account-overlay').classList.contains('open')) {
+    document.getElementById('account-overlay').classList.remove('open');
+    return;
+  }
   // Sluit het meest bovenliggende open element
   if (document.getElementById('ai-backdrop').classList.contains('open')) {
     document.getElementById('ai-backdrop').classList.remove('open');
@@ -2025,7 +2083,7 @@ function switchAdminTab(tab) {
 async function loadCrew() {
   document.getElementById('crew-list').innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>';
   if (!_allRijders.length) await loadRijders();
-  renderCrew(_allRijders.filter(r => ['admin','office','werkplaats'].includes(r.rol)));
+  renderCrew(_allRijders.filter(r => ['admin','office','werkplaats'].includes(r.rol) && r.rol));
 }
 
 function renderCrew(lijst) {
@@ -2058,18 +2116,214 @@ function renderCrew(lijst) {
 function editCrewlid(id) {
   editRijderId = id;
   const r = _allRijders.find(x => x.id === id) || {};
-  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol)));
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol) && x.rol));
   document.querySelector('#panel-crew .layout').classList.add('show-right');
   const detail = document.getElementById('crew-detail');
   detail.style.display = 'block';
-  detail.innerHTML = rijderFormHTML(r, 'cancelCrewEdit');
+  detail.innerHTML = _crewEditFormHTML(r);
+  _updateCrewRechten();
+}
+
+function _crewEditFormHTML(r) {
+  const isAdmin = r.rol === 'admin';
+  const actief  = isAdmin ? RECHTEN_OPTIES.map(o => o.id) : (r.rechten || []);
+  const rechtenGrid = RECHTEN_OPTIES.map(opt => {
+    const aan = actief.includes(opt.id);
+    const dis = isAdmin;
+    return `<div class="recht-item${aan?' on':''}${dis?' disabled':''}" onclick="${dis ? '' : `toggleRecht(this,'${opt.id}')`}" data-recht="${opt.id}">
+      <div class="recht-box"><span class="recht-vinkje">✓</span></div>
+      <span class="recht-label">${opt.label}</span>
+      ${dis?'<span style="font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase;font-family:\'Barlow Condensed\',sans-serif;">Altijd aan</span>':''}
+    </div>`;
+  }).join('');
+
+  return `
+    <button class="close-panel-btn" onclick="cancelCrewEdit()">✕ Sluiten</button>
+    <div class="page-title" style="margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">${r.email||''}</p>
+
+    <div class="section-label">Naam</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="ce-voornaam" value="${r.voornaam||''}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="ce-naam" value="${r.naam||''}" /></div>
+    </div>
+
+    <div class="section-label">Rol</div>
+    <select class="field-select" id="ce-rol" onchange="_updateCrewRechten()" style="margin-bottom:1.25rem;">
+      <option value="office"${r.rol==='office'?' selected':''}>Office</option>
+      <option value="werkplaats"${r.rol==='werkplaats'?' selected':''}>Werkplaats</option>
+      <option value="admin"${r.rol==='admin'?' selected':''}>Admin</option>
+    </select>
+
+    <div id="ce-rechten-wrap">
+      <div class="section-label">Rechten</div>
+      <div class="rechten-grid" id="rechten-grid">${rechtenGrid}</div>
+    </div>
+
+    <button class="add-btn" onclick="slaCrewlidOp('${r.id}')" style="margin-top:1rem;">✓ Opslaan</button>
+    <button class="reset-btn" onclick="cancelCrewEdit()">Annuleren</button>
+
+    <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid #1e1e1e;">
+      <div class="section-label" style="color:#ff5555;">Gevaarlijke zone</div>
+      <button class="reset-btn" onclick="deleteRijder('${r.id}')" style="color:#ff5555;border-color:#3a1a1a;background:#1c1010;width:100%;margin-top:0.5rem;">✕ Account verwijderen</button>
+    </div>`;
+}
+
+function _updateCrewRechten() {
+  const rol  = document.getElementById('ce-rol')?.value;
+  const wrap = document.getElementById('ce-rechten-wrap');
+  const grid = document.getElementById('rechten-grid');
+  if (!rol || !wrap || !grid) return;
+  if (rol === 'admin') {
+    wrap.style.display = 'none';
+  } else {
+    wrap.style.display = '';
+    grid.querySelectorAll('.recht-item').forEach(el => {
+      el.classList.remove('disabled');
+      el.setAttribute('onclick', `toggleRecht(this,'${el.dataset.recht}')`);
+    });
+  }
+}
+
+function toggleRecht(el, rechtId) {
+  el.classList.toggle('on');
+}
+
+async function slaCrewlidOp(id) {
+  const voornaam = document.getElementById('ce-voornaam')?.value.trim();
+  const naam     = document.getElementById('ce-naam')?.value.trim();
+  const rol      = document.getElementById('ce-rol')?.value;
+  if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
+
+  const rechten = rol === 'admin'
+    ? RECHTEN_OPTIES.map(o => o.id)
+    : [...(document.getElementById('rechten-grid')?.querySelectorAll('.recht-item.on') || [])].map(el => el.dataset.recht);
+
+  const { error } = await _supabase.from('profiles').update({ voornaam, naam, rol, rechten }).eq('id', id);
+  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
+
+  const r = _allRijders.find(x => x.id === id);
+  if (r) { r.voornaam = voornaam; r.naam = naam; r.rol = rol; r.rechten = rechten; }
+
+  showToast('Opgeslagen!', 'green');
+  await loadRijders();
+  cancelCrewEdit();
 }
 
 function cancelCrewEdit() {
   editRijderId = null;
   document.querySelector('#panel-crew .layout').classList.remove('show-right');
   document.getElementById('crew-detail').style.display = '';
-  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol)));
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol) && x.rol));
+}
+
+function nieuwCrewlid() {
+  editRijderId = null;
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol) && x.rol));
+  document.querySelector('#panel-crew .layout').classList.add('show-right');
+  const detail = document.getElementById('crew-detail');
+  detail.style.display = 'block';
+  detail.innerHTML = _nieuwCrewlidFormHTML();
+  _updateNieuwCrewRechten();
+}
+
+function _nieuwCrewlidFormHTML() {
+  const rechtenGrid = RECHTEN_OPTIES.map(opt => `
+    <div class="recht-item" onclick="toggleRecht(this,'${opt.id}')" data-recht="${opt.id}">
+      <div class="recht-box"><span class="recht-vinkje">✓</span></div>
+      <span class="recht-label">${opt.label}</span>
+    </div>`).join('');
+
+  return `
+    <button class="close-panel-btn" onclick="cancelCrewEdit()">✕ Sluiten</button>
+    <div class="page-title" style="margin-bottom:4px;">Nieuw crewlid</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">Account aanmaken</p>
+
+    <div class="section-label">Naam</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="nc-voornaam" placeholder="Voornaam" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="nc-naam" placeholder="Naam" /></div>
+    </div>
+
+    <div class="section-label">Account</div>
+    <label class="field-label">E-mailadres</label>
+    <input class="field-input" id="nc-email" type="email" placeholder="email@voorbeeld.com" style="margin-bottom:0.75rem;" />
+    <label class="field-label">Wachtwoord</label>
+    <div style="position:relative;">
+      <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 6 tekens" style="padding-right:48px;" />
+      <button onclick="var i=document.getElementById('nc-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button>
+    </div>
+
+    <div class="section-label" style="margin-top:1.25rem;">Rol</div>
+    <select class="field-select" id="nc-rol" onchange="_updateNieuwCrewRechten()" style="margin-bottom:1.25rem;">
+      <option value="office">Office</option>
+      <option value="werkplaats">Werkplaats</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <div id="nc-rechten-wrap">
+      <div class="section-label">Rechten</div>
+      <div class="rechten-grid" id="nc-rechten-grid">${rechtenGrid}</div>
+    </div>
+
+    <button class="add-btn" onclick="maakCrewlidAan()" style="margin-top:1rem;">✓ Account aanmaken</button>
+    <button class="reset-btn" onclick="cancelCrewEdit()">Annuleren</button>`;
+}
+
+function _updateNieuwCrewRechten() {
+  const rol  = document.getElementById('nc-rol')?.value;
+  const wrap = document.getElementById('nc-rechten-wrap');
+  const grid = document.getElementById('nc-rechten-grid');
+  if (!rol || !wrap || !grid) return;
+
+  if (rol === 'admin') {
+    // Admin: alle rechten altijd aan, niet aanpasbaar
+    wrap.style.display = 'none';
+  } else {
+    wrap.style.display = '';
+    // Standaard: werkplaats krijgt werkplaats aan, office niets standaard
+    grid.querySelectorAll('.recht-item').forEach(el => {
+      const r = el.dataset.recht;
+      const standaard = rol === 'werkplaats' ? ['werkplaats'] : [];
+      el.classList.toggle('on', standaard.includes(r));
+    });
+  }
+}
+
+async function maakCrewlidAan() {
+  const voornaam = document.getElementById('nc-voornaam')?.value.trim();
+  const naam     = document.getElementById('nc-naam')?.value.trim();
+  const email    = document.getElementById('nc-email')?.value.trim();
+  const ww       = document.getElementById('nc-ww')?.value;
+  const rol      = document.getElementById('nc-rol')?.value;
+
+  if (!voornaam || !naam)  { showToast('Vul voornaam en naam in', 'red'); return; }
+  if (!email)              { showToast('Vul een e-mailadres in', 'red'); return; }
+  if (!ww || ww.length < 6){ showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+
+  const rechten = rol === 'admin'
+    ? RECHTEN_OPTIES.map(o => o.id)
+    : [...(document.getElementById('nc-rechten-grid')?.querySelectorAll('.recht-item.on') || [])].map(el => el.dataset.recht);
+
+  const btn = document.querySelector('#crew-detail .add-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
+
+  const { error } = await _supabase.rpc('create_crew_account', {
+    p_email:    email,
+    p_password: ww,
+    p_voornaam: voornaam,
+    p_naam:     naam,
+    p_rol:      rol,
+    p_rechten:  rechten
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = '✓ Account aanmaken'; }
+
+  if (error) { showToast('Aanmaken mislukt: ' + error.message, 'red'); return; }
+
+  showToast(`${voornaam} ${naam} aangemaakt!`, 'green');
+  await loadRijders();
+  cancelCrewEdit();
 }
 
 // ── Rijders ───────────────────────────────────
@@ -2081,7 +2335,9 @@ async function loadRijders() {
     .select('*')
     .order('naam', { ascending: true });
   if (error) { container.innerHTML = `<div class="empty">Fout: ${error.message}</div>`; return; }
-  _allRijders = data || [];
+  // Dedupliceer op id (veiligheidsnet tegen dubbele rijen uit de DB)
+  const seen = new Set();
+  _allRijders = (data || []).filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
   renderRijders();
 }
 
@@ -2116,9 +2372,8 @@ function renderRijders() {
     filterSel.value = huidigeVal; // herstel selectie
   }
 
-  // ── Crew buiten rijderslijst houden ──────────
-  const crewRollen = ['admin', 'office', 'werkplaats'];
-  const rijders = _allRijders.filter(r => !crewRollen.includes(r.rol));
+  // ── Enkel echte rijders tonen (rol === 'rijder') ──
+  const rijders = _allRijders.filter(r => r.rol === 'rijder');
 
   // ── Filter toepassen (enkel op rijders) ───────
   let lijst = [...rijders];
@@ -2242,8 +2497,8 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
     <div class="page-title" style="margin-bottom:4px;">${(r?.voornaam||'')} ${(r?.naam||'')}</div>
     <p class="page-sub" style="margin-bottom:1.5rem;">Rijder aanpassen</p>
 
-    <div class="section-label">Rol</div>
-    <select class="rol-select field-select" id="r-rol" style="margin-bottom:1.5rem;">
+    <div class="section-label vereist-crew">Rol</div>
+    <select class="rol-select field-select vereist-crew" id="r-rol" style="margin-bottom:1.5rem;">
       <option value="rijder"${r?.rol==='rijder'?' selected':''}>Rijder</option>
       <option value="admin"${r?.rol==='admin'?' selected':''}>Admin</option>
       <option value="office"${r?.rol==='office'?' selected':''}>Office</option>
@@ -2363,7 +2618,7 @@ async function saveRijder(id) {
     naam,
     geboortedatum:    document.getElementById('r-geb')?.value || null,
     telefoon:         document.getElementById('r-tel')?.value || null,
-    rol:              document.getElementById('r-rol')?.value || 'rijder',
+    rol:              document.getElementById('r-rol')?.value || _allRijders.find(x => x.id === id)?.rol || 'rijder',
     kart_type:        isEigen ? 'eigen' : 'huur',
     klassen:          isEigen ? [...document.querySelectorAll('#r-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
     startnummers:     isEigen ? getStartnummers('r-startnrs') : {},
@@ -2383,8 +2638,12 @@ async function saveRijder(id) {
 
   showToast('Opgeslagen!', 'green');
   await loadRijders();
-  const inCrew = document.getElementById('panel-crew').classList.contains('on');
-  if (inCrew) cancelCrewEdit(); else cancelRijderEdit();
+  if (document.getElementById('account-overlay').classList.contains('open')) {
+    _vulAccountForm();
+  } else {
+    const inCrew = document.getElementById('panel-crew').classList.contains('on');
+    if (inCrew) cancelCrewEdit(); else cancelRijderEdit();
+  }
 }
 
 async function deleteRijder(id) {
@@ -2394,17 +2653,27 @@ async function deleteRijder(id) {
 
   if (isPrimary) {
     if (!confirm(`"${naam}" volledig verwijderen?\n\nDit verwijdert zowel het profiel als het inlogaccount. Dit kan niet ongedaan gemaakt worden.`)) return;
+    // Verwijder ALLE profielen gekoppeld aan dit account (op account_id én op id),
+    // anders blokkeert een eventueel dubbel profiel de FK-constraint op auth.users
+    await _supabase.from('profiles').delete().eq('account_id', id);
+    await _supabase.from('profiles').delete().eq('id', id);
+    // Dan het auth-account verwijderen
     const { error: rpcErr } = await _supabase.rpc('delete_user_account', { target_user_id: id });
+    // Altijd lijst verversen, ook bij fout (data kan al deels verwijderd zijn)
+    await loadRijders();
+    const inCrewA = document.getElementById('panel-crew').classList.contains('on');
+    if (inCrewA) cancelCrewEdit(); else cancelRijderEdit();
     if (rpcErr) { showToast('Account verwijderen mislukt: ' + rpcErr.message, 'red'); return; }
   } else {
     if (!confirm(`"${naam}" verwijderen?\n\nDit verwijdert alleen dit rijdersprofiel, niet het inlogaccount.`)) return;
     const { error } = await _supabase.from('profiles').delete().eq('id', id);
+    // Altijd lijst verversen, ook bij fout
+    await loadRijders();
+    const inCrewB = document.getElementById('panel-crew').classList.contains('on');
+    if (inCrewB) cancelCrewEdit(); else cancelRijderEdit();
     if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
   }
 
-  await loadRijders();
-  const inCrew = document.getElementById('panel-crew').classList.contains('on');
-  if (inCrew) cancelCrewEdit(); else cancelRijderEdit();
   showToast(`${naam} verwijderd`, 'yellow');
 }
 
@@ -2970,11 +3239,32 @@ function formatDate(dateStr) {
   return `${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} om ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
+// ── Mijn account overlay ─────────────────────
+function openAccountOverlay() {
+  toggleAdminDropdown();
+  if (!_allRijders.length) loadRijders().then(() => _vulAccountForm());
+  else _vulAccountForm();
+  document.getElementById('account-overlay').classList.add('open');
+  history.pushState({ view: 'account' }, '', '#account');
+}
+
+function _vulAccountForm() {
+  const r = _allRijders.find(x => x.id === _adminProfile.id) || _adminProfile;
+  document.getElementById('account-body').innerHTML = rijderFormHTML(r, 'sluitAccountOverlay');
+}
+
+function sluitAccountOverlay() {
+  document.getElementById('account-overlay').classList.remove('open');
+  if (location.hash === '#account') history.back();
+}
+
 function showToast(msg, color) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className   = `toast ${color} show`;
-  setTimeout(() => t.classList.remove('show'), 2800);
+  const duur = color === 'red' ? 4500 : 2800;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duur);
 }
 </script>
 <script>

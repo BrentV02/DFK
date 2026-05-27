@@ -291,6 +291,8 @@ let _selectedKlasse   = null;
     const session = await requireAuth();
     if (!session) return;
     _currentUser = session.user;
+    const _initProfile = await getProfile(_currentUser.id);
+    if (_initProfile?.rol === 'office') { window.location.href = 'admin.html'; return; }
     await loadAccountRijders();
     updateNavbar();
     await Promise.all([loadEvents(), loadMyInschrijvingen()]);
@@ -329,8 +331,8 @@ function updateNavbar() {
   const ini  = naam.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0,2) || '?';
   document.getElementById('nav-avatar').textContent = ini;
   document.getElementById('nav-naam').textContent   = naam;
-  // Toon admin-link alleen voor admins
-  document.getElementById('admin-link').style.display    = (p?.rol === 'admin') ? '' : 'none';
+  // Toon admin-link voor admin en office, werkplaats-link alleen voor admin
+  document.getElementById('admin-link').style.display      = (['admin','office'].includes(p?.rol)) ? '' : 'none';
   document.getElementById('werkplaats-link').style.display = (p?.rol === 'admin') ? '' : 'none';
 }
 
