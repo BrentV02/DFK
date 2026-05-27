@@ -484,11 +484,18 @@ async function doRegister() {
       });
     }
 
-    // 3. Sla profiel op in Supabase
-    const { error: profErr } = await _supabase.from('profiles').upsert(profiel);
-    if (profErr) console.warn('Profiel opslaan mislukt:', profErr.message);
+    // 3. Wacht even zodat de DB-trigger het profiel heeft aangemaakt
+    await new Promise(r => setTimeout(r, 600));
 
-    // 4. Succes
+    // 4. Sla profiel op in Supabase
+    const { error: profErr } = await _supabase.from('profiles').update(profiel).eq('id', userId);
+    if (profErr) {
+      setMsg('reg-msg', 'Profiel opslaan mislukt: ' + profErr.message);
+      btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+      return;
+    }
+
+    // 5. Succes
     btn.textContent = 'Account aanmaken →'; btn.disabled = false;
     setMsg('reg-msg', '✓ Account aangemaakt! Je kan nu inloggen.', true);
     setTimeout(() => sw('login'), 1800);

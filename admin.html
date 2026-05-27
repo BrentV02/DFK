@@ -1883,10 +1883,22 @@ async function toggleWeekendZichtbaar(wid) {
 async function deleteEvent(id) {
   if (!document.body.classList.contains('kan-evenementen')) return;
   if (!confirm('Dit evenement verwijderen? Alle inschrijvingen gaan ook verloren.')) return;
+  const deletedEv = _allEvents.find(e => e.id === id);
   const { error } = await _supabase.from('evenementen').delete().eq('id', id);
   if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
   if (editEventId === id) cancelEdit();
-  await loadEvents();
+  _allEvents = _allEvents.filter(e => e.id !== id);
+  renderEvents();
+  // Als weekenddetail open is, ververs die ook meteen
+  const detailView = document.getElementById('weekend-detail-view');
+  if (detailView && detailView.style.display !== 'none' && deletedEv?.weekend_id) {
+    const resterend = _allEvents.filter(e => e.weekend_id === deletedEv.weekend_id);
+    if (resterend.length > 0) {
+      openWeekendDetail(deletedEv.weekend_id);
+    } else {
+      sluitWeekendDetail();
+    }
+  }
   showToast('Evenement verwijderd', 'yellow');
 }
 
@@ -3332,6 +3344,11 @@ function _crewAccountFormHTML(r) {
       <input class="field-input" id="r-ww" type="password" placeholder="Nieuw wachtwoord..." style="padding-right:48px;" />
       <button onclick="var i=document.getElementById('r-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button>
     </div>
+    <label class="field-label">Wachtwoord bevestigen</label>
+    <div style="position:relative;">
+      <input class="field-input" id="r-ww2" type="password" placeholder="Herhaal wachtwoord..." style="padding-right:48px;" />
+      <button onclick="var i=document.getElementById('r-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button>
+    </div>
 
     <button class="add-btn" onclick="slaCrewAccountOp('${r.id}')" style="margin-top:1.5rem;">✓ Opslaan</button>
     <button class="reset-btn" onclick="sluitAccountOverlay()">Annuleren</button>`;
@@ -3341,13 +3358,15 @@ async function slaCrewAccountOp(id) {
   const voornaam = document.getElementById('r-voornaam')?.value.trim();
   const naam     = document.getElementById('r-naam')?.value.trim();
   const ww       = document.getElementById('r-ww')?.value;
+  const ww2      = document.getElementById('r-ww2')?.value;
   if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
 
   const { error: profErr } = await _supabase.from('profiles').update({ voornaam, naam }).eq('id', id);
   if (profErr) { showToast('Opslaan mislukt: ' + profErr.message, 'red'); return; }
 
-  if (ww) {
+  if (ww || ww2) {
     if (ww.length < 6) { showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+    if (ww !== ww2) { showToast('Wachtwoorden komen niet overeen', 'red'); return; }
     const { error: wwErr } = await _supabase.auth.updateUser({ password: ww });
     if (wwErr) { showToast('Wachtwoord wijzigen mislukt: ' + wwErr.message, 'red'); return; }
   }

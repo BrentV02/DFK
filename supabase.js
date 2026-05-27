@@ -60,7 +60,12 @@ async function requireWerkplaats() {
   const session = await requireAuth();
   if (!session) return null;
   const profile = await getProfile(session.user.id);
-  if (!profile || !['werkplaats', 'admin'].includes(profile.rol)) {
+  const heeftToegang = profile && (
+    profile.rol === 'admin' ||
+    profile.rol === 'werkplaats' ||
+    (Array.isArray(profile.rechten) && profile.rechten.includes('werkplaats'))
+  );
+  if (!heeftToegang) {
     window.location.href = startpaginaVoorRol(profile?.rol);
     return null;
   }
