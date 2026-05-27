@@ -204,6 +204,20 @@
     #dfk-root .empty { text-align: center; padding: 2rem 1rem; color: #444; font-size: 13px; }
     #dfk-root .empty-icon { font-size: 28px; margin-bottom: 0.4rem; }
 
+    /* ── Archief jaar/maand ── */
+    #dfk-root .archief-jaar { margin-bottom: 6px; }
+    #dfk-root .archief-jaar-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border: 1px solid #222; border-radius: 4px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-jaar-header:hover { border-color: #333; background: #161616; }
+    #dfk-root .archief-jaar-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; flex: 1; }
+    #dfk-root .archief-pijl { font-size: 12px; color: #555; width: 12px; transition: color 0.15s; }
+    #dfk-root .archief-jaar-header:hover .archief-pijl { color: #aaa; }
+    #dfk-root .archief-tel { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #444; letter-spacing: 1px; }
+    #dfk-root .archief-jaar-body { padding-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+    #dfk-root .archief-maand-header { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 3px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-maand-header:hover { border-color: #2a2a2a; }
+    #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #888; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+    #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+
     #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease; pointer-events: none; }
     #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
     #dfk-root .toast.yellow { background: #3a3a00; color: #ffff44; border: 1px solid #888800; }
@@ -1488,21 +1502,23 @@ function openWeekendDetail(wid) {
   document.getElementById('events-overzicht').style.display    = 'none';
   document.getElementById('weekend-detail-view').style.display = '';
   document.querySelector('.left-col').scrollTop = 0;
+  history.pushState({ view: 'weekend', wid }, '', '#weekend');
 }
 
 function sluitWeekendDetail() {
   document.getElementById('weekend-detail-view').style.display = 'none';
   document.getElementById('events-overzicht').style.display    = '';
+  if (location.hash === '#weekend') history.back();
 }
 
-function renderList(containerId, list, icon, emptyMsg, isPast) {
-  const container = document.getElementById(containerId);
-  if (list.length === 0) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`;
-    return;
+window.addEventListener('popstate', e => {
+  if (document.getElementById('weekend-detail-view').style.display !== 'none') {
+    document.getElementById('weekend-detail-view').style.display = 'none';
+    document.getElementById('events-overzicht').style.display    = '';
   }
+});
 
-  // Groepeer per weekend
+function buildDisplayItems(list, isPast) {
   const weekendMap = new Map();
   const standalone = [];
   for (const ev of list) {
@@ -1513,8 +1529,6 @@ function renderList(containerId, list, icon, emptyMsg, isPast) {
       standalone.push(ev);
     }
   }
-
-  // Bouw gesorteerde display-items
   const items = [];
   for (const [wid, evs] of weekendMap) {
     const vroegst = evs.reduce((a, b) => a.datum < b.datum ? a : b).datum;
@@ -1526,12 +1540,89 @@ function renderList(containerId, list, icon, emptyMsg, isPast) {
   items.sort((a, b) => isPast
     ? b.sortDatum.localeCompare(a.sortDatum)
     : a.sortDatum.localeCompare(b.sortDatum));
+  return items;
+}
 
-  container.innerHTML = items.map(item =>
-    item.type === 'weekend'
-      ? renderWeekendGroep(item.wid, item.evs, isPast)
-      : renderEvRow(item.ev, isPast)
-  ).join('');
+function renderList(containerId, list, icon, emptyMsg, isPast) {
+  const container = document.getElementById(containerId);
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`;
+    return;
+  }
+
+  const items = buildDisplayItems(list, isPast);
+
+  if (!isPast) {
+    container.innerHTML = items.map(item =>
+      item.type === 'weekend'
+        ? renderWeekendGroep(item.wid, item.evs, false)
+        : renderEvRow(item.ev, false)
+    ).join('');
+    return;
+  }
+
+  // ── Afgelopen: groepeer per jaar → maand ──
+  const jaarMap = new Map();
+  for (const item of items) {
+    const d    = new Date(item.sortDatum + 'T12:00:00');
+    const jaar = d.getFullYear();
+    const mnd  = d.getMonth();
+    if (!jaarMap.has(jaar)) jaarMap.set(jaar, new Map());
+    const mndMap = jaarMap.get(jaar);
+    if (!mndMap.has(mnd)) mndMap.set(mnd, []);
+    mndMap.get(mnd).push(item);
+  }
+
+  const jaren = [...jaarMap.keys()].sort((a, b) => b - a);
+  const MNDNAMEN = ['Januari','Februari','Maart','April','Mei','Juni',
+                    'Juli','Augustus','September','Oktober','November','December'];
+
+  let html = '';
+  jaren.forEach((jaar, ji) => {
+    const mndMap  = jaarMap.get(jaar);
+    const maanden = [...mndMap.keys()].sort((a, b) => b - a);
+    const totaal  = maanden.reduce((s, m) => s + mndMap.get(m).length, 0);
+    const jaarOpen = ji === 0;
+
+    html += `<div class="archief-jaar">
+      <div class="archief-jaar-header" onclick="toggleArchief(this)">
+        <span class="archief-pijl">${jaarOpen ? '▾' : '▸'}</span>
+        <span class="archief-jaar-label">${jaar}</span>
+        <span class="archief-tel">${totaal} weekend${totaal !== 1 ? 'en' : ''}</span>
+      </div>
+      <div class="archief-jaar-body" ${jaarOpen ? '' : 'style="display:none;"'}>`;
+
+    maanden.forEach((mnd, mi) => {
+      const mndItems = mndMap.get(mnd);
+      const mndOpen  = jaarOpen && mi === 0;
+      html += `<div class="archief-maand">
+        <div class="archief-maand-header" onclick="toggleArchief(this)">
+          <span class="archief-pijl">${mndOpen ? '▾' : '▸'}</span>
+          <span class="archief-maand-label">${MNDNAMEN[mnd]}</span>
+          <span class="archief-tel">${mndItems.length}</span>
+        </div>
+        <div class="archief-maand-body" ${mndOpen ? '' : 'style="display:none;"'}>
+          ${mndItems.map(item =>
+            item.type === 'weekend'
+              ? renderWeekendGroep(item.wid, item.evs, true)
+              : renderEvRow(item.ev, true)
+          ).join('')}
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleArchief(header) {
+  const body  = header.nextElementSibling;
+  const pijl  = header.querySelector('.archief-pijl');
+  const open  = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  pijl.textContent   = open ? '▾' : '▸';
 }
 
 // ── Formulier helpers ─────────────────────────
@@ -1748,7 +1839,7 @@ async function autoWeekendKoppelen(datum, circuit) {
   // Geen match — nieuw weekend aanmaken
   const naam = buildWeekendNaam(circuit, [datum]);
   const { data, error } = await _supabase
-    .from('weekenden').insert({ naam, datum }).select().single();
+    .from('weekenden').insert({ naam, datum, zichtbaar: false }).select().single();
   if (error) { showToast('Weekend aanmaken mislukt: ' + error.message, 'red'); return null; }
   _allWeekenden.unshift(data);
   return data.id;
