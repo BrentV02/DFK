@@ -383,9 +383,9 @@
         <span class="nav-badge" id="nav-rol-badge">Admin</span>
       </div>
       <div class="nav-tabs">
-        <button class="nav-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
-        <button class="nav-tab vereist-rijders" onclick="switchAdminTab('rijders')">Rijders</button>
-        <button class="nav-tab vereist-crew" onclick="switchAdminTab('crew')">Crew</button>
+        <button class="nav-tab on vereist-evenementen" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
+        <button class="nav-tab vereist-rijders" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+        <button class="nav-tab vereist-crew" data-tab="crew" onclick="switchAdminTab('crew')">Crew</button>
       </div>
     </div>
     <div class="nav-right">
@@ -409,9 +409,9 @@
   </nav>
 
   <div class="mobile-tab-bar">
-    <button class="mobile-tab on" onclick="switchAdminTab('evenementen')">Evenementen</button>
-    <button class="mobile-tab vereist-rijders" onclick="switchAdminTab('rijders')">Rijders</button>
-    <button class="mobile-tab vereist-crew" onclick="switchAdminTab('crew')">Crew</button>
+    <button class="mobile-tab on vereist-evenementen" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
+    <button class="mobile-tab vereist-rijders" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+    <button class="mobile-tab vereist-crew" data-tab="crew" onclick="switchAdminTab('crew')">Crew</button>
   </div>
 
   <!-- PANEL: EVENEMENTEN -->
@@ -695,10 +695,26 @@ function _pasRechtenToe(profile) {
   const isAdmin = profile.rol === 'admin';
   const actief  = isAdmin ? RECHTEN_OPTIES.map(r => r.id) : (profile.rechten || []);
   actief.forEach(r => document.body.classList.add('kan-' + r));
+
   if (!isAdmin) {
     document.body.classList.add('niet-admin');
-    document.getElementById('nav-rol-badge').textContent = 'Office';
-    document.title = 'DFK – Office';
+    const rolLabel = profile.rol === 'werkplaats' ? 'Werkplaats'
+                   : profile.rol === 'office'     ? 'Office'
+                   : profile.rol.charAt(0).toUpperCase() + profile.rol.slice(1);
+    document.getElementById('nav-rol-badge').textContent = rolLabel;
+    document.title = `DFK – ${rolLabel}`;
+
+    // Stuur door naar eerste tab waartoe deze gebruiker toegang heeft
+    const tabVolgorde = [
+      { tab: 'evenementen', recht: 'evenementen' },
+      { tab: 'rijders',     recht: 'rijders'     },
+      { tab: 'crew',        recht: 'crew'         },
+    ];
+    const eersteTab = tabVolgorde.find(t => actief.includes(t.recht));
+    if (eersteTab) {
+      // Na DOM-update uitvoeren zodat vereist-* al verwerkt is
+      setTimeout(() => switchAdminTab(eersteTab.tab), 0);
+    }
   }
 }
 
@@ -2069,10 +2085,11 @@ function toggleEventForm(forceOpen) {
 // ── Tab wisseling ─────────────────────────────
 function switchAdminTab(tab) {
   const tabs = ['evenementen', 'rijders', 'crew'];
-  document.querySelectorAll('#dfk-root .nav-tab').forEach((b, i) =>
-    b.classList.toggle('on', tabs[i] === tab));
-  document.querySelectorAll('#dfk-root .mobile-tab').forEach((b, i) =>
-    b.classList.toggle('on', tabs[i] === tab));
+  // Gebruik data-tab zodat verborgen tabs de index niet verpesten
+  document.querySelectorAll('#dfk-root .nav-tab[data-tab]').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('#dfk-root .mobile-tab[data-tab]').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
   tabs.forEach(t =>
     document.getElementById('panel-' + t).classList.toggle('on', t === tab));
   if (tab === 'rijders') loadRijders();
@@ -3250,7 +3267,54 @@ function openAccountOverlay() {
 
 function _vulAccountForm() {
   const r = _allRijders.find(x => x.id === _adminProfile.id) || _adminProfile;
-  document.getElementById('account-body').innerHTML = rijderFormHTML(r, 'sluitAccountOverlay');
+  const isCrew = ['admin', 'office', 'werkplaats'].includes(r.rol);
+  document.getElementById('account-body').innerHTML = isCrew
+    ? _crewAccountFormHTML(r)
+    : rijderFormHTML(r, 'sluitAccountOverlay');
+}
+
+function _crewAccountFormHTML(r) {
+  return `
+    <div class="page-title" style="margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">${r.email||''}</p>
+
+    <div class="section-label">Naam</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r.voornaam||''}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r.naam||''}" /></div>
+    </div>
+
+    <div class="section-label" style="margin-top:1.25rem;">Wachtwoord wijzigen</div>
+    <label class="field-label">Nieuw wachtwoord <span style="color:#555;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
+    <div style="position:relative;">
+      <input class="field-input" id="r-ww" type="password" placeholder="Nieuw wachtwoord..." style="padding-right:48px;" />
+      <button onclick="var i=document.getElementById('r-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button>
+    </div>
+
+    <button class="add-btn" onclick="slaCrewAccountOp('${r.id}')" style="margin-top:1.5rem;">✓ Opslaan</button>
+    <button class="reset-btn" onclick="sluitAccountOverlay()">Annuleren</button>`;
+}
+
+async function slaCrewAccountOp(id) {
+  const voornaam = document.getElementById('r-voornaam')?.value.trim();
+  const naam     = document.getElementById('r-naam')?.value.trim();
+  const ww       = document.getElementById('r-ww')?.value;
+  if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
+
+  const { error: profErr } = await _supabase.from('profiles').update({ voornaam, naam }).eq('id', id);
+  if (profErr) { showToast('Opslaan mislukt: ' + profErr.message, 'red'); return; }
+
+  if (ww) {
+    if (ww.length < 6) { showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+    const { error: wwErr } = await _supabase.auth.updateUser({ password: ww });
+    if (wwErr) { showToast('Wachtwoord wijzigen mislukt: ' + wwErr.message, 'red'); return; }
+  }
+
+  const r = _allRijders.find(x => x.id === id);
+  if (r) { r.voornaam = voornaam; r.naam = naam; }
+
+  showToast('Opgeslagen!', 'green');
+  _vulAccountForm();
 }
 
 function sluitAccountOverlay() {
