@@ -91,21 +91,22 @@
     }
     .pdf-btn:hover { border-color: #E02020; color: #fff; }
 
-    /* ── Event selectie ── */
-    .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 2rem; }
+    /* ── Weekend selector ── */
+    .wk-selector { margin-bottom: 1.5rem; }
+    .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
     .event-kaart {
-      background: #141414; border: 1px solid #2a2a2a; border-radius: 4px;
-      padding: 12px 14px; cursor: pointer; transition: border-color 0.15s;
+      background: #111; border: 1px solid #222; border-left: 3px solid #222; border-radius: 4px;
+      padding: 10px 14px; cursor: pointer; transition: border-color 0.15s;
       user-select: none;
     }
-    .event-kaart:hover { border-color: #444; }
-    .event-kaart.geselecteerd { border-color: #E02020; background: #1c1010; }
+    .event-kaart:hover { border-color: #444; border-left-color: #444; }
+    .event-kaart.geselecteerd { border-color: #333; border-left-color: #E02020; background: #1a0e0e; }
     .event-kaart-naam {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 15px; letter-spacing: 1px; color: #fff; margin-bottom: 4px;
+      font-size: 14px; letter-spacing: 1px; color: #ccc; margin-bottom: 3px;
     }
-    .event-kaart.geselecteerd .event-kaart-naam { color: #E02020; }
-    .event-kaart-meta { font-size: 12px; color: #666; font-family: 'Barlow', sans-serif; }
+    .event-kaart.geselecteerd .event-kaart-naam { color: #fff; }
+    .event-kaart-meta { font-size: 11px; color: #555; font-family: 'Barlow', sans-serif; }
 
     /* ── Laadlijst ── */
     .laad-teller {
@@ -260,9 +261,10 @@
 <!-- PANEEL: LADEN VRACHTWAGEN -->
 <div class="tab-panel on" id="panel-laden">
 
-  <div class="sectie-titel">Selecteer weekend</div>
-  <div class="event-grid" id="weekend-grid">
-    <div style="color:#555;font-size:13px;"><span class="spinner"></span>Weekenden laden...</div>
+  <div class="wk-selector">
+    <div class="event-grid" id="weekend-grid">
+      <div style="color:#555;font-size:13px;grid-column:1/-1;"><span class="spinner"></span> Weekenden laden...</div>
+    </div>
   </div>
 
   <div class="sectie-rij">
@@ -372,74 +374,73 @@ function switchTab(tab) {
 })();
 
 // ── Weekenden ─────────────────────────────────
+function weekendDatumStr(w) {
+  const evs    = (w.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
+  const eersteD = evs[0]              ? new Date(evs[0].datum + 'T12:00:00') : null;
+  const laasteD = evs[evs.length - 1] ? new Date(evs[evs.length - 1].datum + 'T12:00:00') : null;
+  if (!eersteD || !laasteD) return '';
+  const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
+  const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
+  if (eersteD.getTime() === laasteD.getTime())
+    return `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
+  if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear())
+    return `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+  return `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+}
+
 async function laadWeekenden() {
   const { data, error } = await _supabase
     .from('weekenden')
     .select('*, evenementen(id, naam, datum, circuit)')
     .order('datum', { ascending: false });
 
-  const grid = document.getElementById('weekend-grid');
   if (error) {
-    grid.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${error.message}</div>`;
+    document.getElementById('weekend-grid').innerHTML =
+      `<div style="color:#E02020;font-size:13px;grid-column:1/-1;">Fout: ${error.message}</div>`;
     return;
   }
 
   const alle = (data || []).filter(w => w.evenementen && w.evenementen.length > 0);
-
-  // Bepaal vroegste datum per weekend
-  const vroegsteDatum = w => {
-    const datums = (w.evenementen || []).map(e => e.datum).sort();
-    return datums[0] || w.datum || '';
-  };
-
+  const vroegsteDatum = w => (w.evenementen || []).map(e => e.datum).sort()[0] || w.datum || '';
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const upcoming = alle.filter(w => new Date(vroegsteDatum(w) + 'T12:00:00') >= today)
                        .sort((a, b) => vroegsteDatum(a).localeCompare(vroegsteDatum(b)));
   const past     = alle.filter(w => new Date(vroegsteDatum(w) + 'T12:00:00') <  today)
                        .sort((a, b) => vroegsteDatum(b).localeCompare(vroegsteDatum(a)));
-
   _allWeekenden = [...upcoming, ...past];
 
   if (!_allWeekenden.length) {
-    grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen weekenden gevonden. Koppel evenementen aan een weekend via de admin.</div>';
+    document.getElementById('weekend-grid').innerHTML =
+      '<div style="color:#555;font-size:13px;grid-column:1/-1;">Geen weekenden gevonden.</div>';
     return;
   }
 
+  // Auto-selecteer eerstvolgende weekend
+  if (!_geselecteerdWid && upcoming.length > 0) {
+    _geselecteerdWid = upcoming[0].id;
+  }
+
   renderWeekendGrid();
+  if (_geselecteerdWid) await buildLaadlijst();
 }
 
 function renderWeekendGrid() {
   const grid = document.getElementById('weekend-grid');
   grid.innerHTML = _allWeekenden.map(w => {
-    const evs    = (w.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
-    const eersteD = evs[0]               ? new Date(evs[0].datum               + 'T12:00:00') : null;
-    const laasteD = evs[evs.length - 1] ? new Date(evs[evs.length - 1].datum  + 'T12:00:00') : null;
-
-    let datumStr = '';
-    if (eersteD && laasteD) {
-      const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
-      const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
-      if (eersteD.getTime() === laasteD.getTime()) {
-        datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
-      } else if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear()) {
-        datumStr = `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
-      } else {
-        datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
-      }
-    }
-    const circuit = evs[0]?.circuit || '';
-    const gesel = _geselecteerdWid === w.id;
+    const datumStr = weekendDatumStr(w);
+    const evs      = (w.evenementen || []).sort((a, b) => a.datum.localeCompare(b.datum));
+    const circuit  = evs[0]?.circuit || '';
+    const gesel    = _geselecteerdWid === w.id;
     return `<div class="event-kaart${gesel ? ' geselecteerd' : ''}" onclick="selecteerWeekend('${w.id}')">
       <div class="event-kaart-naam">${gesel ? '✓ ' : ''}${w.naam}</div>
       ${datumStr ? `<div class="event-kaart-meta">📅 ${datumStr}</div>` : ''}
       ${circuit  ? `<div class="event-kaart-meta">📍 ${circuit}</div>` : ''}
-      <div class="event-kaart-meta" style="margin-top:4px;color:#555;">${evs.length} event${evs.length !== 1 ? 's' : ''}</div>
     </div>`;
   }).join('');
 }
 
 async function selecteerWeekend(id) {
-  _geselecteerdWid = _geselecteerdWid === id ? null : id;
+  _geselecteerdWid = id;
   renderWeekendGrid();
   await buildLaadlijst();
 }
