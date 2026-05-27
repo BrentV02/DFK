@@ -654,11 +654,9 @@ let _inschrSort     = 'naam';
     _adminProfile = result.profile;
     _pasRechtenToe(_adminProfile);
     _updateAdminNav(_adminProfile);
-    circuits        = JSON.parse(localStorage.getItem('dfk_circuits') || '[]');
     deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
-    renderCircuitSelect();
     renderDeadlineChips();
-    await Promise.all([loadEvents(), loadWeekenden()]);
+    await Promise.all([loadCircuits(), loadEvents(), loadWeekenden()]);
 
     // ── Realtime ──────────────────────────────
     _supabase.channel('admin-realtime')
@@ -1996,6 +1994,13 @@ async function autoWeekendKoppelen(datum, circuit) {
 }
 
 // ── Circuit helpers ───────────────────────────
+async function loadCircuits() {
+  const { data, error } = await _supabase.from('circuits').select('naam').order('naam');
+  if (error) { console.error('Circuits laden mislukt:', error); return; }
+  circuits = (data || []).map(r => r.naam);
+  renderCircuitSelect();
+}
+
 function renderCircuitSelect(selected) {
   const sel = document.getElementById('f-circuit');
   const cur = selected !== undefined ? selected : sel.value;
@@ -2012,24 +2017,26 @@ function onCircuitChange() {
   if (delBtn) delBtn.style.display = val ? 'inline-flex' : 'none';
 }
 
-function verwijderCircuit() {
+async function verwijderCircuit() {
   if (!document.body.classList.contains('kan-evenementen')) return;
   const sel  = document.getElementById('f-circuit');
   const naam = sel.value;
   if (!naam) return;
+  const { error } = await _supabase.from('circuits').delete().eq('naam', naam);
+  if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
   circuits = circuits.filter(c => c !== naam);
-  localStorage.setItem('dfk_circuits', JSON.stringify(circuits));
   renderCircuitSelect('');
   showToast('Circuit verwijderd', 'green');
 }
 
-function addCircuit() {
+async function addCircuit() {
   const input = document.getElementById('f-circuit-nieuw');
   const naam  = input.value.trim();
   if (!naam) return;
   if (circuits.includes(naam)) { showToast('Circuit bestaat al', 'yellow'); return; }
+  const { error } = await _supabase.from('circuits').insert({ naam });
+  if (error) { showToast('Toevoegen mislukt: ' + error.message, 'red'); return; }
   circuits.push(naam); circuits.sort();
-  localStorage.setItem('dfk_circuits', JSON.stringify(circuits));
   renderCircuitSelect(naam);
   document.getElementById('f-circuit').value = naam;
   input.value = '';
