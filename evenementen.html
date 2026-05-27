@@ -276,6 +276,7 @@ let _accountRijders   = [];   // alle rijders gekoppeld aan dit account
 let _selectedRijder   = null; // gekozen rijder bij inschrijven
 let _editingRijder    = null; // rijder die bewerkt wordt in account-paneel
 let _allEvents        = [];
+let _allWeekenden     = [];
 let _myEventIds       = new Set();
 let _myInschrijvingen = [];
 let _currentEvent     = null;
@@ -295,6 +296,10 @@ let _selectedKlasse   = null;
     // ── Realtime ──────────────────────────────
     _supabase.channel('ev-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'evenementen' }, async () => {
+        await loadEvents();
+        renderEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekenden' }, async () => {
         await loadEvents();
         renderEvents();
       })
@@ -328,11 +333,12 @@ function updateNavbar() {
 
 // ── Data laden ───────────────────────────────
 async function loadEvents() {
-  const { data, error } = await _supabase
-    .from('evenementen')
-    .select('*')
-    .order('datum', { ascending: true });
-  if (!error && data) _allEvents = data;
+  const [evRes, wRes] = await Promise.all([
+    _supabase.from('evenementen').select('*').order('datum', { ascending: true }),
+    _supabase.from('weekenden').select('id, zichtbaar')
+  ]);
+  if (!evRes.error && evRes.data) _allEvents    = evRes.data;
+  if (!wRes.error  && wRes.data)  _allWeekenden = wRes.data;
 }
 
 async function loadAccountRijders() {
@@ -401,8 +407,15 @@ function renderEvents() {
   const now   = new Date();
   const today = new Date(); today.setHours(0,0,0,0);
 
-  const upcoming = _allEvents.filter(ev => new Date(ev.datum + 'T12:00:00') >= today);
-  const past     = _allEvents.filter(ev => new Date(ev.datum + 'T12:00:00') <  today).reverse(); // meest recent bovenaan
+  // Verberg events waarvan het weekend verborgen is
+  const verborgenWids = new Set(
+    _allWeekenden.filter(w => w.zichtbaar === false).map(w => w.id)
+  );
+  const zichtbare = _allEvents.filter(ev =>
+    !ev.weekend_id || !verborgenWids.has(ev.weekend_id)
+  );
+  const upcoming = zichtbare.filter(ev => new Date(ev.datum + 'T12:00:00') >= today);
+  const past     = zichtbare.filter(ev => new Date(ev.datum + 'T12:00:00') <  today).reverse(); // meest recent bovenaan
 
   if (upcoming.length === 0) {
     grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn geen komende evenementen gepland.</div>`;
