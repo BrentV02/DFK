@@ -40,16 +40,24 @@
 
     #dfk-root .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     #dfk-root .event-card { background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
-    #dfk-root .event-card-top { background: #E02020; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
-    #dfk-root .event-date { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
-    #dfk-root .event-badge { background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
+    #dfk-root .event-card.past { opacity: 0.65; }
+    #dfk-root .event-card-top { background: #E02020; padding: 12px 14px; display: flex; align-items: center; gap: 14px; }
+    #dfk-root .event-card-top.past { background: #2a2a2a; }
+    #dfk-root .evc-date { text-align: center; flex-shrink: 0; }
+    #dfk-root .evc-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 44px; line-height: 1; color: #fff; }
+    #dfk-root .evc-maand { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-top: 1px; }
+    #dfk-root .evc-jaar { font-family: 'Barlow', sans-serif; font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    #dfk-root .evc-divider { width: 1px; align-self: stretch; background: rgba(255,255,255,0.2); flex-shrink: 0; }
+    #dfk-root .evc-mid { flex: 1; min-width: 0; }
+    #dfk-root .evc-dag { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 3px; }
+    #dfk-root .event-badge { flex-shrink: 0; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; align-self: flex-start; }
     #dfk-root .event-body { padding: 16px; }
     #dfk-root .event-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
     #dfk-root .event-circuit { font-size: 13px; color: #888; margin-bottom: 12px; }
     #dfk-root .event-deadline { font-size: 11px; color: #666; margin-bottom: 10px; }
     #dfk-root .event-deadline.urgent { color: #E02020; }
-    #dfk-root .countdown-top { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.85); margin-top: 5px; }
-    #dfk-root .countdown-top strong { color: #fff; font-size: 12px; }
+    #dfk-root .countdown-top { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.9); }
+    #dfk-root .countdown-top strong { color: #fff; font-size: 13px; }
     #dfk-root .event-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     #dfk-root .class-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 3px 8px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .event-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #1e1e1e; padding-top: 12px; }
@@ -59,6 +67,22 @@
     #dfk-root .inschrijf-btn.ingeschreven { background: #1a3a1a; border: 1px solid #2a6a2a; color: #4cff4c; cursor: default; }
     #dfk-root .events-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; grid-column: 1/-1; }
     #dfk-root .events-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
+
+    #dfk-root .countdown-top.vandaag { color: #fff; font-size: 14px; }
+    #dfk-root .countdown-top.vandaag strong { font-size: 15px; }
+
+    @media (max-width: 480px) {
+      #dfk-root .events-grid { gap: 12px; }
+      #dfk-root .event-card-top { padding: 14px 12px; gap: 12px; }
+      #dfk-root .evc-day { font-size: 54px; }
+      #dfk-root .evc-maand { font-size: 13px; letter-spacing: 2px; }
+      #dfk-root .evc-jaar { font-size: 12px; }
+      #dfk-root .evc-dag { font-size: 12px; letter-spacing: 1px; margin-bottom: 4px; }
+      #dfk-root .countdown-top { font-size: 14px; }
+      #dfk-root .countdown-top strong { font-size: 15px; }
+      #dfk-root .event-badge { font-size: 10px; padding: 2px 6px; }
+      #dfk-root .event-name { font-size: 22px; }
+    }
 
     /* ── Tabs ── */
     #dfk-root .tab-bar { background: #111; border-bottom: 3px solid #1a1a1a; display: flex; position: sticky; top: 60px; z-index: 99; }
@@ -253,6 +277,7 @@
 // ── State ────────────────────────────────────
 const MAANDEN    = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 const DAGEN_KORT = ['zo','ma','di','wo','do','vr','za'];
+const DAGEN      = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
 const BENZ_LABELS = ['Ik neem altijd zelf benzine mee','Ik pak altijd benzine bij DFK','Training: zelf — Wedstrijd: bij DFK'];
 const KAMPIOENSCHAPPEN = ['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'];
 const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
@@ -278,6 +303,22 @@ let _selectedKlasse   = null;
     updateNavbar();
     await Promise.all([loadEvents(), loadMyInschrijvingen()]);
     renderEvents();
+
+    // ── Realtime ──────────────────────────────
+    _supabase.channel('ev-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'evenementen' }, async () => {
+        await loadEvents();
+        renderEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inschrijvingen' }, async () => {
+        await loadMyInschrijvingen();
+        renderEvents();
+        if (document.getElementById('tab-inschrijvingen')?.classList.contains('on')) {
+          renderInschrijvingen();
+        }
+      })
+      .subscribe();
+
   } catch(e) {
     console.error('Init fout:', e);
     document.getElementById('events-grid').innerHTML =
@@ -415,7 +456,7 @@ function renderEvents() {
     // ── Eventdatum aftelklok (bovenaan kaart) ──
     let eventTopHtml = '';
     if (isPast) {
-      eventTopHtml = `<div class="countdown-top" style="color:rgba(255,255,255,0.5);">Afgelopen</div>`;
+      eventTopHtml = '';
     } else {
       const msToEvent = dMidnight - now;
       if (msToEvent > 0 && msToEvent < 24 * 3600 * 1000) {
@@ -425,7 +466,9 @@ function renderEvents() {
         const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
         eventTopHtml = `<div class="countdown-top event-countdown" data-eventdate="${dMidnight.toISOString()}">Over <strong>${txt}</strong></div>`;
       } else {
-        eventTopHtml = `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
+        eventTopHtml = dagenOver === 0
+          ? `<div class="countdown-top vandaag">🏁 <strong>Vandaag</strong></div>`
+          : `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
       }
     }
 
@@ -462,15 +505,20 @@ function renderEvents() {
       }
     }
 
-    const topStyle = `style="${isPast ? 'background:#555;' : ''} align-items:flex-start;"`;
     return `
-      <div class="event-card" style="${isPast ? 'opacity:0.7;' : ''}">
-        <div class="event-card-top" ${topStyle}>
-          <div>
-            <span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span>
+      <div class="event-card${isPast ? ' past' : ''}">
+        <div class="event-card-top${isPast ? ' past' : ''}">
+          <div class="evc-date">
+            <div class="evc-day">${d.getDate()}</div>
+            <div class="evc-maand">${MAANDEN[d.getMonth()].toUpperCase()}</div>
+            <div class="evc-jaar">${d.getFullYear()}</div>
+          </div>
+          <div class="evc-divider"></div>
+          <div class="evc-mid">
+            <div class="evc-dag">${DAGEN[d.getDay()]}</div>
             ${eventTopHtml}
           </div>
-          <span class="event-badge" style="margin-top:2px;">${isPast ? 'Afgelopen' : (ev.type || '')}</span>
+          <span class="event-badge">${isPast ? 'Afgelopen' : (ev.type || '')}</span>
         </div>
         <div class="event-body">
           <div class="event-name">${ev.naam}</div>

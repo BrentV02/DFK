@@ -315,6 +315,7 @@ let _laadState    = new Map(); // profiel.id → { kart: bool, banden: bool, bak
 let _aantalEvents = 0;
 let _zoekterm     = '';
 let _filter       = 'alle'; // 'alle' | 'te-laden' | 'geladen'
+let _slaatOp      = false;  // suppres realtime tijdens eigen upsert
 
 // ── Tabs ──────────────────────────────────────
 function switchTab(tab) {
@@ -342,6 +343,32 @@ function switchTab(tab) {
   }
 
   await laadWeekenden();
+
+  // ── Realtime ────────────────────────────────
+  _supabase.channel('wp-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'weekenden' }, async () => {
+      await laadWeekenden();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'evenementen' }, async () => {
+      await laadWeekenden();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'inschrijvingen' }, async () => {
+      if (_geselecteerdWid) await buildLaadlijst();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'laad_status' }, payload => {
+      if (_slaatOp) return; // eigen upsert — al verwerkt in geheugen
+      const rec = payload.new;
+      if (!rec || rec.weekend_id !== _geselecteerdWid) return;
+      const state = _laadState.get(rec.rijder_id);
+      if (!state) return;
+      if ('kart'   in state) state.kart   = rec.kart   ?? false;
+      if ('banden' in state) state.banden = rec.banden ?? false;
+      if ('bak'    in state) state.bak    = rec.bak    ?? false;
+      if ('huur'   in state) state.huur   = rec.huur   ?? false;
+      renderLaadlijst();
+    })
+    .subscribe();
+
 })();
 
 // ── Weekenden ─────────────────────────────────
@@ -357,7 +384,21 @@ async function laadWeekenden() {
     return;
   }
 
-  _allWeekenden = (data || []).filter(w => w.evenementen && w.evenementen.length > 0);
+  const alle = (data || []).filter(w => w.evenementen && w.evenementen.length > 0);
+
+  // Bepaal vroegste datum per weekend
+  const vroegsteDatum = w => {
+    const datums = (w.evenementen || []).map(e => e.datum).sort();
+    return datums[0] || w.datum || '';
+  };
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const upcoming = alle.filter(w => new Date(vroegsteDatum(w) + 'T12:00:00') >= today)
+                       .sort((a, b) => vroegsteDatum(a).localeCompare(vroegsteDatum(b)));
+  const past     = alle.filter(w => new Date(vroegsteDatum(w) + 'T12:00:00') <  today)
+                       .sort((a, b) => vroegsteDatum(b).localeCompare(vroegsteDatum(a)));
+
+  _allWeekenden = [...upcoming, ...past];
 
   if (!_allWeekenden.length) {
     grid.innerHTML = '<div style="color:#555;font-size:13px;">Geen weekenden gevonden. Koppel evenementen aan een weekend via de admin.</div>';
@@ -538,6 +579,7 @@ function toggleLaadItem(rijderId, item) {
 
 async function slaLaadStatusOp(rijderId) {
   const state = _laadState.get(rijderId) || {};
+  _slaatOp = true;
   await _supabase
     .from('laad_status')
     .upsert({
@@ -549,6 +591,7 @@ async function slaLaadStatusOp(rijderId) {
       huur:          state.huur    ?? false,
       bijgewerkt_op: new Date().toISOString()
     }, { onConflict: 'weekend_id,rijder_id' });
+  _slaatOp = false;
 }
 
 function rijderIsGeladen(rijderId) {

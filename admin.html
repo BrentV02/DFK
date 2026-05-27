@@ -287,6 +287,30 @@
       #dfk-root .inschr-ev-naam { font-size: 15px; }
       #dfk-root .inschr-expand { padding-left: 10px; }
     }
+
+    /* ── Admin inschrijf modal ── */
+    #dfk-root .ai-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 400; align-items: center; justify-content: center; }
+    #dfk-root .ai-backdrop.open { display: flex; }
+    #dfk-root .ai-modal { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 6px; padding: 1.5rem; width: min(420px, 95vw); }
+    #dfk-root .ai-titel { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.2rem; }
+    #dfk-root .ai-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #666; margin-bottom: 4px; margin-top: 1rem; display: block; }
+    #dfk-root .ai-label:first-of-type { margin-top: 0; }
+    #dfk-root .ai-input { width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; }
+    #dfk-root .ai-input:focus { border-color: #E02020; }
+    #dfk-root .ai-select { width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; cursor: pointer; }
+    #dfk-root .ai-select:focus { border-color: #E02020; }
+    #dfk-root .ai-rijder-lijst { max-height: 200px; overflow-y: auto; border: 1px solid #2a2a2a; border-radius: 3px; background: #111; margin-top: 2px; display: none; }
+    #dfk-root .ai-rijder-lijst.open { display: block; }
+    #dfk-root .ai-rijder-opt { padding: 9px 12px; cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; border-bottom: 1px solid #1e1e1e; }
+    #dfk-root .ai-rijder-opt:last-child { border-bottom: none; }
+    #dfk-root .ai-rijder-opt:hover { background: #1c1c1c; color: #fff; }
+    #dfk-root .ai-rijder-opt.selected { background: #1c1010; color: #fff; }
+    #dfk-root .ai-rijder-sub { font-size: 11px; color: #555; margin-top: 2px; }
+    #dfk-root .ai-footer { display: flex; gap: 8px; margin-top: 1.4rem; justify-content: flex-end; }
+    #dfk-root .ai-btn { padding: 9px 20px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #888; }
+    #dfk-root .ai-btn.primary { background: #E02020; border-color: #E02020; color: #fff; }
+    #dfk-root .ai-btn.primary:hover { background: #c01818; }
+    #dfk-root .ai-btn:hover:not(.primary) { border-color: #555; color: #ccc; }
   </style>
 </head>
 <body>
@@ -403,15 +427,6 @@
         <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
       </div>
 
-      <label class="field-label" style="margin-top:1rem;">Weekend</label>
-      <div class="sel-del-row">
-        <select class="field-select" id="f-weekend" onchange="onWeekendChange()">
-          <option value="">— Geen weekend —</option>
-          <option value="__nieuw__">+ Nieuw weekend aanmaken...</option>
-        </select>
-        <button class="sel-del-btn" id="weekend-del-btn" onclick="verbergWeekend()" title="Verberg dit weekend uit de lijst" style="display:none;">×</button>
-      </div>
-      <input class="field-input" id="f-weekend-naam" type="text" placeholder="Naam van het weekend (bijv. Genk – mei 2026)" style="display:none;" />
 
       <label class="field-label">Inschrijvingsdeadline</label>
       <input class="field-input" id="f-deadline" type="datetime-local" />
@@ -501,11 +516,40 @@
         <div class="inschr-ev-sub" id="inschr-ev-sub"></div>
       </div>
       <button class="open-form-btn" onclick="exporteerInschrijvingen()" style="flex-shrink:0;">⬇ PDF</button>
+      <button class="open-form-btn" onclick="openAdminInschrijfModal()" style="flex-shrink:0;background:#1a2a1a;border-color:#3aaa3a;color:#6de86d;">+ Inschrijven</button>
     </div>
     <div class="inschr-body">
       <div class="section-label" id="inschr-count" style="margin-bottom:1rem;"></div>
       <div class="filter-bar" id="inschr-filters"></div>
       <div class="inschr-grid" id="inschr-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── Admin inschrijf modal ── -->
+  <div id="ai-backdrop" class="ai-backdrop" onclick="sluitAdminInschrijfModal(event)">
+    <div class="ai-modal" onclick="event.stopPropagation()">
+      <div class="ai-titel">Rijder inschrijven</div>
+
+      <label class="ai-label">Rijder zoeken</label>
+      <input class="ai-input" id="ai-zoek" type="text" placeholder="Naam zoeken..." oninput="filterAiRijders()" onfocus="document.getElementById('ai-lijst').classList.add('open')" autocomplete="off" />
+      <div class="ai-rijder-lijst" id="ai-lijst"></div>
+      <input type="hidden" id="ai-rijder-id" />
+
+      <!-- Preview na selectie -->
+      <div id="ai-preview" style="display:none; margin-top:1rem; background:#1a1a1a; border:1px solid #2a2a2a; border-left:3px solid #E02020; border-radius:3px; padding:12px 14px;">
+        <div id="ai-preview-naam" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:#fff;letter-spacing:1px;"></div>
+        <div id="ai-preview-info" style="font-size:12px;color:#888;margin-top:4px;"></div>
+        <!-- Klasse keuze alleen als rijder meerdere klassen heeft die matchen -->
+        <div id="ai-klasse-wrap" style="display:none;margin-top:10px;">
+          <label class="ai-label" style="margin-top:0;">Klasse</label>
+          <select class="ai-select" id="ai-klasse" onchange="aiKlasseGewijzigd()"></select>
+        </div>
+      </div>
+
+      <div class="ai-footer">
+        <button class="ai-btn" onclick="sluitAdminInschrijfModal()">Annuleren</button>
+        <button class="ai-btn primary" id="ai-inschr-btn" onclick="bevestigAdminInschrijving()" disabled style="opacity:0.4;">Inschrijven</button>
+      </div>
     </div>
   </div>
 
@@ -544,6 +588,22 @@ let _inschrSort     = 'naam';
     renderCircuitSelect();
     renderDeadlineChips();
     await Promise.all([loadEvents(), loadWeekenden()]);
+
+    // ── Realtime ──────────────────────────────
+    _supabase.channel('admin-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'evenementen' }, async () => {
+        await loadEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekenden' }, async () => {
+        await loadWeekenden();
+        renderEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inschrijvingen' }, async () => {
+        await loadEvents();
+        if (_inschrEvent) toonInschrijvingen(_inschrEvent.id);
+      })
+      .subscribe();
+
   } catch(e) {
     console.error('Admin init fout:', e);
     showToast('Laad fout: ' + e.message, 'red');
@@ -639,6 +699,8 @@ function renderWeekendGroep(wid, evs, isPast) {
   const gesorteerd = evs.slice().sort((a, b) => a.datum.localeCompare(b.datum));
   const eersteD = new Date(gesorteerd[0].datum + 'T12:00:00');
   const laasteD = new Date(gesorteerd[gesorteerd.length - 1].datum + 'T12:00:00');
+
+  // Datumbereik label
   const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
   const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
   let datumStr;
@@ -649,19 +711,30 @@ function renderWeekendGroep(wid, evs, isPast) {
   } else {
     datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
   }
-  const weekend    = _allWeekenden.find(w => w.id === wid);
-  const naam       = weekend?.naam || 'Weekend';
-  const totInschr  = evs.reduce((s, ev) => s + (_inschrijvingen[ev.id] || 0), 0);
-  const hasEditing = evs.some(ev => ev.id === editEventId);
-  const isOpen     = _openWeekenden.has(wid) || hasEditing;
-  return `<div class="weekend-groep">
-    <div class="weekend-groep-header${isPast ? ' past' : ''}" onclick="openWeekendDetail('${wid}')">
-      <span class="wg-chevron">▶</span>
-      <div>
-        <div class="wg-naam">${naam}</div>
-        <div class="wg-meta">${datumStr} · ${evs.length} dag${evs.length !== 1 ? 'en' : ''}</div>
-      </div>
-      <div class="wg-badge">${totInschr > 0 ? `👥 ${totInschr}` : ''}</div>
+
+  const weekend   = _allWeekenden.find(w => w.id === wid);
+  const naam      = weekend?.naam || 'Weekend';
+  const totInschr = evs.reduce((s, ev) => s + (_inschrijvingen[ev.id] || 0), 0);
+
+  // Datum-blok: bereik als meerdere dagen, anders gewone dag
+  const meerdere = eersteD.getTime() !== laasteD.getTime();
+  const dagTekst = meerdere
+    ? `${eersteD.getDate()} – ${laasteD.getDate()}`
+    : `${eersteD.getDate()}`;
+  const maand = MAANDEN[eersteD.getMonth()].toUpperCase();
+
+  return `<div class="ev-row${isPast ? ' past' : ''}" style="cursor:pointer;" onclick="openWeekendDetail('${wid}')">
+    <div class="ev-date-block" style="min-width:${meerdere ? '62px' : '48px'};">
+      <div class="ev-day" style="${meerdere ? 'font-size:20px;' : ''}">${dagTekst}</div>
+      <div class="ev-month">${maand}</div>
+    </div>
+    <div class="ev-info" style="flex:1;">
+      <div class="ev-name">${naam}</div>
+      <div class="ev-meta">${datumStr} · ${evs.length} dag${evs.length !== 1 ? 'en' : ''}</div>
+      ${totInschr > 0 ? `<div class="ev-inschrijvingen">👥 ${totInschr} inschrijvingen</div>` : ''}
+    </div>
+    <div class="ev-actions">
+      <span style="font-size:11px;color:#444;">▶</span>
     </div>
   </div>`;
 }
@@ -1499,9 +1572,6 @@ function resetForm() {
   document.getElementById('f-circuit').value = '';
   document.getElementById('f-circuit-nieuw').value = '';
   document.getElementById('f-deadline').value = '';
-  document.getElementById('f-weekend').value = '';
-  document.getElementById('f-weekend-naam').value = '';
-  document.getElementById('f-weekend-naam').style.display = 'none';
   document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
 }
 
@@ -1527,7 +1597,6 @@ function editEvent(id) {
   document.getElementById('f-datum').value = ev.datum;
   document.getElementById('f-type').value  = ev.type || '';
   renderCircuitSelect(ev.circuit);
-  renderWeekendSelect(ev.weekend_id || '');
 
   // deadline: convert from ISO to datetime-local format
   if (ev.deadline) {
@@ -1579,18 +1648,8 @@ async function submitForm() {
 
   saveDeadlineToHistory(dlRaw);
 
-  // Weekend
-  let weekend_id = document.getElementById('f-weekend').value || null;
-  if (weekend_id === '__nieuw__') {
-    const weekendNaam = document.getElementById('f-weekend-naam').value.trim();
-    if (!weekendNaam) { showToast('Vul een naam in voor het weekend', 'red'); return; }
-    const { data: wData, error: wErr } = await _supabase
-      .from('weekenden').insert({ naam: weekendNaam, datum }).select().single();
-    if (wErr) { showToast('Weekend aanmaken mislukt: ' + wErr.message, 'red'); return; }
-    weekend_id = wData.id;
-    _allWeekenden.unshift(wData);
-    renderWeekendSelect(weekend_id);
-  }
+  // Weekend automatisch bepalen op basis van datum
+  const weekend_id = await autoWeekendKoppelen(datum, circuit);
 
   const ev = { naam, datum, type, circuit, deadline, klassen, weekend_id };
   let error;
@@ -1610,43 +1669,68 @@ async function submitForm() {
 
 // ── Weekend helpers ───────────────────────────
 let _allWeekenden = [];
-let _verborgenWeekenden = new Set(JSON.parse(localStorage.getItem('dfk_verborgen_weekenden') || '[]'));
+const MAANDEN_LANG_W = ['januari','februari','maart','april','mei','juni',
+  'juli','augustus','september','oktober','november','december'];
 
 async function loadWeekenden() {
   const { data } = await _supabase.from('weekenden').select('*').order('datum', { ascending: false });
   _allWeekenden = data || [];
-  renderWeekendSelect();
 }
 
-function renderWeekendSelect(selected) {
-  const sel = document.getElementById('f-weekend');
-  if (!sel) return;
-  const cur = selected !== undefined ? selected : sel.value;
-  const zichtbaar = _allWeekenden.filter(w => !_verborgenWeekenden.has(w.id));
-  sel.innerHTML = '<option value="">— Geen weekend —</option>' +
-    zichtbaar.map(w => `<option value="${w.id}"${w.id === cur ? ' selected' : ''}>${w.naam}</option>`).join('') +
-    '<option value="__nieuw__">+ Nieuw weekend aanmaken...</option>';
-  if (cur !== undefined) sel.value = cur;
-  // Toon/verberg × knop
-  const delBtn = document.getElementById('weekend-del-btn');
-  if (delBtn) delBtn.style.display = (cur && cur !== '' && cur !== '__nieuw__') ? 'inline-flex' : 'none';
+// Bouw een weekendnaam op basis van circuit en alle datums
+function buildWeekendNaam(circuit, datums) {
+  const sorted  = [...datums].sort();
+  const eerste  = new Date(sorted[0] + 'T12:00:00');
+  const laatste = new Date(sorted[sorted.length - 1] + 'T12:00:00');
+  const dagE    = eerste.getDate();
+  const dagL    = laatste.getDate();
+  const maandE  = MAANDEN_LANG_W[eerste.getMonth()];
+  const maandL  = MAANDEN_LANG_W[laatste.getMonth()];
+  const jaar    = laatste.getFullYear();
+
+  let datumStr;
+  if (eerste.getTime() === laatste.getTime()) {
+    datumStr = `${dagE} ${maandE} ${jaar}`;
+  } else if (eerste.getMonth() === laatste.getMonth() && eerste.getFullYear() === laatste.getFullYear()) {
+    datumStr = `${dagE}–${dagL} ${maandE} ${jaar}`;
+  } else {
+    datumStr = `${dagE} ${maandE} – ${dagL} ${maandL} ${jaar}`;
+  }
+  return `${circuit || 'Weekend'} · ${datumStr}`;
 }
 
-function onWeekendChange() {
-  const val = document.getElementById('f-weekend').value;
-  document.getElementById('f-weekend-naam').style.display = val === '__nieuw__' ? 'block' : 'none';
-  const delBtn = document.getElementById('weekend-del-btn');
-  if (delBtn) delBtn.style.display = (val && val !== '__nieuw__') ? 'inline-flex' : 'none';
-}
+// Zoek een bestaand weekend binnen 3 dagen van de datum, of maak er automatisch één aan
+async function autoWeekendKoppelen(datum, circuit) {
+  const d = new Date(datum + 'T12:00:00');
+  const drempel = 3 * 24 * 60 * 60 * 1000; // 3 dagen
 
-function verbergWeekend() {
-  const val = document.getElementById('f-weekend').value;
-  if (!val || val === '__nieuw__') return;
-  _verborgenWeekenden.add(val);
-  localStorage.setItem('dfk_verborgen_weekenden', JSON.stringify([..._verborgenWeekenden]));
-  renderWeekendSelect('');
-  document.getElementById('f-weekend-naam').style.display = 'none';
-  showToast('Weekend verborgen uit lijst', 'green');
+  // Zoek event dat al een weekend heeft, dicht bij deze datum ligt én hetzelfde circuit heeft
+  const nabij = _allEvents.find(ev => {
+    if (!ev.weekend_id || ev.id === editEventId) return false;
+    const diff = Math.abs(new Date(ev.datum + 'T12:00:00') - d);
+    return diff <= drempel && ev.circuit === circuit;
+  });
+
+  if (nabij) {
+    // Weekend gevonden — naam bijwerken met de volledige datumrange
+    const wid = nabij.weekend_id;
+    const bestaandeDatums = _allEvents
+      .filter(ev => ev.weekend_id === wid && ev.id !== editEventId)
+      .map(ev => ev.datum);
+    const naam = buildWeekendNaam(circuit, [...bestaandeDatums, datum]);
+    await _supabase.from('weekenden').update({ naam }).eq('id', wid);
+    const w = _allWeekenden.find(w => w.id === wid);
+    if (w) w.naam = naam;
+    return wid;
+  }
+
+  // Geen match — nieuw weekend aanmaken
+  const naam = buildWeekendNaam(circuit, [datum]);
+  const { data, error } = await _supabase
+    .from('weekenden').insert({ naam, datum }).select().single();
+  if (error) { showToast('Weekend aanmaken mislukt: ' + error.message, 'red'); return null; }
+  _allWeekenden.unshift(data);
+  return data.id;
 }
 
 // ── Circuit helpers ───────────────────────────
@@ -2174,6 +2258,155 @@ function sluitInschrijvingenPanel() {
   document.getElementById('inschr-overlay').classList.remove('open');
   _inschrData   = [];
   _inschrEvent  = null;
+}
+
+// ── Admin rijder inschrijven ──────────────────
+let _aiGeselecteerdeRijder = null;
+let _aiKlasse = null;
+let _aiStartnr = null;
+
+async function openAdminInschrijfModal() {
+  if (!_inschrEvent) return;
+  if (!_allRijders.length) await loadRijders();
+
+  _aiGeselecteerdeRijder = null;
+  _aiKlasse  = null;
+  _aiStartnr = null;
+
+  document.getElementById('ai-zoek').value      = '';
+  document.getElementById('ai-rijder-id').value = '';
+  document.getElementById('ai-preview').style.display = 'none';
+  document.getElementById('ai-inschr-btn').disabled = true;
+  document.getElementById('ai-inschr-btn').style.opacity = '0.4';
+
+  renderAiRijders('');
+  document.getElementById('ai-backdrop').classList.add('open');
+  document.getElementById('ai-zoek').focus();
+}
+
+function sluitAdminInschrijfModal(e) {
+  if (e && e.target !== document.getElementById('ai-backdrop')) return;
+  document.getElementById('ai-backdrop').classList.remove('open');
+  document.getElementById('ai-lijst').classList.remove('open');
+}
+
+function renderAiRijders(zoek) {
+  const lijst  = document.getElementById('ai-lijst');
+  const term   = zoek.toLowerCase();
+  const reeds  = new Set((_inschrData || []).map(r => r.rijder_id));
+
+  const gefilterd = _allRijders
+    .filter(r => r.rol === 'rijder')
+    .filter(r => {
+      if (!term) return true;
+      return `${r.voornaam||''} ${r.naam||''}`.toLowerCase().includes(term);
+    })
+    .sort((a, b) => (a.naam||'').localeCompare(b.naam||''));
+
+  if (!gefilterd.length) {
+    lijst.innerHTML = '<div class="ai-rijder-opt" style="color:#555;cursor:default;">Geen rijders gevonden</div>';
+    return;
+  }
+
+  lijst.innerHTML = gefilterd.map(r => {
+    const naam       = `${r.voornaam||''} ${r.naam||''}`.trim();
+    const alIn       = reeds.has(r.id);
+    const isSelected = _aiGeselecteerdeRijder?.id === r.id;
+    const subTxt     = alIn ? 'Al ingeschreven' : ((r.klassen && r.klassen.length) ? r.klassen.join(' · ') : (r.huurkart_type || ''));
+    const style      = alIn ? 'opacity:0.4;pointer-events:none;' : '';
+    return `<div class="ai-rijder-opt${isSelected ? ' selected' : ''}" style="${style}" onclick="selecteerAiRijder('${r.id}')">
+      ${naam}
+      <div class="ai-rijder-sub">${subTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterAiRijders() {
+  document.getElementById('ai-lijst').classList.add('open');
+  renderAiRijders(document.getElementById('ai-zoek').value);
+}
+
+function selecteerAiRijder(rijderId) {
+  _aiGeselecteerdeRijder = _allRijders.find(r => r.id === rijderId);
+  if (!_aiGeselecteerdeRijder) return;
+
+  const p    = _aiGeselecteerdeRijder;
+  const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+
+  document.getElementById('ai-zoek').value      = naam;
+  document.getElementById('ai-rijder-id').value = rijderId;
+  document.getElementById('ai-lijst').classList.remove('open');
+
+  // Klassen van het rijdersprofiel — huurkart gebruikt huurkart_type als klasse
+  const profielKlassen = p.klassen && p.klassen.length ? p.klassen
+                       : p.huurkart_type ? [p.huurkart_type] : [];
+  const evKlassen      = _inschrEvent.klassen || [];
+  const klassen        = profielKlassen.length ? profielKlassen : evKlassen;
+
+  if (klassen.length === 0) {
+    // Geen klassen bekend — gewoon inschrijven zonder klasse
+    _aiKlasse  = null;
+    _aiStartnr = null;
+    document.getElementById('ai-klasse-wrap').style.display = 'none';
+  } else if (klassen.length === 1) {
+    // Exact 1 klasse: automatisch invullen
+    _aiKlasse  = klassen[0];
+    _aiStartnr = p.startnummers?.[_aiKlasse] ?? null;
+    document.getElementById('ai-klasse-wrap').style.display = 'none';
+  } else {
+    // Meerdere klassen: toon select, eerste automatisch geselecteerd
+    const sel = document.getElementById('ai-klasse');
+    sel.innerHTML = klassen.map(k => `<option value="${k}">${k}</option>`).join('');
+    _aiKlasse  = klassen[0];
+    _aiStartnr = p.startnummers?.[_aiKlasse] ?? null;
+    document.getElementById('ai-klasse-wrap').style.display = 'block';
+  }
+
+  // Toon preview
+  const nrTxt  = _aiStartnr != null ? ` · #${_aiStartnr}` : '';
+  const subTxt = _aiKlasse ? `${_aiKlasse}${nrTxt}` : (p.huurkart_type || '—');
+  document.getElementById('ai-preview-naam').textContent = naam;
+  document.getElementById('ai-preview-info').textContent = subTxt;
+  document.getElementById('ai-preview').style.display = 'block';
+
+  // Activeer knop
+  document.getElementById('ai-inschr-btn').disabled = false;
+  document.getElementById('ai-inschr-btn').style.opacity = '1';
+
+  renderAiRijders(naam);
+}
+
+function aiKlasseGewijzigd() {
+  if (!_aiGeselecteerdeRijder) return;
+  _aiKlasse  = document.getElementById('ai-klasse').value;
+  _aiStartnr = _aiGeselecteerdeRijder.startnummers?.[_aiKlasse] ?? null;
+  const nrTxt  = _aiStartnr != null ? ` · #${_aiStartnr}` : '';
+  const p = _aiGeselecteerdeRijder;
+  document.getElementById('ai-preview-info').textContent =
+    _aiKlasse ? `${_aiKlasse}${nrTxt}` : (p.huurkart_type || '—');
+}
+
+async function bevestigAdminInschrijving() {
+  const rijderId = document.getElementById('ai-rijder-id').value;
+  if (!rijderId) { showToast('Selecteer een rijder', 'yellow'); return; }
+
+  const { error } = await _supabase.from('inschrijvingen').insert({
+    rijder_id:    rijderId,
+    event_id:     _inschrEvent.id,
+    klasse:       _aiKlasse,
+    startnummer:  _aiStartnr,
+    bevestigd_op: new Date().toISOString(),
+  });
+
+  if (error) {
+    showToast(error.code === '23505' ? 'Al ingeschreven' : 'Fout: ' + error.message, error.code === '23505' ? 'yellow' : 'red');
+    return;
+  }
+
+  showToast('Rijder ingeschreven!', 'green');
+  document.getElementById('ai-backdrop').classList.remove('open');
+  _inschrijvingen[_inschrEvent.id] = (_inschrijvingen[_inschrEvent.id] || 0) + 1;
+  await toonInschrijvingen(_inschrEvent.id);
 }
 
 async function exporteerInschrijvingen() {
