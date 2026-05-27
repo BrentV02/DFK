@@ -353,6 +353,7 @@
     body:not(.kan-werkplaats) .vereist-werkplaats { display: none !important; }
     body:not(.kan-crew) .vereist-crew { display: none !important; }
     body.niet-admin #nav-rol-badge { background: #1a3a1a; color: #4cff4c; border: 1px solid #2a6a2a; }
+    body:not(.kan-rijders) .vereist-rijders-edit { display: none !important; }
     /* Rechten checkboxes in crew-edit */
     #dfk-root .rechten-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
     #dfk-root .recht-item { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 3px; padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; }
@@ -383,8 +384,8 @@
         <span class="nav-badge" id="nav-rol-badge">Admin</span>
       </div>
       <div class="nav-tabs">
-        <button class="nav-tab on vereist-evenementen" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
-        <button class="nav-tab vereist-rijders" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+        <button class="nav-tab on" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
+        <button class="nav-tab" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
         <button class="nav-tab vereist-crew" data-tab="crew" onclick="switchAdminTab('crew')">Crew</button>
       </div>
     </div>
@@ -409,8 +410,8 @@
   </nav>
 
   <div class="mobile-tab-bar">
-    <button class="mobile-tab on vereist-evenementen" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
-    <button class="mobile-tab vereist-rijders" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+    <button class="mobile-tab on" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
+    <button class="mobile-tab" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
     <button class="mobile-tab vereist-crew" data-tab="crew" onclick="switchAdminTab('crew')">Crew</button>
   </div>
 
@@ -697,24 +698,10 @@ function _pasRechtenToe(profile) {
   actief.forEach(r => document.body.classList.add('kan-' + r));
 
   if (!isAdmin) {
+    // admin.html is enkel bereikbaar voor admin en office (requireAdmin blokkeert de rest)
     document.body.classList.add('niet-admin');
-    const rolLabel = profile.rol === 'werkplaats' ? 'Werkplaats'
-                   : profile.rol === 'office'     ? 'Office'
-                   : profile.rol.charAt(0).toUpperCase() + profile.rol.slice(1);
-    document.getElementById('nav-rol-badge').textContent = rolLabel;
-    document.title = `DFK – ${rolLabel}`;
-
-    // Stuur door naar eerste tab waartoe deze gebruiker toegang heeft
-    const tabVolgorde = [
-      { tab: 'evenementen', recht: 'evenementen' },
-      { tab: 'rijders',     recht: 'rijders'     },
-      { tab: 'crew',        recht: 'crew'         },
-    ];
-    const eersteTab = tabVolgorde.find(t => actief.includes(t.recht));
-    if (eersteTab) {
-      // Na DOM-update uitvoeren zodat vereist-* al verwerkt is
-      setTimeout(() => switchAdminTab(eersteTab.tab), 0);
-    }
+    document.getElementById('nav-rol-badge').textContent = 'Office';
+    document.title = 'DFK – Office';
   }
 }
 
@@ -1604,6 +1591,7 @@ function sluitWeekendDetail() {
 }
 
 function bewerkWeekendNaam(wid) {
+  if (!document.body.classList.contains('kan-evenementen')) return;
   const rij = document.querySelector('.wd-titel-rij');
   const w   = _allWeekenden.find(w => w.id === wid);
   if (!rij || !w) return;
@@ -1639,7 +1627,7 @@ async function slaWeekendNaamOp(wid) {
   const rij = document.querySelector('.wd-titel-rij');
   if (rij) rij.innerHTML = `
     <div class="wd-titel" id="wd-naam-display">${naam}</div>
-    <button class="wd-edit-btn" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
+    <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
   renderEvents();
 }
 
@@ -1649,7 +1637,7 @@ function annuleerWeekendNaam(wid) {
   if (!rij || !w) return;
   rij.innerHTML = `
     <div class="wd-titel" id="wd-naam-display">${w.naam}</div>
-    <button class="wd-edit-btn" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
+    <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
 }
 
 // ── Centrale terugknop-handler ─────────────────
@@ -1848,6 +1836,7 @@ function cancelEdit() {
 }
 
 function editEvent(id) {
+  if (!document.body.classList.contains('kan-evenementen')) return;
   const ev = _allEvents.find(e => e.id === id);
   if (!ev) return;
   toggleEventForm(true);
@@ -1883,6 +1872,7 @@ function editEvent(id) {
 }
 
 async function toggleWeekendZichtbaar(wid) {
+  if (!document.body.classList.contains('kan-zichtbaarheid')) return;
   const w = _allWeekenden.find(w => w.id === wid);
   if (!w) return;
   const nieuw = w.zichtbaar === false ? true : false;
@@ -1893,6 +1883,7 @@ async function toggleWeekendZichtbaar(wid) {
 }
 
 async function deleteEvent(id) {
+  if (!document.body.classList.contains('kan-evenementen')) return;
   if (!confirm('Dit evenement verwijderen? Alle inschrijvingen gaan ook verloren.')) return;
   const { error } = await _supabase.from('evenementen').delete().eq('id', id);
   if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
@@ -1902,6 +1893,7 @@ async function deleteEvent(id) {
 }
 
 async function submitForm() {
+  if (!document.body.classList.contains('kan-evenementen')) return;
   const naam    = document.getElementById('f-naam').value.trim();
   const datum   = document.getElementById('f-datum').value;
   const type    = document.getElementById('f-type').value;
@@ -2021,6 +2013,7 @@ function onCircuitChange() {
 }
 
 function verwijderCircuit() {
+  if (!document.body.classList.contains('kan-evenementen')) return;
   const sel  = document.getElementById('f-circuit');
   const naam = sel.value;
   if (!naam) return;
@@ -2138,7 +2131,7 @@ function editCrewlid(id) {
   const detail = document.getElementById('crew-detail');
   detail.style.display = 'block';
   detail.innerHTML = _crewEditFormHTML(r);
-  _updateCrewRechten();
+  _updateCrewRechten(false); // behoud bestaande rechten bij openen
 }
 
 function _crewEditFormHTML(r) {
@@ -2186,7 +2179,7 @@ function _crewEditFormHTML(r) {
     </div>`;
 }
 
-function _updateCrewRechten() {
+function _updateCrewRechten(resetNaarStandaard = true) {
   const rol  = document.getElementById('ce-rol')?.value;
   const wrap = document.getElementById('ce-rechten-wrap');
   const grid = document.getElementById('rechten-grid');
@@ -2195,10 +2188,14 @@ function _updateCrewRechten() {
     wrap.style.display = 'none';
   } else {
     wrap.style.display = '';
-    grid.querySelectorAll('.recht-item').forEach(el => {
-      el.classList.remove('disabled');
-      el.setAttribute('onclick', `toggleRecht(this,'${el.dataset.recht}')`);
-    });
+    if (resetNaarStandaard) {
+      const standaard = _standaardRechten(rol);
+      grid.querySelectorAll('.recht-item').forEach(el => {
+        el.classList.toggle('on', standaard.includes(el.dataset.recht));
+        el.classList.remove('disabled');
+        el.setAttribute('onclick', `toggleRecht(this,'${el.dataset.recht}')`);
+      });
+    }
   }
 }
 
@@ -2256,22 +2253,24 @@ function _nieuwCrewlidFormHTML() {
     <div class="page-title" style="margin-bottom:4px;">Nieuw crewlid</div>
     <p class="page-sub" style="margin-bottom:1.5rem;">Account aanmaken</p>
 
-    <div class="section-label">Naam</div>
+    <div class="section-label">Persoonlijke gegevens</div>
     <div class="two-col">
-      <div><label class="field-label">Voornaam</label><input class="field-input" id="nc-voornaam" placeholder="Voornaam" /></div>
-      <div><label class="field-label">Naam</label><input class="field-input" id="nc-naam" placeholder="Naam" /></div>
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="nc-voornaam" type="text" placeholder="Jan" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="nc-naam" type="text" placeholder="Janssen" /></div>
     </div>
-
-    <div class="section-label">Account</div>
+    <label class="field-label">Geboortedatum</label>
+    <input class="field-input" id="nc-geb" type="date" />
     <label class="field-label">E-mailadres</label>
-    <input class="field-input" id="nc-email" type="email" placeholder="email@voorbeeld.com" style="margin-bottom:0.75rem;" />
+    <input class="field-input" id="nc-email" type="email" placeholder="email@voorbeeld.com" />
+    <label class="field-label">Telefoonnummer</label>
+    <input class="field-input" id="nc-tel" type="tel" placeholder="+32 477 00 00 00" />
     <label class="field-label">Wachtwoord</label>
-    <div style="position:relative;">
-      <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 6 tekens" style="padding-right:48px;" />
-      <button onclick="var i=document.getElementById('nc-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button>
-    </div>
+    <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 8 tekens" oninput="_checkCrewPwMatch()" />
+    <label class="field-label">Wachtwoord bevestigen</label>
+    <input class="field-input" id="nc-ww2" type="password" placeholder="Herhaal wachtwoord" oninput="_checkCrewPwMatch()" />
+    <p id="nc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:1rem;font-family:'Barlow',sans-serif;color:#E02020;"></p>
 
-    <div class="section-label" style="margin-top:1.25rem;">Rol</div>
+    <div class="section-label">Rol</div>
     <select class="field-select" id="nc-rol" onchange="_updateNieuwCrewRechten()" style="margin-bottom:1.25rem;">
       <option value="office">Office</option>
       <option value="werkplaats">Werkplaats</option>
@@ -2287,6 +2286,17 @@ function _nieuwCrewlidFormHTML() {
     <button class="reset-btn" onclick="cancelCrewEdit()">Annuleren</button>`;
 }
 
+function _checkCrewPwMatch() {
+  const pw  = document.getElementById('nc-ww')?.value  || '';
+  const pw2 = document.getElementById('nc-ww2')?.value || '';
+  const msg = document.getElementById('nc-pw-msg');
+  if (!msg) return;
+  if (!pw2)            { msg.textContent = ''; return; }
+  if (pw.length < 8)   { msg.style.color = '#E02020'; msg.textContent = 'Minimaal 8 tekens.'; return; }
+  if (pw !== pw2)      { msg.style.color = '#E02020'; msg.textContent = 'Wachtwoorden komen niet overeen.'; return; }
+  msg.style.color = '#4cff4c'; msg.textContent = '✓ Wachtwoorden komen overeen';
+}
+
 function _updateNieuwCrewRechten() {
   const rol  = document.getElementById('nc-rol')?.value;
   const wrap = document.getElementById('nc-rechten-wrap');
@@ -2298,25 +2308,36 @@ function _updateNieuwCrewRechten() {
     wrap.style.display = 'none';
   } else {
     wrap.style.display = '';
-    // Standaard: werkplaats krijgt werkplaats aan, office niets standaard
+    const standaard = _standaardRechten(rol);
     grid.querySelectorAll('.recht-item').forEach(el => {
-      const r = el.dataset.recht;
-      const standaard = rol === 'werkplaats' ? ['werkplaats'] : [];
-      el.classList.toggle('on', standaard.includes(r));
+      el.classList.toggle('on', standaard.includes(el.dataset.recht));
+      el.classList.remove('disabled');
+      el.setAttribute('onclick', `toggleRecht(this,'${el.dataset.recht}')`);
     });
   }
+}
+
+function _standaardRechten(rol) {
+  if (rol === 'admin')      return RECHTEN_OPTIES.map(o => o.id);
+  if (rol === 'office')     return ['evenementen', 'zichtbaarheid', 'inschrijvingen', 'rijders'];
+  if (rol === 'werkplaats') return ['werkplaats'];
+  return [];
 }
 
 async function maakCrewlidAan() {
   const voornaam = document.getElementById('nc-voornaam')?.value.trim();
   const naam     = document.getElementById('nc-naam')?.value.trim();
+  const geb      = document.getElementById('nc-geb')?.value || '';
   const email    = document.getElementById('nc-email')?.value.trim();
-  const ww       = document.getElementById('nc-ww')?.value;
+  const tel      = document.getElementById('nc-tel')?.value.trim() || '';
+  const ww       = document.getElementById('nc-ww')?.value  || '';
+  const ww2      = document.getElementById('nc-ww2')?.value || '';
   const rol      = document.getElementById('nc-rol')?.value;
 
   if (!voornaam || !naam)  { showToast('Vul voornaam en naam in', 'red'); return; }
   if (!email)              { showToast('Vul een e-mailadres in', 'red'); return; }
-  if (!ww || ww.length < 6){ showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+  if (ww.length < 8)       { showToast('Wachtwoord moet minimaal 8 tekens zijn', 'red'); return; }
+  if (ww !== ww2)          { showToast('Wachtwoorden komen niet overeen', 'red'); return; }
 
   const rechten = rol === 'admin'
     ? RECHTEN_OPTIES.map(o => o.id)
@@ -2325,18 +2346,31 @@ async function maakCrewlidAan() {
   const btn = document.querySelector('#crew-detail .add-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
 
-  const { error } = await _supabase.rpc('create_crew_account', {
-    p_email:    email,
-    p_password: ww,
-    p_voornaam: voornaam,
-    p_naam:     naam,
-    p_rol:      rol,
-    p_rechten:  rechten
+  // Aparte client zodat admin-sessie niet wordt overschreven
+  const tijdelijkeClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
   });
 
-  if (btn) { btn.disabled = false; btn.textContent = '✓ Account aanmaken'; }
+  const { data, error } = await tijdelijkeClient.auth.signUp({ email, password: ww });
 
+  if (btn) { btn.disabled = false; btn.textContent = '✓ Account aanmaken'; }
   if (error) { showToast('Aanmaken mislukt: ' + error.message, 'red'); return; }
+
+  const userId = data?.user?.id;
+  if (!userId) { showToast('Aanmaken mislukt: geen gebruiker teruggekomen', 'red'); return; }
+
+  // Korte wachttijd zodat de DB-trigger het profiel heeft aangemaakt
+  await new Promise(r => setTimeout(r, 600));
+
+  // Profiel bijwerken (trigger heeft het al aangemaakt met lege waarden)
+  const { error: profErr } = await _supabase.from('profiles').update({
+    voornaam, naam, email, rol, rechten,
+    account_id: userId,
+    geboortedatum: geb || null,
+    telefoon:     tel || null
+  }).eq('id', userId);
+
+  if (profErr) { showToast('Profiel opslaan mislukt: ' + profErr.message, 'red'); return; }
 
   showToast(`${voornaam} ${naam} aangemaakt!`, 'green');
   await loadRijders();
@@ -2458,7 +2492,7 @@ function renderRijders() {
           ? r.klassen.map(k => `${k}${(r.startnummers?.[k]) ? ' #'+r.startnummers[k] : ''}`).join(' · ')
           : (r.huurkart_type || '—')}</div>
       </div>
-      <div class="rider-actions">
+      <div class="rider-actions vereist-rijders-edit">
         <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder('${r.id}')">✎</button>
       </div>
     </div>`;
@@ -2473,6 +2507,7 @@ function renderRijders() {
 }
 
 function editRijder(id) {
+  if (!document.body.classList.contains('kan-rijders')) return;
   editRijderId = id;
   const r = _allRijders.find(x => x.id === id);
   renderRijders();

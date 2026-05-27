@@ -61,7 +61,7 @@ async function requireWerkplaats() {
   if (!session) return null;
   const profile = await getProfile(session.user.id);
   if (!profile || !['werkplaats', 'admin'].includes(profile.rol)) {
-    window.location.href = 'evenementen.html';
+    window.location.href = startpaginaVoorRol(profile?.rol);
     return null;
   }
   return { session, profile };
