@@ -43,19 +43,19 @@ async function requireAuth() {
   return session;
 }
 
-// Redirect naar login als geen admin-rol
+// Redirect naar login als geen admin- of office-rol
 async function requireAdmin() {
   const session = await requireAuth();
   if (!session) return null;
   const profile = await getProfile(session.user.id);
-  if (!profile || profile.rol !== 'admin') {
+  if (!profile || !['admin', 'office'].includes(profile.rol)) {
     window.location.href = 'evenementen.html';
     return null;
   }
   return { session, profile };
 }
 
-// Redirect naar login als geen werkplaats- of admin-rol
+// Redirect naar login als geen werkplaats- of admin-rol (office heeft geen toegang)
 async function requireWerkplaats() {
   const session = await requireAuth();
   if (!session) return null;
@@ -70,6 +70,7 @@ async function requireWerkplaats() {
 // Geeft de juiste startpagina terug op basis van rol
 function startpaginaVoorRol(rol) {
   if (rol === 'admin')      return 'admin.html';
+  if (rol === 'office')     return 'admin.html';
   if (rol === 'werkplaats') return 'werkplaats.html';
   return 'evenementen.html';
 }

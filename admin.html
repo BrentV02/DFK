@@ -343,6 +343,10 @@
     #dfk-root .ai-btn.primary { background: #E02020; border-color: #E02020; color: #fff; }
     #dfk-root .ai-btn.primary:hover { background: #c01818; }
     #dfk-root .ai-btn:hover:not(.primary) { border-color: #555; color: #ccc; }
+
+    /* ── Office-rol beperkingen ── */
+    #dfk-root .rider-badge.office { background: #1a3a1a; color: #4ccc4c; }
+    body.rol-office .admin-only { display: none !important; }
   </style>
 </head>
 <body>
@@ -371,7 +375,7 @@
         <div class="dropdown-item" onclick="window.location.href='evenementen.html'">
           <span class="di-icon">🏁</span> Terug naar site
         </div>
-        <div class="dropdown-item" onclick="window.location.href='werkplaats.html'">
+        <div class="dropdown-item admin-only" onclick="window.location.href='werkplaats.html'">
           <span class="di-icon">🔧</span> Werkplaats
         </div>
         <div class="dropdown-item danger" onclick="uitloggen()">
@@ -400,7 +404,7 @@
             <div class="page-title">Evenementen</div>
             <p class="page-sub" style="margin-bottom:0;">Overzicht van alle ingevoerde evenementen</p>
           </div>
-          <button class="open-form-btn" onclick="toggleEventForm()">＋ Toevoegen</button>
+          <button class="open-form-btn admin-only" onclick="toggleEventForm()">＋ Toevoegen</button>
         </div>
         <div class="section-label">Komende evenementen</div>
         <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">⏳</div>Laden...</div></div>
@@ -414,7 +418,7 @@
       </div>
     </div>
 
-    <div class="right-col">
+    <div class="right-col admin-only">
 
       <!-- Inschrijvingen lijst (verborgen tenzij actief) -->
       <div id="inschrijvingen-content" style="display:none;"></div>
@@ -614,6 +618,7 @@ let _inschrSort     = 'naam';
     const result = await requireAdmin();
     if (!result) return;
     _adminProfile = result.profile;
+    if (_adminProfile.rol === 'office') document.body.classList.add('rol-office');
     _updateAdminNav(_adminProfile);
     circuits        = JSON.parse(localStorage.getItem('dfk_circuits') || '[]');
     deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
@@ -724,8 +729,8 @@ function renderEvRow(ev, isPast) {
     </div>
     <div class="ev-actions">
       <button class="ev-btn riders" onclick="toonInschrijvingen('${ev.id}')">👥 ${inCount}</button>
-      <button class="ev-btn edit"   onclick="editEvent('${ev.id}')">✎</button>
-      <button class="ev-btn del"    onclick="deleteEvent('${ev.id}')">✕</button>
+      <button class="ev-btn edit admin-only" onclick="editEvent('${ev.id}')">✎</button>
+      <button class="ev-btn del admin-only"  onclick="deleteEvent('${ev.id}')">✕</button>
     </div>
   </div>`;
 }
@@ -1479,7 +1484,7 @@ function openWeekendDetail(wid) {
     <div class="wd-header">
       <div class="wd-titel-rij">
         <div class="wd-titel" id="wd-naam-display">${weekend.naam}</div>
-        <button class="wd-edit-btn" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>
+        <button class="wd-edit-btn admin-only" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>
       </div>
       <div class="wd-datum">${datumStr}</div>
       <div class="wd-stats">
@@ -2020,7 +2025,7 @@ function switchAdminTab(tab) {
 async function loadCrew() {
   document.getElementById('crew-list').innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>';
   if (!_allRijders.length) await loadRijders();
-  renderCrew(_allRijders.filter(r => ['admin','werkplaats'].includes(r.rol)));
+  renderCrew(_allRijders.filter(r => ['admin','office','werkplaats'].includes(r.rol)));
 }
 
 function renderCrew(lijst) {
@@ -2035,8 +2040,8 @@ function renderCrew(lijst) {
     const naam     = r.naam     || '';
     const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
     const isEditing  = r.id === editRijderId;
-    const badgeType  = r.rol === 'admin' ? 'admin' : 'werkplaats';
-    const badgeLabel = r.rol === 'admin' ? 'Admin' : 'Werkplaats';
+    const badgeType  = r.rol === 'admin' ? 'admin' : r.rol === 'office' ? 'office' : 'werkplaats';
+    const badgeLabel = r.rol === 'admin' ? 'Admin' : r.rol === 'office' ? 'Office' : 'Werkplaats';
     return `<div class="rider-row${isEditing?' editing':''}" onclick="editCrewlid('${r.id}')">
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
@@ -2053,7 +2058,7 @@ function renderCrew(lijst) {
 function editCrewlid(id) {
   editRijderId = id;
   const r = _allRijders.find(x => x.id === id) || {};
-  renderCrew(_allRijders.filter(x => ['admin','werkplaats'].includes(x.rol)));
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol)));
   document.querySelector('#panel-crew .layout').classList.add('show-right');
   const detail = document.getElementById('crew-detail');
   detail.style.display = 'block';
@@ -2064,7 +2069,7 @@ function cancelCrewEdit() {
   editRijderId = null;
   document.querySelector('#panel-crew .layout').classList.remove('show-right');
   document.getElementById('crew-detail').style.display = '';
-  renderCrew(_allRijders.filter(x => ['admin','werkplaats'].includes(x.rol)));
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol)));
 }
 
 // ── Rijders ───────────────────────────────────
@@ -2112,7 +2117,7 @@ function renderRijders() {
   }
 
   // ── Crew buiten rijderslijst houden ──────────
-  const crewRollen = ['admin', 'werkplaats'];
+  const crewRollen = ['admin', 'office', 'werkplaats'];
   const rijders = _allRijders.filter(r => !crewRollen.includes(r.rol));
 
   // ── Filter toepassen (enkel op rijders) ───────
@@ -2241,6 +2246,7 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
     <select class="rol-select field-select" id="r-rol" style="margin-bottom:1.5rem;">
       <option value="rijder"${r?.rol==='rijder'?' selected':''}>Rijder</option>
       <option value="admin"${r?.rol==='admin'?' selected':''}>Admin</option>
+      <option value="office"${r?.rol==='office'?' selected':''}>Office</option>
       <option value="werkplaats"${r?.rol==='werkplaats'?' selected':''}>Werkplaats</option>
     </select>
 
