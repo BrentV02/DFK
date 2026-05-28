@@ -2570,16 +2570,13 @@ function renderRijders() {
     const isEditing  = r.id === editRijderId;
     const badgeType  = r.rol === 'admin' ? 'admin' : r.rol === 'werkplaats' ? 'werkplaats' : (r.kart_type === 'huur' ? 'huur' : 'eigen');
     const badgeLabel = r.rol === 'admin' ? 'Admin' : r.rol === 'werkplaats' ? 'Werkplaats' : (r.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart');
-    return `<div class="rider-row${isEditing?' editing':''}" onclick="editRijder('${r.id}')">
+    return `<div class="rider-row${isEditing?' editing':''}" onclick="toonRijderDetail('${r.id}')">
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
         <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
         <div class="rider-meta">${r.klassen?.length
           ? r.klassen.map(k => `${k}${(r.startnummers?.[k]) ? ' #'+r.startnummers[k] : ''}`).join(' · ')
           : (r.huurkart_type || '—')}</div>
-      </div>
-      <div class="rider-actions vereist-rijders-edit">
-        <button class="ev-btn edit" onclick="event.stopPropagation(); editRijder('${r.id}')">✎</button>
       </div>
     </div>`;
   }
@@ -2590,6 +2587,61 @@ function renderRijders() {
   }
 
   container.innerHTML = lijst.map(rijderKaart).join('');
+}
+
+function toonRijderDetail(id) {
+  const r = _allRijders.find(x => x.id === id);
+  if (!r) return;
+  const naam = `${r.voornaam || ''} ${r.naam || ''}`.trim();
+  const isEigen = r.kart_type !== 'huur';
+
+  const rij = (label, waarde) => waarde
+    ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e1e1e;">
+        <span style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px;">${label}</span>
+        <span style="font-size:14px;color:#ccc;text-align:right;max-width:60%;">${waarde}</span>
+       </div>`
+    : '';
+
+  const klassen = r.klassen?.length
+    ? r.klassen.map(k => `${k}${r.startnummers?.[k] ? ' #'+r.startnummers[k] : ''}`).join(', ')
+    : null;
+
+  document.getElementById('rijder-overlay-titel').textContent = naam;
+  document.getElementById('rijder-overlay-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:2rem;">
+      <div style="width:56px;height:56px;border-radius:50%;background:#E02020;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#fff;flex-shrink:0;">
+        ${((r.voornaam?.[0]||'')+(r.naam?.[0]||'')).toUpperCase()||'?'}
+      </div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#fff;letter-spacing:2px;">${naam}</div>
+        <div style="font-size:13px;color:#666;">${r.email||''}</div>
+      </div>
+    </div>
+
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:0.5rem;">Gegevens</div>
+    ${rij('Geboortedatum', r.geboortedatum)}
+    ${rij('Telefoon', r.telefoon)}
+    ${rij('Kart type', isEigen ? 'Eigen kart' : 'Huurkart')}
+    ${isEigen ? rij('Klassen', klassen) : ''}
+    ${isEigen ? rij('Kampioenschappen', r.kampioenschappen?.join(', ')) : ''}
+    ${!isEigen ? rij('Huurkart type', r.huurkart_type) : ''}
+    ${!isEigen ? rij('Lengte / Gewicht', [r.lengte ? r.lengte+'cm' : null, r.gewicht ? r.gewicht+'kg' : null].filter(Boolean).join(' · ')) : ''}
+    ${isEigen ? rij('Benzine', r.benzine) : ''}
+
+    <div style="margin-top:2rem;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="vereist-rijders-edit" onclick="editRijder('${r.id}')"
+        style="flex:1;padding:14px;background:#E02020;color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-width:140px;">
+        ✎ Aanpassen
+      </button>
+      <button onclick="cancelRijderEdit()"
+        style="flex:1;padding:14px;background:transparent;color:#555;border:1px solid #222;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-width:140px;">
+        Sluiten
+      </button>
+    </div>
+  `;
+  document.getElementById('rijder-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'rijder-edit' }, '', '#rijder-edit');
 }
 
 function editRijder(id) {
