@@ -274,7 +274,7 @@
     /* ── Inschrijvingen full-screen overlay ────── */
     #dfk-root .inschr-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
     #dfk-root .inschr-overlay.open { display: flex; }
-    #dfk-root .inschr-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; }
+    #dfk-root .inschr-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
     #dfk-root .inschr-ev-info { flex: 1; min-width: 0; overflow: hidden; }
     #dfk-root .inschr-ev-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; color: #fff; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #dfk-root .inschr-ev-sub { font-size: 12px; color: #999; margin-top: 1px; }
@@ -315,9 +315,11 @@
     #dfk-root .inschr-uitschr-btn { margin-top: 10px; padding: 6px 14px; background: #1c1010; border: 1px solid #3a1a1a; color: #ff5555; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .inschr-uitschr-btn:hover { background: #2a1010; border-color: #ff5555; }
     @media (max-width: 768px) {
-      #dfk-root .inschr-topbar { padding: 0 1rem; gap: 1rem; }
+      #dfk-root .inschr-topbar { padding: 0.6rem 1rem; height: auto; flex-wrap: wrap; gap: 0.5rem; }
+      #dfk-root .inschr-ev-info { order: -1; width: 100%; }
+      #dfk-root .inschr-ev-naam { font-size: 15px; white-space: normal; }
+      #dfk-root .inschr-ev-sub { font-size: 11px; }
       #dfk-root .inschr-body { padding: 1rem; }
-      #dfk-root .inschr-ev-naam { font-size: 15px; }
       #dfk-root .inschr-expand { padding-left: 10px; }
     }
 
@@ -541,8 +543,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="inschr-ev-naam" id="inschr-ev-naam"></div>
         <div class="inschr-ev-sub" id="inschr-ev-sub"></div>
       </div>
-      <button class="open-form-btn" onclick="exporteerInschrijvingen()" style="flex-shrink:0;">⬇ PDF</button>
-      <button class="open-form-btn" onclick="openAdminInschrijfModal()" style="flex-shrink:0;background:#1a2a1a;border-color:#3aaa3a;color:#6de86d;">+ Inschrijven</button>
+      <button class="open-form-btn" onclick="exporteerInschrijvingen()" style="flex-shrink:0;padding:7px 12px;">⬇ PDF</button>
+      <button class="open-form-btn" onclick="openAdminInschrijfModal()" style="flex-shrink:0;background:#1a2a1a;border-color:#3aaa3a;color:#6de86d;padding:7px 12px;">+ Inschrijven</button>
     </div>
     <div class="inschr-body">
       <div class="section-label" id="inschr-count" style="margin-bottom:1rem;"></div>
