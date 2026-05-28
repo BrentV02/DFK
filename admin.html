@@ -127,10 +127,10 @@
     #dfk-root .dl-chips-label { font-size: 11px; color: #999; width: 100%; margin-bottom: 2px; }
 
     #dfk-root .event-list { display: flex; flex-direction: column; gap: 10px; }
-    #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #2a8a2a; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
     #dfk-root .ev-row.past { border-left-color: #333; opacity: 0.5; }
     #dfk-root .ev-row.vandaag { border-left-color: #4cff4c; background: #0d1a0d; }
-    #dfk-root .ev-row.gesloten { border-left-color: #4cff4c; }
+    #dfk-root .ev-row.gesloten { border-left-color: #E02020; }
     #dfk-root .ev-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
     #dfk-root .ev-date-block { text-align: center; min-width: 48px; flex-shrink: 0; }
     #dfk-root .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; line-height: 1; }
@@ -139,8 +139,10 @@
     #dfk-root .ev-info { flex: 1; min-width: 0; }
     #dfk-root .ev-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #dfk-root .ev-meta { font-size: 12px; color: #999; margin-top: 2px; }
+    #dfk-root .ev-klassen { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+    #dfk-root .ev-klasse-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 2px 7px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .ev-deadline { font-size: 11px; color: #aaa; margin-top: 3px; }
-    #dfk-root .ev-deadline.closed { color: #4cff4c; font-weight: 600; }
+    #dfk-root .ev-deadline.closed { color: #E02020; font-weight: 600; }
     #dfk-root .ev-inschrijvingen { font-size: 11px; color: #E02020; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .ev-btn.riders { color: #88aaff; border-color: #223366; background: #0d1a33; }
     #dfk-root .ev-btn.riders:hover { background: #1a2a4a; border-color: #88aaff; }
@@ -649,9 +651,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <!-- ── Rijder bewerken overlay ── -->
   <div id="rijder-overlay" class="rijder-overlay">
-    <div class="rijder-overlay-topbar">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;" id="rijder-overlay-titel">Rijder bewerken</div>
-    </div>
     <div class="rijder-overlay-body" id="rijder-overlay-body"></div>
   </div>
 
@@ -700,7 +699,7 @@ let editRijderId    = null; // UUID of rider being edited
 let _inschrData     = [];   // inschrijvingen voor huidig geopend event
 let _inschrEvent    = null;
 let _inschrFilter   = null; // actieve klasse-filter (null = alle)
-let _inschrSort     = 'naam';
+let _inschrSort     = 'klasse';
 
 // ── Init ─────────────────────────────────────
 (async () => {
@@ -823,8 +822,8 @@ function renderEvRow(ev, isPast) {
   const deadlinePassed = ev.deadline && new Date(ev.deadline) < now;
   const deadlineTxt = ev.deadline
     ? deadlinePassed
-      ? `🔒 Inschrijving gesloten (${formatDate(ev.deadline)})`
-      : `⏱ ${formatDate(ev.deadline)}`
+      ? `⏱ Inschrijving gesloten`
+      : `⏱ Inschrijving open tot ${formatDate(ev.deadline)}`
     : '';
   const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
   const inCount = _inschrijvingen[ev.id] || 0;
@@ -837,9 +836,9 @@ function renderEvRow(ev, isPast) {
     <div class="ev-info">
       <div class="ev-name">${ev.naam}</div>
       <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type || ''}</div>
-      ${klassen.length ? `<div class="ev-meta">${klassen.join(' · ')}</div>` : ''}
+      ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${k}</span>`).join('')}</div>` : ''}
       ${isVandaag ? `<div class="ev-meta" style="color:#4cff4c;font-weight:700;">Bezig</div>` : ''}
-      ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}">${deadlineTxt}</div>` : ''}
+      ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#4cff4c;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
       ${inCount > 0 ? `<div class="ev-inschrijvingen">▶ ${inCount} ingeschreven</div>` : ''}
     </div>
     <div class="ev-actions">
@@ -1009,14 +1008,23 @@ async function downloadWeekendPdf(wid, nr) {
 
     tekenDagHeader(ev);
 
-    const lijst = (perEvent.get(ev.id) || []).sort((a, b) => {
-      const nA = `${a.profiles?.naam||''} ${a.profiles?.voornaam||''}`.trim();
-      const nB = `${b.profiles?.naam||''} ${b.profiles?.voornaam||''}`.trim();
-      return nA.localeCompare(nB);
-    });
+    const alleRijders = perEvent.get(ev.id) || [];
 
-    const eigenLijst = lijst.filter(r => (r.profiles||{}).kart_type !== 'huur');
-    const huurLijst  = lijst.filter(r => (r.profiles||{}).kart_type === 'huur');
+    const eigenLijst = alleRijders
+      .filter(r => (r.profiles||{}).kart_type !== 'huur')
+      .sort((a, b) => {
+        const nA = `${a.profiles?.naam||''} ${a.profiles?.voornaam||''}`.trim();
+        const nB = `${b.profiles?.naam||''} ${b.profiles?.voornaam||''}`.trim();
+        return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
+      });
+
+    const huurLijst = alleRijders
+      .filter(r => (r.profiles||{}).kart_type === 'huur')
+      .sort((a, b) => {
+        const nA = `${a.profiles?.naam||''} ${a.profiles?.voornaam||''}`.trim();
+        const nB = `${b.profiles?.naam||''} ${b.profiles?.voornaam||''}`.trim();
+        return ((a.profiles?.huurkart_type)||'￿').localeCompare((b.profiles?.huurkart_type)||'￿') || nA.localeCompare(nB);
+      });
 
     // Eigen kart tabel
     doc.setFont('helvetica', 'bold');
@@ -2625,7 +2633,6 @@ function toonRijderDetail(id) {
     ? r.klassen.map(k => `${k}${r.startnummers?.[k] ? ' #'+r.startnummers[k] : ''}`).join(', ')
     : null;
 
-  document.getElementById('rijder-overlay-titel').textContent = naam;
   document.getElementById('rijder-overlay-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:2rem;">
       <div style="width:56px;height:56px;border-radius:50%;background:#E02020;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#fff;flex-shrink:0;">
@@ -2668,7 +2675,6 @@ function editRijder(id) {
   editRijderId = id;
   const r = _allRijders.find(x => x.id === id);
   const naam = `${r?.voornaam || ''} ${r?.naam || ''}`.trim() || 'Rijder bewerken';
-  document.getElementById('rijder-overlay-titel').textContent = naam;
   document.getElementById('rijder-overlay-body').innerHTML = rijderFormHTML(r);
   document.getElementById('rijder-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -2901,7 +2907,7 @@ async function toonInschrijvingen(eventId) {
   if (!ev) return;
   _inschrEvent  = ev;
   _inschrFilter = null;
-  _inschrSort   = 'naam';
+  _inschrSort   = 'klasse';
 
   // Toon overlay, reset inhoud
   document.getElementById('inschr-overlay').classList.add('open');
@@ -3116,10 +3122,12 @@ async function exporteerInschrijvingen() {
     const nB = `${pb.naam||''} ${pb.voornaam||''}`.trim();
     if (_inschrSort==='naam')   return nA.localeCompare(nB);
     if (_inschrSort==='naam_z') return nB.localeCompare(nA);
-    if (_inschrSort==='klasse') return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
     if (_inschrSort==='nr')     return (a.startnummer||9999)-(b.startnummer||9999);
     if (_inschrSort==='datum')  return new Date(a.bevestigd_op)-new Date(b.bevestigd_op);
-    return 0;
+    // standaard: klasse dan achternaam
+    const kA = pa.kart_type === 'huur' ? (pa.huurkart_type||'￿') : (a.klasse||'￿');
+    const kB = pb.kart_type === 'huur' ? (pb.huurkart_type||'￿') : (b.klasse||'￿');
+    return kA.localeCompare(kB) || nA.localeCompare(nB);
   });
 
   const ev       = _inschrEvent;
@@ -3307,11 +3315,11 @@ function _renderInschrFilters() {
       ${klasseOpties}
     </select>
     <select class="inschr-sort" onchange="sorteerInschrijvingen(this.value)">
-      <option value="naam">Naam A → Z</option>
-      <option value="naam_z">Naam Z → A</option>
-      <option value="klasse">Klasse</option>
-      <option value="nr">Startnummer</option>
-      <option value="datum">Inschrijfdatum</option>
+      <option value="naam"${_inschrSort==='naam'?' selected':''}>Naam A → Z</option>
+      <option value="naam_z"${_inschrSort==='naam_z'?' selected':''}>Naam Z → A</option>
+      <option value="klasse"${_inschrSort==='klasse'?' selected':''}>Klasse</option>
+      <option value="nr"${_inschrSort==='nr'?' selected':''}>Startnummer</option>
+      <option value="datum"${_inschrSort==='datum'?' selected':''}>Inschrijfdatum</option>
     </select>`;
 }
 
@@ -3332,7 +3340,12 @@ function _renderInschrGrid() {
     const nB = `${pb.naam||''} ${pb.voornaam||''}`.trim();
     if (_inschrSort === 'naam')   return nA.localeCompare(nB);
     if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
-    if (_inschrSort === 'klasse') return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
+    if (_inschrSort === 'klasse') {
+      const pa2 = a.profiles||{}, pb2 = b.profiles||{};
+      const kA = pa2.kart_type === 'huur' ? (pa2.huurkart_type||'￿') : (a.klasse||'￿');
+      const kB = pb2.kart_type === 'huur' ? (pb2.huurkart_type||'￿') : (b.klasse||'￿');
+      return kA.localeCompare(kB) || nA.localeCompare(nB);
+    }
     if (_inschrSort === 'nr')     return (a.startnummer||9999) - (b.startnummer||9999);
     if (_inschrSort === 'datum')  return new Date(a.bevestigd_op) - new Date(b.bevestigd_op);
     return 0;
