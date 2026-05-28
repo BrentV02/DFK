@@ -421,12 +421,20 @@ async function laadWeekenden() {
 
   const alle = (data || []).filter(w => w.evenementen && w.evenementen.length > 0);
   const vroegsteDatum = w => (w.evenementen || []).map(e => e.datum).sort()[0] || w.datum || '';
+  const laatsteDatum  = w => (w.evenementen || []).map(e => e.datum).sort().at(-1) || w.datum || '';
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const upcoming = alle.filter(w => new Date(vroegsteDatum(w) + 'T12:00:00') >= today)
                        .sort((a, b) => vroegsteDatum(a).localeCompare(vroegsteDatum(b)));
   const past     = alle.filter(w => new Date(vroegsteDatum(w) + 'T12:00:00') <  today)
                        .sort((a, b) => vroegsteDatum(b).localeCompare(vroegsteDatum(a)));
-  _allWeekenden = [...upcoming, ...past];
+  // Actieve weekenden (laatste dag nog niet voorbij) vooraan, dan rest
+  const actieveIds = new Set(
+    alle.filter(w => new Date(laatsteDatum(w) + 'T12:00:00') >= today).map(w => w.id)
+  );
+  const actief  = [...upcoming, ...past].filter(w =>  actieveIds.has(w.id))
+                    .sort((a, b) => vroegsteDatum(a).localeCompare(vroegsteDatum(b)));
+  const voorbij = past.filter(w => !actieveIds.has(w.id));
+  _allWeekenden = [...actief, ...voorbij];
 
   if (!_allWeekenden.length) {
     document.getElementById('weekend-grid').innerHTML =
@@ -434,9 +442,12 @@ async function laadWeekenden() {
     return;
   }
 
-  // Auto-selecteer eerstvolgende weekend
-  if (!_geselecteerdWid && upcoming.length > 0) {
-    _geselecteerdWid = upcoming[0].id;
+  // Auto-selecteer: het weekend waarvan de laatste dag nog niet voorbij is en het vroegst begint
+  if (!_geselecteerdWid) {
+    const actief = _allWeekenden
+      .filter(w => new Date(laatsteDatum(w) + 'T12:00:00') >= today)
+      .sort((a, b) => vroegsteDatum(a).localeCompare(vroegsteDatum(b)));
+    if (actief.length > 0) _geselecteerdWid = actief[0].id;
   }
 
   renderWeekendGrid();
@@ -565,7 +576,11 @@ async function buildLaadlijst() {
     return nA.localeCompare(nB);
   });
 
-  _eigenKart    = gesorteerd.filter(r => r.profiel.kart_type !== 'huur');
+  _eigenKart    = gesorteerd.filter(r => {
+    if (r.profiel.kart_type === 'huur') return false;
+    const p = r.profiel;
+    return p.kart_in_werkplaats || p.banden_in_werkplaats || p.bak_in_werkplaats;
+  });
   _huurKart     = gesorteerd.filter(r => r.profiel.kart_type === 'huur');
   _aantalEvents = weekend?.evenementen?.length || 0;
 
@@ -586,7 +601,8 @@ async function buildLaadlijst() {
     _laadState.set(p.id, items);
   }
 
-  teller.innerHTML = `<span>${rijderMap.size}</span> rijder${rijderMap.size !== 1 ? 's' : ''} &nbsp;·&nbsp; <span>${_eigenKart.length}</span> eigen kart &nbsp;·&nbsp; <span>${_huurKart.length}</span> huurkart`;
+  const totaalLaad = _eigenKart.length + _huurKart.length;
+  teller.innerHTML = `<span>${totaalLaad}</span> te laden &nbsp;·&nbsp; <span>${_eigenKart.length}</span> eigen kart &nbsp;·&nbsp; <span>${_huurKart.length}</span> huurkart`;
 
   // Reset zoek + filter
   _zoekterm = '';

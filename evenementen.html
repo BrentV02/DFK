@@ -98,6 +98,20 @@
     #dfk-root .inschrijvingen-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; }
     #dfk-root .inschrijvingen-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
 
+    /* ── Archief jaar/maand ── */
+    #dfk-root .archief-jaar { margin-bottom: 6px; }
+    #dfk-root .archief-jaar-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border: 1px solid #222; border-radius: 4px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-jaar-header:hover { border-color: #333; background: #161616; }
+    #dfk-root .archief-jaar-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; flex: 1; }
+    #dfk-root .archief-pijl { font-size: 12px; color: #999; width: 12px; transition: color 0.15s; }
+    #dfk-root .archief-jaar-header:hover .archief-pijl { color: #aaa; }
+    #dfk-root .archief-tel { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #444; letter-spacing: 1px; }
+    #dfk-root .archief-jaar-body { padding-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+    #dfk-root .archief-maand-header { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 3px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-maand-header:hover { border-color: #2a2a2a; }
+    #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+    #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
     #dfk-root .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; }
     #dfk-root .overlay.open { display: block; }
     #dfk-root .account-panel { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; height: 100dvh; background: #141414; border-left: 3px solid #E02020; z-index: 400; display: flex; flex-direction: column; transition: right 0.25s ease; overflow: hidden; }
@@ -244,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div id="past-section" style="display:none; margin-top:2.5rem;">
         <div class="section-label" style="color:#999; border-color:#1e1e1e;">Afgelopen evenementen</div>
-        <div class="events-grid" id="past-grid"></div>
+        <div id="past-grid"></div>
       </div>
     </div>
   </div>
@@ -318,6 +332,7 @@ let _myEventIds       = new Set();
 let _myInschrijvingen = [];
 let _currentEvent     = null;
 let _selectedKlasse   = null;
+let _selectedMonteur  = null; // 'dfk' | 'eigen' | null
 
 // ── Init ─────────────────────────────────────
 (async () => {
@@ -597,12 +612,84 @@ function renderEvents() {
   // Afgelopen evenementen
   if (past.length > 0) {
     pastSec.style.display = '';
-    pastGrid.innerHTML = past.map(buildCard).join('');
+
+    // Groepeer per jaar → maand
+    const jaarMap = new Map();
+    for (const ev of past) {
+      const d    = new Date(ev.datum + 'T12:00:00');
+      const jaar = d.getFullYear();
+      const mnd  = d.getMonth();
+      if (!jaarMap.has(jaar)) jaarMap.set(jaar, new Map());
+      const mndMap = jaarMap.get(jaar);
+      if (!mndMap.has(mnd)) mndMap.set(mnd, []);
+      mndMap.get(mnd).push(ev);
+    }
+
+    const MNDNAMEN = ['Januari','Februari','Maart','April','Mei','Juni',
+                      'Juli','Augustus','September','Oktober','November','December'];
+    const jaren = [...jaarMap.keys()].sort((a, b) => b - a);
+
+    let html = '';
+    jaren.forEach((jaar, ji) => {
+      const mndMap  = jaarMap.get(jaar);
+      const maanden = [...mndMap.keys()].sort((a, b) => b - a);
+      const totaal  = maanden.reduce((s, m) => s + mndMap.get(m).length, 0);
+      const jaarOpen = ji === 0;
+
+      html += `<div class="archief-jaar">
+        <div class="archief-jaar-header" onclick="toggleArchiefEv(this)">
+          <span class="archief-pijl">${jaarOpen ? '▾' : '▸'}</span>
+          <span class="archief-jaar-label">${jaar}</span>
+          <span class="archief-tel">${totaal} evenement${totaal !== 1 ? 'en' : ''}</span>
+        </div>
+        <div class="archief-jaar-body" ${jaarOpen ? '' : 'style="display:none;"'}>`;
+
+      maanden.forEach((mnd, mi) => {
+        const mndEvs  = mndMap.get(mnd);
+        const mndOpen = jaarOpen && mi === 0;
+        html += `<div class="archief-maand">
+          <div class="archief-maand-header" onclick="toggleArchiefEv(this)">
+            <span class="archief-pijl">${mndOpen ? '▾' : '▸'}</span>
+            <span class="archief-maand-label">${MNDNAMEN[mnd]}</span>
+            <span class="archief-tel">${mndEvs.length}</span>
+          </div>
+          <div class="archief-maand-body" ${mndOpen ? '' : 'style="display:none;"'}>
+            ${mndEvs.map(ev => buildCard(ev)).join('')}
+          </div>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    pastGrid.innerHTML = html;
   } else {
     pastSec.style.display = 'none';
   }
 
   startCountdowns();
+}
+
+function kiesMonteur(keuze) {
+  _selectedMonteur = _selectedMonteur === keuze ? null : keuze;
+  const actief = { border: '1px solid #E02020', background: '#2a1010', color: '#fff', boxShadow: 'none' };
+  const inact  = { border: '1px solid #333',    background: '#1c1c1c', color: '#aaa', boxShadow: 'none' };
+  const dfkBtn   = document.getElementById('monteur-dfk');
+  const eigenBtn = document.getElementById('monteur-eigen');
+  if (dfkBtn)   Object.assign(dfkBtn.style,   _selectedMonteur === 'dfk'   ? actief : inact);
+  if (eigenBtn) Object.assign(eigenBtn.style, _selectedMonteur === 'eigen' ? actief : inact);
+  // Foutmelding weghalen zodra er een keuze is
+  if (_selectedMonteur) {
+    document.querySelector('.monteur-fout')?.remove();
+  }
+}
+
+function toggleArchiefEv(header) {
+  const body = header.nextElementSibling;
+  const pijl = header.querySelector('.archief-pijl');
+  const open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  pijl.textContent   = open ? '▾' : '▸';
 }
 
 function startCountdowns() {
@@ -1190,6 +1277,13 @@ function _openInschrijvenForm() {
     <span class="section-title">Klasse voor dit event</span>
     ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}
 
+    <span class="section-title">Monteur</span>
+    <p style="font-size:13px;color:#999;margin-bottom:0.8rem;line-height:1.5;">Heb je een eigen monteur of wil je een monteur van DFK?</p>
+    <div style="display:flex;gap:10px;margin-bottom:1.2rem;">
+      <button id="monteur-dfk" onclick="kiesMonteur('dfk')" style="flex:1;padding:12px 8px;border-radius:3px;border:1px solid #333;background:#1c1c1c;color:#aaa;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;">🔧 Monteur van DFK</button>
+      <button id="monteur-eigen" onclick="kiesMonteur('eigen')" style="flex:1;padding:12px 8px;border-radius:3px;border:1px solid #333;background:#1c1c1c;color:#aaa;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;">👤 Eigen monteur</button>
+    </div>
+
     <span class="section-title">Vraag of opmerking</span>
     <textarea id="inschrijf-opmerking" placeholder="Optioneel — stel hier een vraag of voeg een opmerking toe aan je inschrijving." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;margin-bottom:1.2rem;outline:none;font-family:'Barlow',sans-serif;resize:vertical;min-height:90px;line-height:1.5;" onfocus="this.style.borderColor='#E02020'" onblur="this.style.borderColor='#333'"></textarea>
 
@@ -1208,8 +1302,9 @@ function sluitInschrijven() {
   document.getElementById('inschrijf-overlay').classList.remove('open');
   document.getElementById('inschrijf-panel').classList.remove('open');
   document.body.style.overflow = '';
-  _currentEvent   = null;
-  _selectedKlasse = null;
+  _currentEvent    = null;
+  _selectedKlasse  = null;
+  _selectedMonteur = null;
   if (location.hash === '#inschrijven') history.back();
   _selectedRijder = null;
 }
@@ -1218,11 +1313,31 @@ async function _toonBevestiging() {
   const ev = _currentEvent;
   if (!ev) return;
 
+  // Validatie: monteur verplicht
+  if (!_selectedMonteur) {
+    const dfkBtn   = document.getElementById('monteur-dfk');
+    const eigenBtn = document.getElementById('monteur-eigen');
+    if (dfkBtn)   { dfkBtn.style.borderColor   = '#E02020'; dfkBtn.style.boxShadow   = '0 0 0 1px #E02020'; }
+    if (eigenBtn) { eigenBtn.style.borderColor = '#E02020'; eigenBtn.style.boxShadow = '0 0 0 1px #E02020'; }
+    const panel = document.getElementById('inschrijf-body');
+    const bestaand = panel.querySelector('.monteur-fout');
+    if (!bestaand) {
+      const fout = document.createElement('p');
+      fout.className = 'monteur-fout';
+      fout.style.cssText = 'color:#E02020;font-size:13px;margin:-0.6rem 0 1rem;font-family:\'Barlow\',sans-serif;';
+      fout.textContent = 'Kies een optie voor de monteur om verder te gaan.';
+      dfkBtn?.parentElement?.after(fout);
+    }
+    dfkBtn?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   // Lees geselecteerde klasse en opmerking vóór innerHTML vervangen
   const klasse      = _selectedKlasse;
   const rijder      = _selectedRijder || _currentProfile;
   const startnummer = klasse ? (rijder?.startnummers?.[klasse] ?? null) : null;
   const opmerking   = (document.getElementById('inschrijf-opmerking')?.value || '').trim();
+  const monteur     = _selectedMonteur || null;
 
   const body = document.getElementById('inschrijf-body');
   body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#aaa;">Bezig met inschrijven...</div>`;
@@ -1233,6 +1348,7 @@ async function _toonBevestiging() {
     klasse:      klasse      || null,
     startnummer: startnummer || null,
     opmerking:   opmerking   || null,
+    monteur:     monteur,
   });
 
   if (error && error.code !== '23505') {
@@ -1251,9 +1367,11 @@ async function _toonBevestiging() {
     rijder_id: _selectedRijder?.id || _currentUser.id,
     klasse:      klasse      || null,
     startnummer: startnummer || null,
+    monteur:     monteur,
     bevestigd_op: new Date().toISOString(),
     evenementen: ev,
   });
+  _selectedMonteur = null;
   renderEvents();
 
   const d = new Date(ev.datum + 'T12:00:00');
