@@ -650,9 +650,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <!-- ── Rijder bewerken overlay ── -->
   <div id="rijder-overlay" class="rijder-overlay">
     <div class="rijder-overlay-topbar">
-      <button class="nav-back" onclick="cancelRijderEdit()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;" id="rijder-overlay-titel">Rijder bewerken</div>
-      <div style="width:80px;"></div>
     </div>
     <div class="rijder-overlay-body" id="rijder-overlay-body"></div>
   </div>
@@ -1701,7 +1699,9 @@ function annuleerWeekendNaam(wid) {
 }
 
 // ── Centrale terugknop-handler ─────────────────
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (e) => {
+  const state = e.state?.view;
+
   if (document.getElementById('account-overlay').classList.contains('open')) {
     document.getElementById('account-overlay').classList.remove('open');
     return;
@@ -1719,7 +1719,6 @@ window.addEventListener('popstate', () => {
     renderRijders();
     return;
   }
-  // Sluit het meest bovenliggende open element
   if (document.getElementById('ai-backdrop').classList.contains('open')) {
     document.getElementById('ai-backdrop').classList.remove('open');
     document.getElementById('ai-lijst').classList.remove('open');
@@ -1729,9 +1728,12 @@ window.addEventListener('popstate', () => {
     document.getElementById('inschr-overlay').classList.remove('open');
     _inschrData  = [];
     _inschrEvent = null;
+    // Als we terugkeren naar het weekend, detail open laten
+    if (state === 'weekend') return;
     return;
   }
-  if (document.getElementById('weekend-detail-view').style.display !== 'none') {
+  // Sluit weekenddetail enkel als we teruggaan naar de basisstaat
+  if (state !== 'weekend' && document.getElementById('weekend-detail-view').style.display !== 'none') {
     document.getElementById('weekend-detail-view').style.display = 'none';
     document.getElementById('events-overzicht').style.display    = '';
   }
