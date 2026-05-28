@@ -11,7 +11,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
     body { background: #0a0a0a; }
 
     #dfk-root * { box-sizing: border-box; }
@@ -371,9 +372,39 @@
     #dfk-root .account-overlay.open { display: flex; }
     #dfk-root .account-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
     #dfk-root .account-body { flex: 1; overflow-y: auto; padding: 2rem; max-width: 600px; width: 100%; margin: 0 auto; }
+
+    /* ── Rijder bewerken overlay ── */
+    #dfk-root .rijder-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow-y: auto; }
+    #dfk-root .rijder-overlay.open { display: flex; }
+    #dfk-root .rijder-overlay-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+    #dfk-root .rijder-overlay-body { flex: 1; padding: 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
+
+    /* ── Event formulier overlay ── */
+    #dfk-root .event-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow-y: auto; }
+    #dfk-root .event-overlay.open { display: flex; }
+    #dfk-root .event-overlay-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+    #dfk-root .event-overlay-body { flex: 1; padding: 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
   </style>
 </head>
 <body>
+
+<script>
+document.documentElement.style.visibility = 'hidden';
+document.addEventListener('DOMContentLoaded', function() {
+  const isRefresh = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+  const tab = isRefresh ? localStorage.getItem('dfk_admin_tab') : 'evenementen';
+  if (tab && tab !== 'evenementen') {
+    ['evenementen','rijders','crew'].forEach(function(t) {
+      const el = document.getElementById('panel-' + t);
+      if (el) el.classList.toggle('on', t === tab);
+    });
+    document.querySelectorAll('[data-tab]').forEach(function(b) {
+      b.classList.toggle('on', b.dataset.tab === tab);
+    });
+  }
+  document.documentElement.style.visibility = '';
+});
+</script>
 
 <div id="dfk-root">
 
@@ -445,75 +476,6 @@
       </div>
     </div>
 
-    <div class="right-col vereist-evenementen">
-
-      <!-- Inschrijvingen lijst (verborgen tenzij actief) -->
-      <div id="inschrijvingen-content" style="display:none;"></div>
-
-      <!-- Evenement formulier -->
-      <div id="form-content">
-      <button class="close-panel-btn" onclick="toggleEventForm()">✕ Sluiten</button>
-      <div class="page-title" id="form-title">Toevoegen</div>
-      <p class="page-sub" id="form-sub">Vul het formulier in om een nieuw evenement aan te maken</p>
-
-      <div class="edit-banner" id="edit-banner">
-        <span>✎ Je past een evenement aan</span>
-        <span onclick="cancelEdit()" style="cursor:pointer; color:#888;">✕ Annuleren</span>
-      </div>
-
-      <div class="section-label">Evenement</div>
-
-      <label class="field-label">Naam</label>
-      <input class="field-input" id="f-naam" type="text" placeholder="bijv. Iame Benelux – Ronde 3" />
-
-      <div class="two-col">
-        <div>
-          <label class="field-label">Datum</label>
-          <input class="field-input" id="f-datum" type="date" style="margin-bottom:0;" />
-        </div>
-        <div>
-          <label class="field-label">Type</label>
-          <select class="field-select" id="f-type" style="margin-bottom:0;">
-            <option value="">Selecteer...</option>
-            <option>Wedstrijd</option><option>Nationaal</option><option>Club</option><option>Training</option><option>Andere</option>
-          </select>
-        </div>
-      </div>
-
-      <label class="field-label" style="margin-top:1rem;">Circuit / Locatie</label>
-      <div class="sel-del-row">
-        <select class="field-select" id="f-circuit" onchange="onCircuitChange()"><option value="">Selecteer circuit...</option></select>
-        <button class="sel-del-btn" id="circuit-del-btn" onclick="verwijderCircuit()" title="Verwijder dit circuit uit de lijst" style="display:none;">×</button>
-      </div>
-      <div class="circuit-add-row">
-        <input class="field-input" id="f-circuit-nieuw" type="text" placeholder="Nieuw circuit toevoegen..." />
-        <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
-      </div>
-
-
-      <label class="field-label">Inschrijvingsdeadline</label>
-      <input class="field-input" id="f-deadline" type="datetime-local" />
-      <div id="dl-chips" class="dl-chips"></div>
-
-      <div class="section-label">Klassen</div>
-      <p class="hint">Meerdere keuzes mogelijk</p>
-      <div class="chk-grid" id="klassen-grid">
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Iame Mini"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="KA100"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="X30 Junior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="X30 Senior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Iame Super Shifter"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Cadet"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Junior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Senior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Rotax"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
-        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Alle klassen"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Alle klassen</span></div>
-      </div>
-
-      <button class="add-btn" id="submit-btn" onclick="submitForm()">+ Evenement toevoegen</button>
-      <button class="reset-btn" onclick="cancelEdit()">Annuleren / leegmaken</button>
-      </div><!-- einde form-content -->
-    </div>
   </div>
   </div>
 
@@ -617,6 +579,82 @@
     </div>
   </div>
 
+  <!-- ── Event formulier overlay ── -->
+  <div id="event-overlay" class="event-overlay">
+    <div class="event-overlay-topbar">
+      <button class="nav-back" onclick="sluitEventOverlay()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;" id="event-overlay-titel">Evenement toevoegen</div>
+      <div style="width:80px;"></div>
+    </div>
+    <div class="event-overlay-body">
+      <div class="edit-banner" id="edit-banner">
+        <span>✎ Je past een evenement aan</span>
+        <span onclick="sluitEventOverlay()" style="cursor:pointer; color:#888;">✕ Annuleren</span>
+      </div>
+
+      <div class="section-label">Evenement</div>
+
+      <label class="field-label">Naam</label>
+      <input class="field-input" id="f-naam" type="text" placeholder="bijv. Iame Benelux – Ronde 3" />
+
+      <div class="two-col">
+        <div>
+          <label class="field-label">Datum</label>
+          <input class="field-input" id="f-datum" type="date" style="margin-bottom:0;" />
+        </div>
+        <div>
+          <label class="field-label">Type</label>
+          <select class="field-select" id="f-type" style="margin-bottom:0;">
+            <option value="">Selecteer...</option>
+            <option>Wedstrijd</option><option>Nationaal</option><option>Club</option><option>Training</option><option>Andere</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="field-label" style="margin-top:1rem;">Circuit / Locatie</label>
+      <div class="sel-del-row">
+        <select class="field-select" id="f-circuit" onchange="onCircuitChange()"><option value="">Selecteer circuit...</option></select>
+        <button class="sel-del-btn" id="circuit-del-btn" onclick="verwijderCircuit()" title="Verwijder dit circuit uit de lijst" style="display:none;">×</button>
+      </div>
+      <div class="circuit-add-row">
+        <input class="field-input" id="f-circuit-nieuw" type="text" placeholder="Nieuw circuit toevoegen..." />
+        <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
+      </div>
+
+      <label class="field-label">Inschrijvingsdeadline</label>
+      <input class="field-input" id="f-deadline" type="datetime-local" />
+      <div id="dl-chips" class="dl-chips"></div>
+
+      <div class="section-label">Klassen</div>
+      <p class="hint">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="klassen-grid">
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Iame Mini"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="KA100"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="X30 Junior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="X30 Senior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Iame Super Shifter"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Cadet"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Junior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Formula Honda Senior"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Rotax"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
+        <div class="chk-item" onclick="toggleChk(this)" data-klasse="Alle klassen"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Alle klassen</span></div>
+      </div>
+
+      <button class="add-btn" id="submit-btn" onclick="submitForm()">+ Evenement toevoegen</button>
+      <button class="reset-btn" onclick="sluitEventOverlay()">Annuleren</button>
+    </div>
+  </div>
+
+  <!-- ── Rijder bewerken overlay ── -->
+  <div id="rijder-overlay" class="rijder-overlay">
+    <div class="rijder-overlay-topbar">
+      <button class="nav-back" onclick="cancelRijderEdit()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;" id="rijder-overlay-titel">Rijder bewerken</div>
+      <div style="width:80px;"></div>
+    </div>
+    <div class="rijder-overlay-body" id="rijder-overlay-body"></div>
+  </div>
+
   <!-- ── Mijn account overlay ── -->
   <div id="account-overlay" class="account-overlay">
     <div class="account-topbar">
@@ -660,6 +698,9 @@ let _inschrSort     = 'naam';
     deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
     renderDeadlineChips();
     await Promise.all([loadCircuits(), loadEvents(), loadWeekenden()]);
+    const opgeslagenTab = localStorage.getItem('dfk_admin_tab');
+    if (opgeslagenTab === 'rijders') loadRijders();
+    if (opgeslagenTab === 'crew')    loadCrew();
 
     // ── Realtime ──────────────────────────────
     _supabase.channel('admin-realtime')
@@ -1647,6 +1688,19 @@ window.addEventListener('popstate', () => {
     document.getElementById('account-overlay').classList.remove('open');
     return;
   }
+  if (document.getElementById('event-overlay').classList.contains('open')) {
+    document.getElementById('event-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    cancelEdit();
+    return;
+  }
+  if (document.getElementById('rijder-overlay').classList.contains('open')) {
+    document.getElementById('rijder-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    editRijderId = null;
+    renderRijders();
+    return;
+  }
   // Sluit het meest bovenliggende open element
   if (document.getElementById('ai-backdrop').classList.contains('open')) {
     document.getElementById('ai-backdrop').classList.remove('open');
@@ -1827,20 +1881,25 @@ function resetForm() {
 function cancelEdit() {
   editEventId = null;
   resetForm();
-  document.getElementById('form-title').textContent = 'Toevoegen';
-  document.getElementById('form-sub').textContent   = 'Vul het formulier in om een nieuw evenement aan te maken';
   document.getElementById('edit-banner').classList.remove('show');
+  document.getElementById('event-overlay-titel').textContent = 'Evenement toevoegen';
   const btn = document.getElementById('submit-btn');
   btn.textContent = '+ Evenement toevoegen';
   btn.classList.remove('edit-mode');
   renderEvents();
 }
 
+function sluitEventOverlay() {
+  cancelEdit();
+  document.getElementById('event-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  if (location.hash === '#event-form') history.back();
+}
+
 function editEvent(id) {
   if (!document.body.classList.contains('kan-evenementen')) return;
   const ev = _allEvents.find(e => e.id === id);
   if (!ev) return;
-  toggleEventForm(true);
   editEventId = id;
 
   document.getElementById('f-naam').value  = ev.naam;
@@ -1848,7 +1907,6 @@ function editEvent(id) {
   document.getElementById('f-type').value  = ev.type || '';
   renderCircuitSelect(ev.circuit);
 
-  // deadline: convert from ISO to datetime-local format
   if (ev.deadline) {
     const d = new Date(ev.deadline);
     const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -1862,14 +1920,16 @@ function editEvent(id) {
   document.querySelectorAll('#klassen-grid .chk-item').forEach(i =>
     i.classList.toggle('on', klassen.includes(i.dataset.klasse)));
 
-  document.getElementById('form-title').textContent = 'Aanpassen';
-  document.getElementById('form-sub').textContent   = 'Pas de gegevens aan en sla op';
+  document.getElementById('event-overlay-titel').textContent = ev.naam;
   document.getElementById('edit-banner').classList.add('show');
   const btn = document.getElementById('submit-btn');
   btn.textContent = '✓ Wijzigingen opslaan';
   btn.classList.add('edit-mode');
+
+  document.getElementById('event-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'event-form' }, '', '#event-form');
   renderEvents();
-  document.querySelector('.right-col').scrollTop = 0;
 }
 
 async function toggleWeekendZichtbaar(wid) {
@@ -2086,14 +2146,16 @@ function saveDeadlineToHistory(val) {
 }
 
 // ── Evenement form tonen/verbergen ────────────
-function toggleEventForm(forceOpen) {
-  const layout = document.querySelector('#panel-evenementen .layout');
-  const isOpen = layout.classList.contains('show-right');
-  if (forceOpen === true || !isOpen) {
-    layout.classList.add('show-right');
+function toggleEventForm() {
+  const overlay = document.getElementById('event-overlay');
+  if (overlay.classList.contains('open')) {
+    sluitEventOverlay();
   } else {
-    layout.classList.remove('show-right');
     cancelEdit();
+    document.getElementById('event-overlay-titel').textContent = 'Evenement toevoegen';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    history.pushState({ view: 'event-form' }, '', '#event-form');
   }
 }
 
@@ -2109,6 +2171,7 @@ function switchAdminTab(tab) {
     document.getElementById('panel-' + t).classList.toggle('on', t === tab));
   if (tab === 'rijders') loadRijders();
   if (tab === 'crew')    loadCrew();
+  localStorage.setItem('dfk_admin_tab', tab);
 }
 
 // ── Crew ──────────────────────────────────────
@@ -2532,11 +2595,12 @@ function editRijder(id) {
   if (!document.body.classList.contains('kan-rijders')) return;
   editRijderId = id;
   const r = _allRijders.find(x => x.id === id);
-  renderRijders();
-  document.querySelector('#panel-rijders .layout').classList.add('show-right');
-  const detail = document.getElementById('rider-detail');
-  detail.style.display = 'block';
-  detail.innerHTML = rijderFormHTML(r);
+  const naam = `${r?.voornaam || ''} ${r?.naam || ''}`.trim() || 'Rijder bewerken';
+  document.getElementById('rijder-overlay-titel').textContent = naam;
+  document.getElementById('rijder-overlay-body').innerHTML = rijderFormHTML(r);
+  document.getElementById('rijder-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'rijder-edit' }, '', '#rijder-edit');
 }
 
 function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
@@ -2754,8 +2818,9 @@ async function deleteRijder(id) {
 function cancelRijderEdit() {
   editRijderId = null;
   renderRijders();
-  document.querySelector('#panel-rijders .layout').classList.remove('show-right');
-  document.getElementById('rider-detail').style.display = '';
+  document.getElementById('rijder-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  if (location.hash === '#rijder-edit') history.back();
 }
 
 // ── Inschrijvingen full-screen overlay ───────

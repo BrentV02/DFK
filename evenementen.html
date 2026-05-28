@@ -9,7 +9,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
     body { background: #0a0a0a; }
 
     #dfk-root * { box-sizing: border-box; }
@@ -179,6 +180,24 @@
   </style>
 </head>
 <body>
+
+<script>
+document.documentElement.style.visibility = 'hidden';
+document.addEventListener('DOMContentLoaded', function() {
+  const isRefresh = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+  const tab = isRefresh ? localStorage.getItem('dfk_ev_tab') : 'evenementen';
+  if (tab && tab !== 'evenementen') {
+    document.querySelectorAll('#dfk-root .tab-btn').forEach(function(b, i) {
+      b.classList.toggle('on', tab === 'evenementen' ? i === 0 : i === 1);
+    });
+    var evEl = document.getElementById('tab-evenementen');
+    var inEl = document.getElementById('tab-inschrijvingen');
+    if (evEl) evEl.classList.toggle('on', tab === 'evenementen');
+    if (inEl) inEl.classList.toggle('on', tab === 'inschrijvingen');
+  }
+  document.documentElement.style.visibility = '';
+});
+</script>
 
 <div id="dfk-root" class="locked">
 
@@ -634,6 +653,7 @@ function switchTab(tab) {
     renderInschrijvingen();
     loadMyInschrijvingen().then(() => renderInschrijvingen());
   }
+  localStorage.setItem('dfk_ev_tab', tab);
 }
 
 // ── Mijn Inschrijvingen ──────────────────────
