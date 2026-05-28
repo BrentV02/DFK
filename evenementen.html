@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -23,7 +23,7 @@
     #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 4px; padding: 7px 14px; cursor: pointer; color: #ccc; font-size: 13px; font-family: 'Barlow', sans-serif; }
     #dfk-root .nav-user-btn:hover { border-color: #E02020; color: #fff; }
     #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
-    #dfk-root .nav-chevron { font-size: 10px; color: #666; }
+    #dfk-root .nav-chevron { font-size: 10px; color: #999; }
 
     #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
     #dfk-root .dropdown.open { display: block; }
@@ -36,7 +36,7 @@
 
     #dfk-root .main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; width: 100%; margin: 0 auto; }
     #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-    #dfk-root .page-sub { font-size: 13px; color: #666; margin-bottom: 2rem; }
+    #dfk-root .page-sub { font-size: 13px; color: #999; margin-bottom: 2rem; }
     #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
 
     #dfk-root .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
@@ -57,8 +57,8 @@
     #dfk-root .event-badge { flex-shrink: 0; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; align-self: flex-start; }
     #dfk-root .event-body { padding: 16px; }
     #dfk-root .event-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
-    #dfk-root .event-circuit { font-size: 13px; color: #888; margin-bottom: 12px; }
-    #dfk-root .event-deadline { font-size: 11px; color: #666; margin-bottom: 10px; }
+    #dfk-root .event-circuit { font-size: 13px; color: #aaa; margin-bottom: 12px; }
+    #dfk-root .event-deadline { font-size: 11px; color: #999; margin-bottom: 10px; }
     #dfk-root .event-deadline.urgent { color: #E02020; }
     #dfk-root .countdown-top { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.9); }
     #dfk-root .countdown-top strong { color: #fff; font-size: 13px; }
@@ -67,7 +67,7 @@
     #dfk-root .event-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #1e1e1e; padding-top: 12px; }
     #dfk-root .inschrijf-btn { background: #E02020; color: #fff; border: none; border-radius: 3px; padding: 8px 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .inschrijf-btn:hover { background: #c01010; }
-    #dfk-root .inschrijf-btn.vol { background: #2a2a2a; color: #555; cursor: default; }
+    #dfk-root .inschrijf-btn.vol { background: #2a2a2a; color: #999; cursor: default; }
     #dfk-root .inschrijf-btn.ingeschreven { background: #1a3a1a; border: 1px solid #2a6a2a; color: #4cff4c; cursor: default; }
     #dfk-root .events-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; grid-column: 1/-1; }
     #dfk-root .events-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
@@ -78,7 +78,7 @@
 
     /* ── Tabs ── */
     #dfk-root .tab-bar { background: #111; border-bottom: 3px solid #1a1a1a; display: flex; position: sticky; top: 60px; z-index: 99; }
-    #dfk-root .tab-btn { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; transition: color 0.15s; }
+    #dfk-root .tab-btn { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; transition: color 0.15s; }
     #dfk-root .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
     #dfk-root .tab-panel { display: none; }
     #dfk-root .tab-panel.on { display: block; }
@@ -87,12 +87,12 @@
     #dfk-root .inschrijving-card { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
     #dfk-root .inschrijving-info { flex: 1; }
     #dfk-root .inschrijving-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
-    #dfk-root .inschrijving-meta { font-size: 13px; color: #888; margin-bottom: 2px; }
-    #dfk-root .inschrijving-reg { font-size: 11px; color: #555; margin-top: 6px; }
-    #dfk-root .uitschrijf-btn { background: none; border: 1px solid #333; border-radius: 3px; color: #666; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    #dfk-root .inschrijving-meta { font-size: 13px; color: #aaa; margin-bottom: 2px; }
+    #dfk-root .inschrijving-reg { font-size: 11px; color: #999; margin-top: 6px; }
+    #dfk-root .uitschrijf-btn { background: none; border: 1px solid #333; border-radius: 3px; color: #999; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     #dfk-root .uitschrijf-btn:hover { border-color: #E02020; color: #E02020; }
     #dfk-root .uitschrijf-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-    #dfk-root .uitschrijf-dl { font-size: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #555; text-align: right; line-height: 1.5; }
+    #dfk-root .uitschrijf-dl { font-size: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; text-align: right; line-height: 1.5; }
     #dfk-root .uitschrijf-dl.urgent { color: #cc2020; }
     #dfk-root .uitschrijf-dl strong { font-size: 12px; color: #ff4444; }
     #dfk-root .inschrijvingen-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; }
@@ -104,12 +104,12 @@
     #dfk-root .account-panel.open { right: 0; }
     #dfk-root .panel-header { background: #111; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
     #dfk-root .panel-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
-    #dfk-root .panel-close { background: none; border: none; color: #666; font-size: 22px; cursor: pointer; line-height: 1; }
+    #dfk-root .panel-close { background: none; border: none; color: #999; font-size: 22px; cursor: pointer; line-height: 1; }
     #dfk-root .panel-close:hover { color: #fff; }
     #dfk-root .panel-body { padding: 24px; flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
     #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
     #dfk-root .section-title:first-child { margin-top: 0; }
-    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
     #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
@@ -119,7 +119,7 @@
     #dfk-root .save-btn:hover { background: #c01010; }
     #dfk-root .edit-btn { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 6px 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .edit-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .cancel-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #666; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .cancel-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #999; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
     #dfk-root .cancel-btn:hover { color: #ccc; border-color: #444; }
     #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
     #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
@@ -133,7 +133,7 @@
     #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
     #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
     #dfk-root .toggle-group { display: flex; gap: 6px; }
-    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #888; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #aaa; }
     #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
     #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
     #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
@@ -150,27 +150,27 @@
     #dfk-root .ev-confirm-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 1px; margin-bottom: 6px; }
     #dfk-root .ev-confirm-meta { font-size: 13px; color: #aaa; }
     #dfk-root .cf-field { margin-bottom: 0.85rem; }
-    #dfk-root .cf-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #555; margin-bottom: 3px; }
+    #dfk-root .cf-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 3px; }
     #dfk-root .cf-value { font-size: 14px; color: #ccc; }
     #dfk-root .cf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.85rem; }
     #dfk-root .cf-two .cf-field { margin-bottom: 0; }
     #dfk-root .confirm-vraag { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin: 1.8rem 0 0.4rem; }
-    #dfk-root .confirm-hint { font-size: 13px; color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
+    #dfk-root .confirm-hint { font-size: 13px; color: #999; margin-bottom: 1.5rem; line-height: 1.5; }
     #dfk-root .bevestig-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .bevestig-btn:hover { background: #c01010; }
-    #dfk-root .annuleer-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #666; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .annuleer-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #999; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
     #dfk-root .annuleer-btn:hover { color: #ccc; border-color: #444; }
     #dfk-root .save-msg { font-size: 12px; text-align: center; margin-top: 8px; min-height: 18px; font-family: 'Barlow', sans-serif; }
     #dfk-root .rijder-kaart { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
     #dfk-root .rijder-kaart:hover { border-color: #E02020; }
     #dfk-root .rijder-kaart-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
-    #dfk-root .rijder-kaart-sub { font-size: 12px; color: #666; margin-top: 2px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .acc-add-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #888; border: 1px dashed #333; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 4px; text-align: center; }
+    #dfk-root .rijder-kaart-sub { font-size: 12px; color: #999; margin-top: 2px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .acc-add-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #aaa; border: 1px dashed #333; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 4px; text-align: center; }
     #dfk-root .acc-add-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .acc-back-btn { background: none; border: none; color: #888; font-size: 22px; cursor: pointer; padding: 0 8px 0 0; line-height: 1; }
+    #dfk-root .acc-back-btn { background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 0 8px 0 0; line-height: 1; }
     #dfk-root .acc-back-btn:hover { color: #fff; }
     #dfk-root .kart-type-keuze { display: flex; gap: 8px; margin-bottom: 1rem; }
-    #dfk-root .kart-type-keuze-btn { flex: 1; padding: 12px 8px; border: 1px solid #444; border-radius: 3px; background: #1c1c1c; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; }
+    #dfk-root .kart-type-keuze-btn { flex: 1; padding: 12px 8px; border: 1px solid #444; border-radius: 3px; background: #1c1c1c; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; }
     #dfk-root .kart-type-keuze-btn.on { border-color: #E02020; background: #2a1010; color: #fff; }
     @media (max-width: 768px) {
       #dfk-root .inschrijf-panel { width: 100%; right: -100%; }
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="events-empty"><div class="events-empty-icon">⏳</div>Evenementen laden...</div>
       </div>
       <div id="past-section" style="display:none; margin-top:2.5rem;">
-        <div class="section-label" style="color:#555; border-color:#1e1e1e;">Afgelopen evenementen</div>
+        <div class="section-label" style="color:#999; border-color:#1e1e1e;">Afgelopen evenementen</div>
         <div class="events-grid" id="past-grid"></div>
       </div>
     </div>
@@ -290,6 +290,21 @@ const DAGEN_KORT = ['zo','ma','di','wo','do','vr','za'];
 const DAGEN      = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
 const BENZ_LABELS = ['Ik neem altijd zelf benzine mee','Ik pak altijd benzine bij DFK','Training: zelf — Wedstrijd: bij DFK'];
 const KAMPIOENSCHAPPEN = ['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'];
+
+function berekenLeeftijd(geboortedatum) {
+  if (!geboortedatum) return null;
+  const gd = new Date(geboortedatum + 'T12:00:00');
+  const nu = new Date();
+  let leeftijd = nu.getFullYear() - gd.getFullYear();
+  if (nu.getMonth() < gd.getMonth() || (nu.getMonth() === gd.getMonth() && nu.getDate() < gd.getDate())) leeftijd--;
+  return leeftijd;
+}
+
+function formatGeboortedatum(geboortedatum) {
+  if (!geboortedatum) return null;
+  const gd = new Date(geboortedatum + 'T12:00:00');
+  return `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()} <span style="color:#999;font-size:12px;">(${berekenLeeftijd(geboortedatum)} jaar)</span>`;
+}
 const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
 
 let _currentUser      = null;
@@ -692,7 +707,7 @@ function renderInschrijvingen() {
     } else if (isPast) {
       rechts = `<span style="font-size:11px;color:#444;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>`;
     } else if (dlPassed) {
-      rechts = `<span style="font-size:11px;color:#555;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
+      rechts = `<span style="font-size:11px;color:#999;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
     } else {
       // Knop + eventuele countdown
       let cdHtml = '';
@@ -786,7 +801,7 @@ function _renderAccLijst() {
   document.getElementById('acc-body').innerHTML = `
     <span class="section-title">Account</span>
     <label class="field-label">E-mailadres</label>
-    <input class="field-input" type="email" value="${email}" disabled style="color:#555;" />
+    <input class="field-input" type="email" value="${email}" disabled style="color:#999;" />
     <label class="field-label">Wachtwoord wijzigen</label>
     <input id="acc-pw" class="field-input" type="password" placeholder="Nieuw wachtwoord" oninput="checkAccPwMatch()" />
     <label class="field-label">Wachtwoord bevestigen</label>
@@ -802,7 +817,7 @@ function _renderAccLijst() {
           <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
           <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
         </div>
-        <span style="color:#666;font-size:20px;">›</span>
+        <span style="color:#999;font-size:20px;">›</span>
       </div>
     `).join('')}
     <button class="acc-add-btn" onclick="_addRijder()">+ Extra rijder toevoegen</button>
@@ -848,7 +863,7 @@ function _rijderFormHTML(r, isExtra) {
     <div id="acc-eigen-sectie" style="display:${isEigen?'':'none'};">
       <span class="section-title">Kart & Competitie</span>
       <label class="field-label">Klasse(n)</label>
-      <p style="font-size:11px;color:#666;font-family:'Barlow',sans-serif;margin-bottom:0.5rem;margin-top:-0.3rem;">Meerdere keuzes mogelijk</p>
+      <p style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;margin-bottom:0.5rem;margin-top:-0.3rem;">Meerdere keuzes mogelijk</p>
       <div class="chk-grid" id="acc-klassen-grid">${klassenHtml}</div>
       <div id="acc-startnrs" style="display:none;margin-bottom:1rem;">
         <label class="field-label">Startnummer per klasse</label>
@@ -1110,7 +1125,7 @@ function _toonRijderKeuze() {
           <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
           <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
         </div>
-        <span style="color:#666;font-size:20px;">›</span>
+        <span style="color:#999;font-size:20px;">›</span>
       </div>`).join('')}
     <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
   `;
@@ -1127,11 +1142,7 @@ function _openInschrijvenForm() {
   const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
   const acc = _getAccountData();
 
-  let gebStr = acc.geboorte;
-  if (acc.geboorte) {
-    const gd = new Date(acc.geboorte + 'T12:00:00');
-    gebStr = `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()}`;
-  }
+  const gebStr = formatGeboortedatum(acc.geboorte);
 
   let kartInfoHtml = '';
   if (acc.kartType === 'huur') {
@@ -1186,7 +1197,7 @@ function _openInschrijvenForm() {
       <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Is alles correct?</div>
       <button class="edit-btn" onclick="enableInschrijfEdit()">✎ Aanpassen</button>
     </div>
-    <p style="font-size:13px; color:#666; margin-bottom:1.4rem; line-height:1.5;">Kloppen er gegevens niet? Klik op Aanpassen.</p>
+    <p style="font-size:13px; color:#999; margin-bottom:1.4rem; line-height:1.5;">Kloppen er gegevens niet? Klik op Aanpassen.</p>
 
     <button class="bevestig-btn" onclick="_toonBevestiging()">Bevestigen →</button>
     <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
@@ -1214,7 +1225,7 @@ async function _toonBevestiging() {
   const opmerking   = (document.getElementById('inschrijf-opmerking')?.value || '').trim();
 
   const body = document.getElementById('inschrijf-body');
-  body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#888;">Bezig met inschrijven...</div>`;
+  body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#aaa;">Bezig met inschrijven...</div>`;
 
   const { error } = await _supabase.from('inschrijvingen').insert({
     rijder_id:   _selectedRijder?.id || _currentUser.id,
@@ -1252,7 +1263,7 @@ async function _toonBevestiging() {
     <div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
       <div style="font-size:52px; margin-bottom:1rem;">✅</div>
       <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin-bottom:0.4rem;">Inschrijving bevestigd!</div>
-      <p style="font-size:13px; color:#888; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
+      <p style="font-size:13px; color:#aaa; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
     </div>
     <div class="ev-confirm-box" style="margin-bottom:2rem;">
       <div class="ev-confirm-name">${ev.naam}</div>
@@ -1375,7 +1386,7 @@ function selectKlasseVoorEvent(item) {
 
 function buildKlasseKeuzeHtml(klassen, startnummers) {
   if (!klassen || klassen.length === 0) {
-    return `<p style="font-size:13px;color:#666;padding:8px 0;font-family:'Barlow',sans-serif;">
+    return `<p style="font-size:13px;color:#999;padding:8px 0;font-family:'Barlow',sans-serif;">
       Geen klasse ingesteld. Stel je klasse in via <em style="color:#E02020;font-style:normal;cursor:pointer;" onclick="sluitInschrijven();openAccount()">Mijn account</em>.
     </p>`;
   }
@@ -1383,7 +1394,7 @@ function buildKlasseKeuzeHtml(klassen, startnummers) {
   if (!_selectedKlasse || !klassen.includes(_selectedKlasse)) _selectedKlasse = klassen[0];
   const enkelvoud = klassen.length === 1;
   return `
-    <p style="font-size:11px;color:#666;margin-bottom:0.5rem;font-family:'Barlow',sans-serif;">
+    <p style="font-size:11px;color:#999;margin-bottom:0.5rem;font-family:'Barlow',sans-serif;">
       ${enkelvoud ? 'Jouw klasse voor dit event:' : 'Kies de klasse waarmee je deelneemt:'}
     </p>
     <div class="klasse-keuze-grid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;">
@@ -1511,3 +1522,4 @@ async function bevestigInschrijving() {
 </script>
 </body>
 </html>
+

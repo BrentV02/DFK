@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -34,7 +34,7 @@
       display: flex; align-items: center; padding: 0 20px; height: 100%;
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
       font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-      color: #555; background: transparent; border: none;
+      color: #999; background: transparent; border: none;
       border-bottom: 3px solid transparent; margin-bottom: -3px;
       cursor: pointer; transition: color 0.15s;
     }
@@ -42,7 +42,7 @@
     .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
 
     .mobile-tab-bar { display: none; background: #111; border-bottom: 3px solid #1a1a1a; position: sticky; top: 60px; z-index: 99; }
-    .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
+    .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
     .mobile-tab.on { color: #fff; border-bottom-color: #E02020; }
 
     @media (max-width: 768px) {
@@ -56,7 +56,7 @@
     .nav-user-btn:hover { background: #1a1a1a; }
     .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
     .nav-naam { font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; }
-    .nav-chevron { font-size: 10px; color: #666; }
+    .nav-chevron { font-size: 10px; color: #999; }
     .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
     .dropdown.open { display: block; }
     .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; font-family: 'Barlow', sans-serif; }
@@ -97,8 +97,8 @@
     .wk-huidig { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #E02020; border-radius: 4px; padding: 12px 16px; cursor: pointer; user-select: none; }
     .wk-huidig:hover { background: #1c1010; }
     .wk-huidig-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; flex: 1; }
-    .wk-huidig-meta { font-size: 12px; color: #888; font-family: 'Barlow', sans-serif; margin-top: 2px; }
-    .wk-wissel-pijl { font-size: 13px; color: #888; transition: transform 0.2s; flex-shrink: 0; }
+    .wk-huidig-meta { font-size: 12px; color: #aaa; font-family: 'Barlow', sans-serif; margin-top: 2px; }
+    .wk-wissel-pijl { font-size: 13px; color: #aaa; transition: transform 0.2s; flex-shrink: 0; }
     .wk-huidig.open .wk-wissel-pijl { transform: rotate(180deg); color: #E02020; }
     .wk-lijst { display: none; flex-direction: column; gap: 6px; margin-top: 6px; }
     .wk-lijst.open { display: flex; }
@@ -108,14 +108,14 @@
       padding: 10px 14px; cursor: pointer; transition: border-color 0.15s;
       user-select: none;
     }
-    .event-kaart:hover { border-color: #444; border-left-color: #555; }
+    .event-kaart:hover { border-color: #444; border-left-color: #999; }
     .event-kaart.geselecteerd { border-color: #333; border-left-color: #E02020; background: #1a0e0e; }
     .event-kaart-naam {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
       font-size: 14px; letter-spacing: 1px; color: #ccc; margin-bottom: 3px;
     }
     .event-kaart.geselecteerd .event-kaart-naam { color: #fff; }
-    .event-kaart-meta { font-size: 11px; color: #555; font-family: 'Barlow', sans-serif; }
+    .event-kaart-meta { font-size: 11px; color: #999; font-family: 'Barlow', sans-serif; }
 
     /* ── Laadlijst ── */
     .laad-teller {
@@ -186,7 +186,7 @@
     /* ── Zoek + filter ── */
     .laad-controls { display: none; flex-direction: column; gap: 8px; margin-bottom: 1.2rem; }
     .zoek-wrap { position: relative; }
-    .zoek-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #666; font-size: 15px; pointer-events: none; }
+    .zoek-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #999; font-size: 15px; pointer-events: none; }
     .zoek-input {
       width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff;
       padding: 11px 12px 11px 38px; font-size: 15px; border-radius: 4px; outline: none;
@@ -198,7 +198,7 @@
       flex: 1; padding: 9px 6px; text-align: center;
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
       font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-      border: 1px solid #2a2a2a; background: #161616; color: #555;
+      border: 1px solid #2a2a2a; background: #161616; color: #999;
       border-radius: 3px; cursor: pointer; transition: all 0.15s;
     }
     .filter-btn.on         { border-color: #E02020; color: #fff; background: #2a1010; }
@@ -211,7 +211,7 @@
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
       font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
       padding: 6px 11px; border-radius: 3px; cursor: pointer;
-      border: 1px solid #2a2a2a; background: #1a1a1a; color: #555;
+      border: 1px solid #2a2a2a; background: #1a1a1a; color: #999;
       transition: all 0.12s;
     }
     .laad-toggle:hover { border-color: #444; color: #aaa; }
@@ -280,7 +280,7 @@
     </div>
     <div class="wk-lijst" id="wk-lijst">
       <div class="event-grid" id="weekend-grid">
-        <div style="color:#555;font-size:13px;grid-column:1/-1;"><span class="spinner"></span> Weekenden laden...</div>
+        <div style="color:#999;font-size:13px;grid-column:1/-1;"><span class="spinner"></span> Weekenden laden...</div>
       </div>
     </div>
   </div>
@@ -430,7 +430,7 @@ async function laadWeekenden() {
 
   if (!_allWeekenden.length) {
     document.getElementById('weekend-grid').innerHTML =
-      '<div style="color:#555;font-size:13px;grid-column:1/-1;">Geen weekenden gevonden.</div>';
+      '<div style="color:#999;font-size:13px;grid-column:1/-1;">Geen weekenden gevonden.</div>';
     return;
   }
 
@@ -508,7 +508,7 @@ async function buildLaadlijst() {
     return;
   }
 
-  lijst.innerHTML        = `<div style="color:#555;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
+  lijst.innerHTML        = `<div style="color:#999;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
   teller.innerHTML       = '';
   controls.style.display = 'none';
   pdfBtn.style.display   = 'none';
@@ -968,22 +968,22 @@ function openAccountOverlay() {
   const r = _werkplaatsProfile || {};
   document.getElementById('account-body').innerHTML = `
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#fff;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
-    <p style="font-size:13px;color:#666;margin-bottom:1.8rem;">${r.email||''}</p>
+    <p style="font-size:13px;color:#999;margin-bottom:1.8rem;">${r.email||''}</p>
 
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:1.2rem;">Naam</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;">
-      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;">Voornaam</label><input id="acc-voornaam" value="${r.voornaam||''}" style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;" /></div>
-      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;">Naam</label><input id="acc-naam" value="${r.naam||''}" style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;" /></div>
+      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Voornaam</label><input id="acc-voornaam" value="${r.voornaam||''}" style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;" /></div>
+      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Naam</label><input id="acc-naam" value="${r.naam||''}" style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;" /></div>
     </div>
 
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:1.2rem;margin-top:1.5rem;">Wachtwoord wijzigen</div>
-    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;">Nieuw wachtwoord <span style="color:#555;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
-    <div style="position:relative;"><input id="acc-ww" type="password" placeholder="Nieuw wachtwoord..." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 48px 11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;margin-bottom:1rem;" /><button onclick="var i=document.getElementById('acc-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button></div>
-    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;">Wachtwoord bevestigen</label>
-    <div style="position:relative;"><input id="acc-ww2" type="password" placeholder="Herhaal wachtwoord..." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 48px 11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;margin-bottom:1.5rem;" /><button onclick="var i=document.getElementById('acc-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;font-size:14px;">👁</button></div>
+    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Nieuw wachtwoord <span style="color:#999;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
+    <div style="position:relative;"><input id="acc-ww" type="password" placeholder="Nieuw wachtwoord..." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 48px 11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;margin-bottom:1rem;" /><button onclick="var i=document.getElementById('acc-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button></div>
+    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Wachtwoord bevestigen</label>
+    <div style="position:relative;"><input id="acc-ww2" type="password" placeholder="Herhaal wachtwoord..." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 48px 11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;margin-bottom:1.5rem;" /><button onclick="var i=document.getElementById('acc-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button></div>
 
     <button onclick="slaWerkplaatsAccountOp('${r.id}')" style="width:100%;padding:14px;background:#E02020;color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:0.8rem;">✓ Opslaan</button>
-    <button onclick="sluitAccountOverlay()" style="width:100%;padding:14px;background:transparent;color:#555;border:1px solid #222;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Annuleren</button>
+    <button onclick="sluitAccountOverlay()" style="width:100%;padding:14px;background:transparent;color:#999;border:1px solid #222;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Annuleren</button>
   `;
 }
 
@@ -1018,7 +1018,7 @@ async function slaWerkplaatsAccountOp(id) {
 
 <div id="account-overlay" style="display:none; position:fixed; inset:0; background:#0a0a0a; z-index:300; flex-direction:column; overflow:hidden;">
   <div style="height:56px; background:#111; border-bottom:3px solid #E02020; display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; flex-shrink:0;">
-    <button onclick="sluitAccountOverlay()" style="background:none; border:1px solid #2a2a2a; border-radius:3px; color:#888; font-size:13px; padding:6px 14px; cursor:pointer; font-family:'Barlow',sans-serif;">← Terug</button>
+    <button onclick="sluitAccountOverlay()" style="background:none; border:1px solid #2a2a2a; border-radius:3px; color:#aaa; font-size:13px; padding:6px 14px; cursor:pointer; font-family:'Barlow',sans-serif;">← Terug</button>
     <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:18px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Mijn account</div>
   </div>
   <div id="account-body" style="padding:2rem; max-width:480px; width:100%; margin:0 auto; overflow-y:auto;"></div>
@@ -1040,3 +1040,4 @@ async function slaWerkplaatsAccountOp(id) {
 
 </body>
 </html>
+
