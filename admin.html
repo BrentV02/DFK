@@ -144,8 +144,8 @@
     #dfk-root .ev-deadline { font-size: 11px; color: #aaa; margin-top: 3px; }
     #dfk-root .ev-deadline.closed { color: #E02020; font-weight: 600; }
     #dfk-root .ev-inschrijvingen { font-size: 11px; color: #E02020; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
-    #dfk-root .ev-btn.riders { color: #88aaff; border-color: #223366; background: #0d1a33; }
-    #dfk-root .ev-btn.riders:hover { background: #1a2a4a; border-color: #88aaff; }
+    #dfk-root .ev-btn.riders { color: #aaccff; border-color: #4477dd; background: #0d1a33; }
+    #dfk-root .ev-btn.riders:hover { background: #1a2a4a; border-color: #88aaff; color: #fff; }
     #dfk-root .inschrijving-rider-row { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px; }
     #dfk-root .inschrijving-rider-info { flex: 1; min-width: 0; }
     #dfk-root .inschrijving-rider-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
@@ -154,9 +154,9 @@
     #dfk-root .ev-actions { display: flex; gap: 6px; flex-shrink: 0; }
     #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #aaa; }
     #dfk-root .ev-btn:hover { color: #fff; border-color: #999; }
-    #dfk-root .ev-btn.edit { color: #cccc00; border-color: #555500; background: #1a1a00; }
-    #dfk-root .ev-btn.edit:hover { background: #2a2a00; border-color: #888800; }
-    #dfk-root .ev-btn.del { color: #ff5555; border-color: #3a1a1a; background: #1c1010; }
+    #dfk-root .ev-btn.edit { color: #fff; border-color: #aaaa00; background: #666600; }
+    #dfk-root .ev-btn.edit:hover { background: #888800; border-color: #dddd00; }
+    #dfk-root .ev-btn.del { color: #fff; border-color: #aa2222; background: #881111; }
     @media (max-width: 600px) {
       #dfk-root .ev-row { padding: 12px; gap: 10px; align-items: flex-start; }
       #dfk-root .ev-row.ev-row-weekend { align-items: center; }
@@ -214,13 +214,16 @@
     #dfk-root .wd-stat { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; color: #999; }
     #dfk-root .wd-stat span { color: #fff; font-size: 16px; }
     #dfk-root .wd-section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1rem; margin-top: 1.8rem; }
-    #dfk-root .wd-pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    #dfk-root .wd-pdf-kaart { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; padding: 14px 16px; cursor: pointer; transition: all 0.15s; }
-    #dfk-root .wd-pdf-kaart:hover { border-color: #E02020; background: #1c1010; }
-    #dfk-root .wd-pdf-kaart-icon { font-size: 22px; flex-shrink: 0; }
-    #dfk-root .wd-pdf-kaart-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; color: #fff; letter-spacing: 1px; }
-    #dfk-root .wd-pdf-kaart-sub { font-size: 11px; color: #999; margin-top: 2px; font-family: 'Barlow', sans-serif; }
-    @media (max-width: 500px) { #dfk-root .wd-pdf-grid { grid-template-columns: 1fr; } }
+    #dfk-root .wd-dl-wrapper { position: relative; display: inline-block; margin-bottom: 1.8rem; }
+    #dfk-root .wd-dl-btn { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #1c1c1c; border: 1px solid #333; border-radius: 4px; color: #ccc; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    #dfk-root .wd-dl-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .wd-dl-btn.open { border-color: #E02020; color: #fff; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    #dfk-root .wd-dl-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 260px; background: #1c1c1c; border: 1px solid #E02020; border-top: none; border-radius: 0 4px 4px 4px; z-index: 50; overflow: hidden; }
+    #dfk-root .wd-dl-menu.open { display: block; }
+    #dfk-root .wd-dl-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ccc; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border-bottom: 1px solid #2a2a2a; transition: background 0.1s; }
+    #dfk-root .wd-dl-item:last-child { border-bottom: none; }
+    #dfk-root .wd-dl-item:hover { background: #2a1010; color: #fff; }
+    #dfk-root .wd-dl-item-icon { font-size: 16px; flex-shrink: 0; }
 
     #dfk-root .empty { text-align: center; padding: 2rem 1rem; color: #444; font-size: 13px; }
     #dfk-root .empty-icon { font-size: 28px; margin-bottom: 0.4rem; }
@@ -838,17 +841,17 @@ function renderEvRow(ev, isPast) {
   const inCount = _inschrijvingen[ev.id] || 0;
   return `<div class="ev-row${isPast?' past':''}${isVandaag?' vandaag':''}${isEditing?' editing':''}${(!isPast && deadlinePassed)?' gesloten':''}">
     <div class="ev-date-block">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">${DAGEN[d.getDay()]}</div>
       <div class="ev-day">${d.getDate()}</div>
       <div class="ev-month">${MAANDEN[d.getMonth()]}</div>
     </div>
     <div class="ev-divider"></div>
     <div class="ev-info">
       <div class="ev-name">${ev.naam}</div>
-      <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type || ''}</div>
+      <div class="ev-meta">${ev.circuit}${ev.type ? ' · ' + ev.type : ''}</div>
       ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${k}</span>`).join('')}</div>` : ''}
       ${isVandaag ? `<div class="ev-meta" style="color:#4cff4c;font-weight:700;">Bezig</div>` : ''}
       ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#4cff4c;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
-      ${inCount > 0 ? `<div class="ev-inschrijvingen">▶ ${inCount} ingeschreven</div>` : ''}
     </div>
     <div class="ev-actions">
       <button class="ev-btn riders vereist-inschrijvingen" onclick="toonInschrijvingen('${ev.id}')">👥 ${inCount}</button>
@@ -1625,23 +1628,13 @@ function openWeekendDetail(wid) {
       </div>
     </div>
 
-    <div class="wd-section-label">Downloads</div>
-    <div class="wd-pdf-grid">
-      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf('${wid}', 1)">
-        <div class="wd-pdf-kaart-icon">📄</div>
-        <div><div class="wd-pdf-kaart-naam">Inschrijvingen per dag</div><div class="wd-pdf-kaart-sub">Alle dagen gebundeld, één pagina per dag</div></div>
-      </div>
-      <div class="wd-pdf-kaart" onclick="downloadOpmerkingPdf('${wid}')">
-        <div class="wd-pdf-kaart-icon">💬</div>
-        <div><div class="wd-pdf-kaart-naam">Opmerkingen</div><div class="wd-pdf-kaart-sub">Alle opmerkingen bij inschrijvingen</div></div>
-      </div>
-      <div class="wd-pdf-kaart" onclick="downloadRijderslijstPdf('${wid}')">
-        <div class="wd-pdf-kaart-icon">🏎️</div>
-        <div><div class="wd-pdf-kaart-naam">Rijderslijst weekend</div><div class="wd-pdf-kaart-sub">Alle rijders samen, huurkart met afmetingen</div></div>
-      </div>
-      <div class="wd-pdf-kaart" onclick="downloadWeekendPdf4('${wid}')">
-        <div class="wd-pdf-kaart-icon">🛒</div>
-        <div><div class="wd-pdf-kaart-naam">Shop bon per rijder</div><div class="wd-pdf-kaart-sub">Eén pagina per rijder met aankooplijntjes</div></div>
+    <div class="wd-dl-wrapper" id="wd-dl-wrapper-${wid}">
+      <button class="wd-dl-btn" onclick="toggleWdDl('${wid}')">⬇ Downloads ▾</button>
+      <div class="wd-dl-menu" id="wd-dl-menu-${wid}">
+        <div class="wd-dl-item" onclick="downloadWeekendPdf('${wid}',1);sluitWdDl('${wid}')"><span class="wd-dl-item-icon">📄</span> Inschrijvingen per dag</div>
+        <div class="wd-dl-item" onclick="downloadOpmerkingPdf('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">💬</span> Opmerkingen</div>
+        <div class="wd-dl-item" onclick="downloadRijderslijstPdf('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">🏎️</span> Rijderslijst weekend</div>
+        <div class="wd-dl-item" onclick="downloadWeekendPdf4('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">🛒</span> Shop bon per rijder</div>
       </div>
     </div>
 
@@ -3544,6 +3537,27 @@ function sluitAccountOverlay() {
   document.getElementById('account-overlay').classList.remove('open');
   if (location.hash === '#account') history.back();
 }
+
+function toggleWdDl(wid) {
+  const btn  = document.querySelector(`#wd-dl-wrapper-${wid} .wd-dl-btn`);
+  const menu = document.getElementById(`wd-dl-menu-${wid}`);
+  const open = menu.classList.contains('open');
+  // Sluit alle andere open dropdowns
+  document.querySelectorAll('.wd-dl-menu.open').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.wd-dl-btn.open').forEach(b => b.classList.remove('open'));
+  if (!open) { menu.classList.add('open'); btn.classList.add('open'); }
+}
+function sluitWdDl(wid) {
+  document.getElementById(`wd-dl-menu-${wid}`)?.classList.remove('open');
+  document.querySelector(`#wd-dl-wrapper-${wid} .wd-dl-btn`)?.classList.remove('open');
+}
+// Klik buiten sluit dropdown
+document.addEventListener('click', e => {
+  if (!e.target.closest('.wd-dl-wrapper')) {
+    document.querySelectorAll('.wd-dl-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.wd-dl-btn.open').forEach(b => b.classList.remove('open'));
+  }
+});
 
 function showToast(msg, color) {
   const t = document.getElementById('toast');
