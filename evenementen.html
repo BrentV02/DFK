@@ -1388,6 +1388,7 @@ async function _toonBevestiging() {
       <div class="ev-confirm-meta" style="margin-top:6px;">📅 ${datumStr}</div>
       <div class="ev-confirm-meta">📍 ${ev.circuit}</div>
       ${klasse ? `<div class="ev-confirm-meta" style="margin-top:6px;">🏁 ${klasse}${startnummer ? ' — #'+startnummer : ''}</div>` : ''}
+      <div class="ev-confirm-meta" style="margin-top:6px;">${monteur === 'dfk' ? '🔧 Monteur van DFK' : '👤 Eigen monteur'}</div>
     </div>
     <button class="bevestig-btn" onclick="sluitInschrijven()">Sluiten</button>`;
 }
