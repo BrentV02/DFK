@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="dropdown-item" onclick="openAccountOverlay()">
           <span class="di-icon">👤</span> Mijn account
         </div>
-        <div class="dropdown-item" onclick="window.location.href='evenementen.html'">
+        <div class="dropdown-item niet-admin" style="display:none;" onclick="window.location.href='evenementen.html'">
           <span class="di-icon">🏁</span> Naar de site
         </div>
         <div class="dropdown-item vereist-werkplaats" onclick="window.location.href='werkplaats.html'">
@@ -739,8 +739,9 @@ function _pasRechtenToe(profile) {
   const actief  = isAdmin ? RECHTEN_OPTIES.map(r => r.id) : (profile.rechten || []);
   actief.forEach(r => document.body.classList.add('kan-' + r));
 
-  if (!isAdmin) {
-    // admin.html is enkel bereikbaar voor admin en office (requireAdmin blokkeert de rest)
+  if (isAdmin) {
+    document.querySelector('.dropdown-item.niet-admin').style.display = '';
+  } else {
     document.body.classList.add('niet-admin');
     document.getElementById('nav-rol-badge').textContent = 'Office';
     document.title = 'DFK – Office';
