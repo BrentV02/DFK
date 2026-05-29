@@ -242,8 +242,7 @@
     #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
     #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
 
-    /* ── Monteur weekend overlay ── */
-    #dfk-root #mw-overlay .inschr-body { max-width: 580px; }
+
 
     #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(200px); opacity: 0; border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease, opacity 0.3s ease; pointer-events: none; max-width: 90vw; text-align: center; word-break: break-word; }
     #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
@@ -314,11 +313,6 @@
     #dfk-root .inschr-row-meta { flex: 1; min-width: 0; }
     #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #dfk-root .inschr-reg { font-size: 11px; color: #999; margin-top: 2px; }
-    #dfk-root .inschr-monteur-badge { display: inline-flex; align-items: center; vertical-align: middle; padding: 2px 7px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; }
-    #dfk-root .inschr-monteur-badge.nodig { background: #2a1a00; border: 1px solid #885500; color: #ff9900; }
-    #dfk-root .inschr-monteur-badge.toegewezen { background: #0d1a0d; border: 1px solid #2a6a2a; color: #4cff4c; }
-    #dfk-root .inschr-monteur-badge.eigen { background: #1a1a1a; border: 1px solid #333; color: #888; }
-    #dfk-root .inschr-row.monteur-nodig { border-left-color: #ff9900; }
     #dfk-root .inschr-row-rechts { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     #dfk-root .inschr-klasse-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 15px; color: #fff; letter-spacing: 1px; text-align: right; }
     #dfk-root .inschr-nr { color: #E02020; }
@@ -599,20 +593,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
 
-      <div style="margin-top:1rem;">
-        <label class="ai-label">Monteur</label>
-        <div style="display:flex;gap:8px;">
-          <button id="ai-monteur-dfk" onclick="kiesAiMonteur('dfk')"
-            style="flex:1;padding:10px 6px;border-radius:3px;border:1px solid #333;background:#1c1c1c;color:#aaa;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;">
-            🔧 Monteur van DFK
-          </button>
-          <button id="ai-monteur-eigen" onclick="kiesAiMonteur('eigen')"
-            style="flex:1;padding:10px 6px;border-radius:3px;border:1px solid #333;background:#1c1c1c;color:#aaa;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;">
-            👤 Eigen monteur
-          </button>
-        </div>
-      </div>
-
       <div class="ai-footer">
         <button class="ai-btn" onclick="sluitAdminInschrijfModal()">Annuleren</button>
         <button class="ai-btn primary" id="ai-inschr-btn" onclick="bevestigAdminInschrijving()" disabled style="opacity:0.4;">Inschrijven</button>
@@ -620,41 +600,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
-  <!-- ── Monteur keuze modal ── -->
-  <div id="monteur-modal-backdrop" class="ai-backdrop" style="display:none;" onclick="sluitMonteurModal()">
-    <div class="ai-modal" onclick="event.stopPropagation()" style="max-height:80vh;display:flex;flex-direction:column;">
-      <div class="ai-titel">Monteur koppelen</div>
-      <input class="ai-input" id="monteur-zoek" type="text" placeholder="Naam zoeken..." oninput="filterMonteurs()" autocomplete="off" style="margin-bottom:8px;" />
-      <div id="monteur-lijst" style="max-height:320px;overflow-y:auto;flex:1;border:1px solid #2a2a2a;border-radius:3px;background:#111;"></div>
-      <div style="display:flex;gap:6px;margin-top:10px;">
-        <input class="ai-input" id="monteur-nieuw" type="text" placeholder="Nieuwe monteur toevoegen..." autocomplete="off"
-          onkeydown="if(event.key==='Enter')voegMonteurToe()"
-          style="flex:1;padding:8px 12px;font-size:13px;" />
-        <button onclick="voegMonteurToe()"
-          style="flex-shrink:0;padding:8px 14px;border-radius:3px;border:1px solid #2a6a2a;background:#0d1a0d;color:#4cff4c;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;white-space:nowrap;">
-          + Toevoegen
-        </button>
-      </div>
-      <div class="ai-footer" style="margin-top:8px;">
-        <button class="ai-btn" onclick="sluitMonteurModal()">Annuleren</button>
-        <button class="ai-btn" onclick="verwijderMonteurKoppeling()" style="color:#ff7777;border-color:#552222;">✕ Koppeling verwijderen</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Monteurs weekend overlay ── -->
-  <div id="mw-overlay" class="inschr-overlay">
-    <div class="inschr-topbar">
-      <button class="nav-back" onclick="sluitMonteurWeekend()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
-      <div class="inschr-ev-info">
-        <div class="inschr-ev-naam" id="mw-titel"></div>
-        <div class="inschr-ev-sub" id="mw-sub"></div>
-      </div>
-    </div>
-    <div class="inschr-body">
-      <div id="mw-grid"></div>
-    </div>
-  </div>
 
   <!-- ── Event formulier overlay ── -->
   <div id="event-overlay" class="event-overlay">
@@ -772,10 +717,6 @@ let editRijderId    = null; // UUID of rider being edited
 let _inschrData     = [];   // inschrijvingen voor huidig geopend event
 let _inschrEvent    = null;
 let _inschrFilter   = null; // actieve klasse-filter (null = alle)
-let _allMonteurs    = [];   // lijst van beschikbare monteurs
-let _monteurTarget  = null; // inschrId waarvoor monteur gekozen wordt
-let _mwData         = [];   // inschrijvingen voor monteur-weekend overlay
-let _mwWid          = null; // weekend-id van open monteur overlay
 let _inschrSort     = 'klasse';
 
 // ── Init ─────────────────────────────────────
@@ -919,8 +860,6 @@ function renderEvents() {
 
   renderList('past-list', past, '🏁', 'Geen afgelopen evenementen', true);
 
-  // Laad monteurbadges voor alle komende weekenden in één query
-  laadWeekendMonteurBadges(upcoming);
 }
 
 function renderEvRow(ev, isPast) {
@@ -997,7 +936,6 @@ function renderWeekendGroep(wid, evs, isPast) {
       <div class="ev-name">${naam}</div>
       <div class="ev-meta">${datumStr} · ${evs.length} dag${evs.length !== 1 ? 'en' : ''}</div>
       ${totInschr > 0 ? `<div class="ev-inschrijvingen">👥 ${totInschr} inschrijvingen</div>` : ''}
-      <div id="wg-monteur-${wid}"></div>
     </div>
     <div class="ev-actions" style="flex-direction:column; align-items:center; gap:3px;">
       <div class="wk-switch${zichtbaar ? ' on' : ''}" onclick="toggleWeekendZichtbaar('${wid}')" title="${zichtbaar ? 'Zichtbaar voor klanten — klik om te verbergen' : 'Verborgen voor klanten — klik om zichtbaar te maken'}">
@@ -1737,13 +1675,7 @@ function openWeekendDetail(wid) {
         <div class="wd-dl-item" onclick="downloadWeekendPdf4('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">🛒</span> Shop bon per rijder</div>
       </div>
       </div>
-      <button onclick="openMonteurWeekend('${wid}')"
-        style="display:flex;align-items:center;gap:8px;padding:9px 16px;background:#1c1c1c;border:1px solid #885500;border-radius:4px;color:#ff9900;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;white-space:nowrap;">
-        🔧 Monteurs koppelen
-      </button>
     </div>
-
-    <div id="wd-monteur-status" style="margin-bottom:1.2rem;"></div>
 
     <div class="wd-section-label">Evenementen</div>
     <div class="event-list">
@@ -1758,117 +1690,6 @@ function openWeekendDetail(wid) {
   document.querySelector('.left-col').scrollTop = 0;
   history.pushState({ view: 'weekend', wid }, '', '#weekend');
 
-  // Laad monteurtelling asynchroon en toon melding
-  laadMonteurStatus(wid, evs.map(e => e.id));
-}
-
-// Laad monteurbadge voor één specifiek event (of weekend) en zet die in wg-monteur-{wid}
-async function laadMonteurBadgeVoorEvent(eventIds, wid) {
-  if (!eventIds.length) return;
-
-  const { data } = await _supabase
-    .from('inschrijvingen')
-    .select('monteur, monteur_toegewezen')
-    .in('event_id', eventIds)
-    .eq('monteur', 'dfk');
-
-  if (!data) return;
-
-  const totaal = data.length;
-  const nodig  = data.filter(r => !r.monteur_toegewezen).length;
-
-  // Update wg-monteur-{wid} badge binnenin het weekend-blok
-  if (wid) {
-    const el = document.getElementById(`wg-monteur-${wid}`);
-    if (el) {
-      if (nodig > 0) {
-        el.innerHTML = `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:3px 9px;background:#1c1000;border:1px solid #885500;border-radius:3px;"><span style="font-size:12px;">⚠</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#ff9900;letter-spacing:1px;">${nodig} monteur${nodig !== 1 ? 's' : ''} nog te koppelen</span></div>`;
-      } else if (totaal > 0) {
-        el.innerHTML = `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:3px 9px;background:#0a1a0a;border:1px solid #2a6a2a;border-radius:3px;"><span style="font-size:12px;">✓</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#4cff4c;letter-spacing:1px;">Alle monteurs gekoppeld</span></div>`;
-      } else {
-        el.innerHTML = '';
-      }
-    }
-  }
-}
-
-async function laadWeekendMonteurBadges(upcomingEvents) {
-  // Verzamel alle event-IDs van weekenden in één query
-  const weekendIds  = [...new Set(upcomingEvents.filter(e => e.weekend_id).map(e => e.weekend_id))];
-  const alleEventIds = upcomingEvents.filter(e => e.weekend_id).map(e => e.id);
-  if (!alleEventIds.length) return;
-
-  const { data } = await _supabase
-    .from('inschrijvingen')
-    .select('event_id, monteur, monteur_toegewezen')
-    .in('event_id', alleEventIds)
-    .eq('monteur', 'dfk');
-
-  if (!data) return;
-
-  for (const wid of weekendIds) {
-    const el = document.getElementById(`wg-monteur-${wid}`);
-    if (!el) continue;
-    const widEventIds = upcomingEvents.filter(e => e.weekend_id === wid).map(e => e.id);
-    const rijen  = data.filter(r => widEventIds.includes(r.event_id));
-    const nodig  = rijen.filter(r => !r.monteur_toegewezen).length;
-    if (nodig > 0) {
-      el.innerHTML = `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:3px 9px;background:#1c1000;border:1px solid #885500;border-radius:3px;"><span style="font-size:12px;">⚠</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#ff9900;letter-spacing:1px;">${nodig} monteur${nodig !== 1 ? 's' : ''} nog te koppelen</span></div>`;
-    } else if (rijen.length > 0) {
-      el.innerHTML = `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:3px 9px;background:#0a1a0a;border:1px solid #2a6a2a;border-radius:3px;"><span style="font-size:12px;">✓</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#4cff4c;letter-spacing:1px;">Alle monteurs gekoppeld</span></div>`;
-    } else {
-      el.innerHTML = '';
-    }
-  }
-}
-
-async function laadMonteurStatus(wid, eventIds) {
-  const el = document.getElementById('wd-monteur-status');
-  if (!el || !eventIds.length) return;
-
-  const { data } = await _supabase
-    .from('inschrijvingen')
-    .select('monteur, monteur_toegewezen')
-    .in('event_id', eventIds)
-    .eq('monteur', 'dfk');
-
-  if (!data) return;
-
-  const totaal    = data.length;
-  const nodig     = data.filter(r => !r.monteur_toegewezen).length;
-  const toegewezen = totaal - nodig;
-
-  if (totaal === 0) {
-    el.innerHTML = '';
-    return;
-  }
-
-  if (nodig > 0) {
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1c1000;border:1px solid #885500;border-left:4px solid #ff9900;border-radius:4px;">
-        <span style="font-size:20px;flex-shrink:0;">⚠</span>
-        <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#ff9900;letter-spacing:1px;">
-            ${nodig} rijder${nodig !== 1 ? 's' : ''} wacht${nodig === 1 ? '' : 'en'} nog op een monteur
-          </div>
-          <div style="font-size:12px;color:#aa7700;margin-top:2px;">
-            ${toegewezen} van ${totaal} DFK-monteur verzoeken zijn gekoppeld
-          </div>
-        </div>
-        <button onclick="openMonteurWeekend('${wid}')"
-          style="margin-left:auto;flex-shrink:0;padding:7px 14px;background:#2a1800;border:1px solid #ff9900;border-radius:3px;color:#ff9900;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap;">
-          Koppelen →
-        </button>
-      </div>`;
-  } else {
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#0a1a0a;border:1px solid #2a6a2a;border-left:4px solid #4cff4c;border-radius:4px;">
-        <span style="font-size:20px;flex-shrink:0;">✓</span>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#4cff4c;letter-spacing:1px;">
-          Alle ${totaal} DFK-monteur verzoeken zijn gekoppeld
-        </div>
-      </div>`;
-  }
 }
 
 function sluitWeekendDetail() {
@@ -3142,13 +2963,8 @@ async function toonInschrijvingen(eventId) {
   document.getElementById('inschr-grid').innerHTML      =
     '<div style="color:#999;text-align:center;padding:3rem;font-family:\'Barlow\',sans-serif;font-size:13px;">Laden...</div>';
 
-  // Laad monteurs parallel met inschrijvingen
-  const [inschrRes, monteursRes] = await Promise.all([
-    _supabase.from('inschrijvingen').select('*, profiles(*)').eq('event_id', eventId).order('bevestigd_op', { ascending: true }),
-    _supabase.from('monteurs').select('naam').order('naam'),
-  ]);
+  const inschrRes = await _supabase.from('inschrijvingen').select('*, profiles(*)').eq('event_id', eventId).order('bevestigd_op', { ascending: true });
   const { data, error } = inschrRes;
-  if (monteursRes.data) _allMonteurs = monteursRes.data.map(r => r.naam);
 
   if (error) {
     document.getElementById('inschr-grid').innerHTML =
@@ -3172,7 +2988,6 @@ function sluitInschrijvingenPanel() {
 let _aiGeselecteerdeRijder = null;
 let _aiKlasse   = null;
 let _aiStartnr  = null;
-let _aiMonteur  = null;
 
 async function openAdminInschrijfModal() {
   if (!_inschrEvent) return;
@@ -3181,9 +2996,6 @@ async function openAdminInschrijfModal() {
   _aiGeselecteerdeRijder = null;
   _aiKlasse  = null;
   _aiStartnr = null;
-  _aiMonteur = null;
-  kiesAiMonteur(null);
-
   document.getElementById('ai-zoek').value      = '';
   document.getElementById('ai-rijder-id').value = '';
   document.getElementById('ai-preview').style.display = 'none';
@@ -3313,27 +3125,15 @@ async function adminUitschrijven(inschrijvingId, naam) {
   renderEvents();
 }
 
-function kiesAiMonteur(keuze) {
-  _aiMonteur = keuze;
-  const actief = { border: '1px solid #E02020', background: '#2a1010', color: '#fff' };
-  const inact  = { border: '1px solid #333',    background: '#1c1c1c', color: '#aaa' };
-  const dfkBtn   = document.getElementById('ai-monteur-dfk');
-  const eigenBtn = document.getElementById('ai-monteur-eigen');
-  if (dfkBtn)   Object.assign(dfkBtn.style,   keuze === 'dfk'   ? actief : inact);
-  if (eigenBtn) Object.assign(eigenBtn.style, keuze === 'eigen' ? actief : inact);
-}
-
 async function bevestigAdminInschrijving() {
   const rijderId = document.getElementById('ai-rijder-id').value;
   if (!rijderId) { showToast('Selecteer een rijder', 'yellow'); return; }
-  if (!_aiMonteur) { showToast('Kies een optie voor de monteur', 'yellow'); return; }
 
   const { error } = await _supabase.from('inschrijvingen').insert({
     rijder_id:    rijderId,
     event_id:     _inschrEvent.id,
     klasse:       _aiKlasse,
     startnummer:  _aiStartnr,
-    monteur:      _aiMonteur,
     bevestigd_op: new Date().toISOString(),
   });
 
@@ -3614,20 +3414,6 @@ function _inschrCardHTML(r) {
   const badgeType  = isHuur ? 'huur' : 'eigen';
   const badgeLabel = isHuur ? 'Huurkart' : 'Eigen kart';
 
-  // ── Monteur badge ─────────────────────────────
-  const monteur          = r.monteur || null;
-  const monteurToegewezen = r.monteur_toegewezen || null;
-  let monteurBadge = '';
-  if (monteur === 'dfk') {
-    if (monteurToegewezen) {
-      monteurBadge = `<div class="inschr-monteur-badge toegewezen">🔧 ${monteurToegewezen}</div>`;
-    } else {
-      monteurBadge = `<div class="inschr-monteur-badge nodig">🔧 DFK monteur nodig</div>`;
-    }
-  } else if (monteur === 'eigen') {
-    monteurBadge = `<div class="inschr-monteur-badge eigen">👤 Eigen monteur</div>`;
-  }
-
   // ── Rechterkant: klasse + nr (eigen) of kart type (huur) ──
   let rechtsHTML = '';
   if (!isHuur) {
@@ -3665,7 +3451,6 @@ function _inschrCardHTML(r) {
       <div class="inschr-sectie">
         <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
       </div>
-      ${_monteurSectieHTML(r.id, monteur, monteurToegewezen)}
       <button class="inschr-uitschr-btn" onclick="event.stopPropagation(); adminUitschrijven('${r.id}', '${vollNaam}')">✕ Uitschrijven</button>`;
   } else {
     const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
@@ -3689,7 +3474,6 @@ function _inschrCardHTML(r) {
       <div class="inschr-sectie">
         <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
       </div>
-      ${_monteurSectieHTML(r.id, monteur, monteurToegewezen)}
       <button class="inschr-uitschr-btn" onclick="event.stopPropagation(); adminUitschrijven('${r.id}', '${vollNaam}')">✕ Uitschrijven</button>`;
   }
 
@@ -3711,241 +3495,7 @@ function _inschrCardHTML(r) {
   </div>`;
 }
 
-// ── Monteur sectie ────────────────────────────
-function _monteurSectieHTML(inschrId, monteur, toegewezen) {
-  if (!monteur) return `<div class="inschr-sectie"><div class="inschr-sectie-label">Monteur</div><div class="inschr-sectie-value" style="color:#444;">Niet opgegeven</div></div>`;
-  if (monteur === 'eigen') return `<div class="inschr-sectie"><div class="inschr-sectie-label">Monteur</div><div class="inschr-sectie-value">👤 Eigen monteur</div></div>`;
-  return `<div class="inschr-sectie" onclick="event.stopPropagation()">
-    <div class="inschr-sectie-label">Monteur van DFK</div>
-    <div style="margin-top:6px;">
-      <button onclick="event.stopPropagation();openMonteurModal('${inschrId}')"
-        style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;background:${toegewezen ? '#0d1a0d' : '#1c1010'};border:1px solid ${toegewezen ? '#2a6a2a' : '#ff9900'};border-radius:3px;color:${toegewezen ? '#4cff4c' : '#ff9900'};font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;text-align:left;">
-        <span>${toegewezen ? '🔧 ' + toegewezen : '⚠ Monteur toewijzen...'}</span>
-        <span style="margin-left:auto;font-size:11px;opacity:0.6;">▼</span>
-      </button>
-    </div>
-  </div>`;
-}
 
-async function openMonteurModal(ids) {
-  _monteurTarget = Array.isArray(ids) ? ids : [ids];
-  document.getElementById('monteur-zoek').value = '';
-  document.getElementById('monteur-nieuw').value = '';
-  document.getElementById('monteur-modal-backdrop').style.display = 'flex';
-  document.getElementById('monteur-lijst').innerHTML = `<div style="padding:1rem;color:#555;font-size:13px;text-align:center;">Laden...</div>`;
-  const { data } = await _supabase.from('monteurs').select('naam').order('naam');
-  if (data) _allMonteurs = data.map(r => r.naam);
-  filterMonteurs();
-  setTimeout(() => document.getElementById('monteur-zoek').focus(), 50);
-}
-
-function sluitMonteurModal() {
-  document.getElementById('monteur-modal-backdrop').style.display = 'none';
-  _monteurTarget = null;
-}
-
-function filterMonteurs() {
-  const zoek  = document.getElementById('monteur-zoek').value.toLowerCase();
-  const gefilt = _allMonteurs.filter(n => n.toLowerCase().includes(zoek));
-  const lijst  = document.getElementById('monteur-lijst');
-  if (!gefilt.length) {
-    lijst.innerHTML = `<div style="padding:1rem;color:#555;font-size:13px;text-align:center;">Geen monteurs gevonden</div>`;
-    return;
-  }
-  lijst.innerHTML = gefilt.map(n => `
-    <div class="ai-rijder-item" onclick="selecteerMonteur('${n.replace(/'/g, "\\'")}')"
-      style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e1e1e;font-family:'Barlow',sans-serif;font-size:14px;color:#ccc;">
-      🔧 ${n}
-    </div>`).join('');
-}
-
-async function voegMonteurToe() {
-  const input = document.getElementById('monteur-nieuw');
-  const naam  = (input.value || '').trim();
-  if (!naam) { showToast('Geef een naam in', 'yellow'); return; }
-  if (_allMonteurs.some(n => n.toLowerCase() === naam.toLowerCase())) {
-    showToast('Monteur staat al in de lijst', 'yellow');
-    return;
-  }
-  const { error } = await _supabase.from('monteurs').insert({ naam });
-  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
-  _allMonteurs = [..._allMonteurs, naam].sort((a, b) => a.localeCompare(b));
-  input.value = '';
-  filterMonteurs();
-  showToast(`Monteur "${naam}" toegevoegd`, 'green');
-}
-
-async function selecteerMonteur(naam) {
-  if (!_monteurTarget) return;
-  await slaMonteurtoe(_monteurTarget, naam);
-  sluitMonteurModal();
-}
-
-async function verwijderMonteurKoppeling() {
-  if (!_monteurTarget) return;
-  await slaMonteurtoe(_monteurTarget, null);
-  sluitMonteurModal();
-}
-
-async function slaMonteurtoe(ids, naam) {
-  const idArr       = Array.isArray(ids) ? ids : [ids];
-  const naamTrimmed = (naam || '').trim() || null;
-  // Gebruik eq() per ID (bewezen werkend, geeft fout bij RLS-probleem)
-  for (const id of idArr) {
-    const { data: updated, error } = await _supabase
-      .from('inschrijvingen')
-      .update({ monteur_toegewezen: naamTrimmed })
-      .eq('id', id)
-      .select('id');
-    if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
-    if (!updated || updated.length === 0) { showToast('Geen rechten om monteur op te slaan', 'red'); return; }
-  }
-  // Update lokale data zodat overlay direct bijgewerkt is
-  for (const id of idArr) {
-    const r = _inschrData.find(r => r.id === id);
-    if (r) r.monteur_toegewezen = naamTrimmed;
-    const mw = _mwData.find(d => d.inschr.id === id);
-    if (mw) mw.inschr.monteur_toegewezen = naamTrimmed;
-  }
-  if (_mwData.length) _renderMwGrid();
-  // Herlaad alle monteermeldingen
-  if (_mwWid) {
-    const evIds = _allEvents.filter(e => e.weekend_id === _mwWid).map(e => e.id);
-    laadMonteurStatus(_mwWid, evIds);
-    laadNextMonteurWarning(evIds);
-  }
-  const todayR = new Date(); todayR.setHours(0,0,0,0);
-  laadWeekendMonteurBadges(_allEvents.filter(e => new Date(e.datum + 'T12:00:00') >= todayR));
-
-  // Controleer of dezelfde monteur nu bij meerdere rijders staat
-  if (naamTrimmed && _mwData.length) {
-    const toegewezenRijderIds = new Set(
-      _mwData.filter(d => idArr.includes(d.inschr.id)).map(d => d.inschr.rijder_id)
-    );
-    const dubbelGebruikt = _mwData.some(d =>
-      !toegewezenRijderIds.has(d.inschr.rijder_id) &&
-      d.inschr.monteur_toegewezen === naamTrimmed
-    );
-    if (dubbelGebruikt) {
-      showToast(`⚠ Let op: "${naamTrimmed}" is nu bij 2 rijders gekoppeld!`, 'yellow');
-      _renderInschrGrid();
-      return;
-    }
-  }
-
-  showToast(naamTrimmed ? `Monteur "${naamTrimmed}" toegewezen` : 'Monteur verwijderd', naamTrimmed ? 'green' : 'yellow');
-  _renderInschrGrid();
-}
-
-// ── Monteurs weekend overlay ───────────────────
-async function openMonteurWeekend(wid) {
-  _mwWid = wid;
-  const weekend = _allWeekenden.find(w => w.id === wid);
-  const evs = _allEvents.filter(e => e.weekend_id === wid).sort((a, b) => a.datum.localeCompare(b.datum));
-  document.getElementById('mw-titel').textContent = weekend?.naam || '';
-  document.getElementById('mw-sub').textContent   = 'Monteurs koppelen';
-  document.getElementById('mw-grid').innerHTML    = `<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>`;
-  document.getElementById('mw-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  const eventIds = evs.map(e => e.id);
-  const [inschrRes, monteursRes] = await Promise.all([
-    _supabase.from('inschrijvingen').select('*, profiles(*)').in('event_id', eventIds),
-    _supabase.from('monteurs').select('naam').order('naam'),
-  ]);
-  if (monteursRes.data) _allMonteurs = monteursRes.data.map(r => r.naam);
-  _mwData = (inschrRes.data || []).map(r => ({ inschr: r, event: evs.find(e => e.id === r.event_id) }));
-  _renderMwGrid();
-}
-
-function openMonteurModalVoorRijder(rijderId) {
-  const ids = _mwData.filter(d => d.inschr.rijder_id === rijderId).map(d => d.inschr.id);
-  openMonteurModal(ids);
-}
-
-function _renderMwGrid() {
-  const grid = document.getElementById('mw-grid');
-  if (!grid) return;
-  if (!_mwData.length) {
-    grid.innerHTML = `<div class="empty"><div class="empty-icon">👥</div>Geen inschrijvingen gevonden</div>`;
-    return;
-  }
-
-  // Dedupliceer per rijder_id
-  const rijderMap = new Map();
-  for (const d of _mwData) {
-    const rid = d.inschr.rijder_id;
-    if (!rijderMap.has(rid)) rijderMap.set(rid, []);
-    rijderMap.get(rid).push(d);
-  }
-
-  // Bouw per rijder één object op
-  const rijders = [...rijderMap.entries()].map(([rid, groep]) => {
-    const p      = groep[0].inschr.profiles || {};
-    const naam   = [p.naam, p.voornaam].filter(Boolean).join(' ');
-    const klasse = p.kart_type === 'huur' ? (p.huurkart_type || 'Huurkart') : (groep[0].inschr.klasse || '—');
-    // Monteurkeuze: dfk heeft prioriteit, dan eigen, dan null
-    const monteur = groep.some(d => d.inschr.monteur === 'dfk') ? 'dfk'
-                  : groep.some(d => d.inschr.monteur === 'eigen') ? 'eigen'
-                  : null;
-    const toegewezen = groep.map(d => d.inschr.monteur_toegewezen).find(t => t) || null;
-    // Dagen gesorteerd
-    const dagen = groep.map(d => d.event).filter(Boolean)
-      .sort((a, b) => a.datum.localeCompare(b.datum))
-      .map(ev => { const d = new Date(ev.datum + 'T12:00:00'); return `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]}`; });
-    return { rid, naam, klasse, monteur, toegewezen, dagen };
-  });
-
-  // Sortering: DFK zonder monteur eerst, DFK toegewezen, eigen, geen keuze
-  const prioriteit = r => {
-    if (!r.monteur) return 3;
-    if (r.monteur === 'eigen') return 2;
-    return r.toegewezen ? 1 : 0;
-  };
-  rijders.sort((a, b) => {
-    const diff = prioriteit(a) - prioriteit(b);
-    return diff !== 0 ? diff : a.naam.localeCompare(b.naam);
-  });
-
-  grid.innerHTML = rijders.map(r => {
-    const dagenStr = r.dagen.join(' · ');
-    let monteurHtml = '';
-    let borderLeft  = '#333';
-
-    if (!r.monteur) {
-      monteurHtml = `<span style="color:#444;font-size:12px;font-family:'Barlow',sans-serif;">Geen keuze</span>`;
-    } else if (r.monteur === 'eigen') {
-      monteurHtml = `<span class="inschr-monteur-badge eigen">👤 Eigen</span>`;
-    } else {
-      borderLeft = r.toegewezen ? '#2a6a2a' : '#ff9900';
-      const btnBg    = r.toegewezen ? '#0d1a0d' : '#1c1010';
-      const btnBorde = r.toegewezen ? '#2a6a2a' : '#ff9900';
-      const btnColor = r.toegewezen ? '#4cff4c' : '#ff9900';
-      const btnLabel = r.toegewezen ? `🔧 ${r.toegewezen}` : '⚠ Toewijzen...';
-      monteurHtml = `<button onclick="openMonteurModalVoorRijder('${r.rid}')"
-        style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:${btnBg};border:1px solid ${btnBorde};border-radius:3px;color:${btnColor};font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap;">
-        ${btnLabel}<span style="font-size:9px;opacity:0.6;">▼</span>
-      </button>`;
-    }
-
-    return `<div class="inschr-row" style="cursor:default;border-left-color:${borderLeft};">
-      <div class="inschr-row-top">
-        <div class="inschr-row-meta" style="flex:1;min-width:0;">
-          <div class="inschr-naam">${r.naam}</div>
-          <div class="inschr-reg">${r.klasse}${dagenStr ? ' · ' + dagenStr : ''}</div>
-        </div>
-        <div class="inschr-row-rechts">${monteurHtml}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function sluitMonteurWeekend() {
-  document.getElementById('mw-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-  _mwWid = null;
-  _mwData = [];
-}
 
 // ── Hulpfuncties ──────────────────────────────
 function formatDate(dateStr) {
